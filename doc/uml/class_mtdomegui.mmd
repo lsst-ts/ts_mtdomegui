@@ -1,0 +1,27 @@
+classDiagram
+
+namespace guitool {
+  class ControlTabs
+  class TabTemplate
+}
+
+namespace tab {
+  class TabSettings
+  class TabInterlock
+}
+
+TabTemplate <|-- TabSettings
+TabTemplate <|-- TabInterlock
+
+MainWindow *-- Model
+MainWindow *-- ControlTabs
+MainWindow *-- ControlPanel
+MainWindow *-- TabSettings
+
+ControlPanel *-- Model
+ControlPanel *-- TabInterlock
+
+TabSettings *-- Model
+TabInterlock *-- Model
+
+ControlTabs "1" *-- "9" TabTemplate

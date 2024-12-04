@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabCommand
+TabTemplate <|-- TabSelector
+
+TabCommand *-- Model
+TabCommand "1" *-- "3" TabSelector
+
+TabSelector *-- Model

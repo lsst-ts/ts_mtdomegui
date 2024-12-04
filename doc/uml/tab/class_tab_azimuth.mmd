@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabAzimuth
+TabTemplate <|-- TabFigure
+
+TabAzimuth *-- Model
+TabAzimuth "1" *-- "7" TabFigure
+
+TabFigure *-- Model

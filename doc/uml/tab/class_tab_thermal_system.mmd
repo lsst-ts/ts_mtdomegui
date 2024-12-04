@@ -1,0 +1,19 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+  class FigureConstant
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabThermalSystem
+TabTemplate <|-- TabSelector
+
+TabThermalSystem *-- Model
+TabThermalSystem *-- TabSelector
+TabThermalSystem *-- FigureConstant
+
+TabSelector *-- Model

@@ -1,0 +1,15 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+  class FigureConstant
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabFigure
+
+TabFigure *-- Model
+TabFigure *-- FigureConstant

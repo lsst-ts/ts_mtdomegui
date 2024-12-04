@@ -1,0 +1,183 @@
+.. _Developer_Guide:
+
+#########################
+Developer Guide
+#########################
+
+This GUI is constructed on the top of Qt framework (`Qt for Python <https://wiki.qt.io/Qt_for_Python>`_).
+
+.. _Dependencies:
+
+Dependencies
+============
+
+* `ts_xml <https://github.com/lsst-ts/ts_xml>`_
+* `ts_guitool <https://github.com/lsst-ts/ts_guitool>`_
+
+.. _Architecture:
+
+Architecture
+=============
+
+The classes in module are listed below.
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui:
+
+mtdomegui
+---------
+
+.. mermaid:: ../uml/class_mtdomegui.mmd
+    :caption: Class diagram of dome GUI
+
+* **MainWindow** is the main window of the application.
+* **Model** contains the main business logic in the application.
+* **ControlPanel** shows the current system status.
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab:
+
+mtdomegui.tab
+-------------
+
+.. mermaid:: ../uml/tab/class_tab.mmd
+    :caption: Class diagram of tab module
+
+* **TabApertureShutter** shows the aperture shutter status.
+* **TabAzimuth** shows the azimuth status.
+* **TabCalibration** shows the calibration screen status.
+* **TabCommand** shows the avaiable commands to the controller.
+* **TabElevation** shows the elevation (light/wind screen) status.
+* **TabFigure** shows the real-time figure.
+* **TabInterlock** shows the interlock status.
+* **TabLouver** shows the louver status.
+* **TabLouverSingle** shows the single louver status that is selected in **TabLouver**.
+* **TabRearAccessDoor** shows the rear access door status.
+* **TabSelector** shows the selections used in the **TabCommand** and **TabThermalSystem**.
+* **TabSettings** shows the settings of GUI.
+* **TabThermalSystem** shows the thermal system status.
+* **TabUtility** shows the utility status.
+
+The class diagrams for each table class are listed below to give you the idea of class relationship.
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_aperture_shutter:
+
+mtdomegui.tab.TabApertureShutter
+--------------------------------
+
+.. mermaid:: ../uml/tab/class_tab_aperture_shutter.mmd
+    :caption: Class diagram of TabApertureShutter class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_azimuth:
+
+mtdomegui.tab.TabAzimuth
+------------------------
+
+.. mermaid:: ../uml/tab/class_tab_azimuth.mmd
+    :caption: Class diagram of TabAzimuth class
+
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_calibration:
+
+mtdomegui.tab.TabCalibration
+----------------------------
+
+.. mermaid:: ../uml/tab/class_tab_calibration.mmd
+    :caption: Class diagram of TabCalibration class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_command:
+
+mtdomegui.tab.TabCommand
+------------------------
+
+.. mermaid:: ../uml/tab/class_tab_command.mmd
+    :caption: Class diagram of TabCommand class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_elevation:
+
+mtdomegui.tab.TabElevation
+--------------------------
+
+.. mermaid:: ../uml/tab/class_tab_elevation.mmd
+    :caption: Class diagram of TabElevation class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_figure:
+
+mtdomegui.tab.TabFigure
+-----------------------
+
+.. mermaid:: ../uml/tab/class_tab_figure.mmd
+    :caption: Class diagram of TabFigure class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_interlock:
+
+mtdomegui.tab.TabInterlock
+--------------------------
+
+.. mermaid:: ../uml/tab/class_tab_interlock.mmd
+    :caption: Class diagram of TabInterlock class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_louver:
+
+mtdomegui.tab.TabLouver
+-----------------------
+
+.. mermaid:: ../uml/tab/class_tab_louver.mmd
+    :caption: Class diagram of TabLouver class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_louver_single:
+
+mtdomegui.tab.TabLouverSingle
+-----------------------------
+
+.. mermaid:: ../uml/tab/class_tab_louver_single.mmd
+    :caption: Class diagram of TabLouverSingle class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_rear_access_door:
+
+mtdomegui.tab.TabRearAccessDoor
+-------------------------------
+
+.. mermaid:: ../uml/tab/class_tab_rear_access_door.mmd
+    :caption: Class diagram of TabRearAccessDoor class
+
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_selector:
+
+mtdomegui.tab.TabSelector
+-------------------------
+
+.. mermaid:: ../uml/tab/class_tab_selector.mmd
+    :caption: Class diagram of TabSelector class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_settings:
+
+mtdomegui.tab.TabSettings
+-------------------------
+
+.. mermaid:: ../uml/tab/class_tab_settings.mmd
+    :caption: Class diagram of TabSettings class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_thermal_system:
+
+mtdomegui.tab.TabThermalSystem
+------------------------------
+
+.. mermaid:: ../uml/tab/class_tab_thermal_system.mmd
+    :caption: Class diagram of TabThermalSystem class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_utility:
+
+mtdomegui.tab.TabUtility
+------------------------
+
+.. mermaid:: ../uml/tab/class_tab_utility.mmd
+    :caption: Class diagram of TabUtility class
+
+.. _API:
+
+APIs
+=============
+
+This section is autogenerated from docstrings.
+
+.. automodapi:: lsst.ts.mtdomegui
+    :no-inheritance-diagram:

@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabRearAccessDoor
+TabTemplate <|-- TabFigure
+
+TabRearAccessDoor *-- Model
+TabRearAccessDoor "1" *-- "6" TabFigure
+
+TabFigure *-- Model
