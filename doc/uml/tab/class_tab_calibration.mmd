@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabCalibration
+TabTemplate <|-- TabFigure
+
+TabCalibration *-- Model
+TabCalibration "1" *-- "6" TabFigure
+
+TabFigure *-- Model

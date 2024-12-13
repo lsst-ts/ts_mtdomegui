@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabElevation
+TabTemplate <|-- TabFigure
+
+TabElevation *-- Model
+TabElevation "1" *-- "8" TabFigure
+
+TabFigure *-- Model

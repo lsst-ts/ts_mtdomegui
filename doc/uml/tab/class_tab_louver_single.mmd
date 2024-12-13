@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabLouverSingle
+TabTemplate <|-- TabFigure
+
+TabLouverSingle *-- Model
+TabLouverSingle "1" *-- "5" TabFigure
+
+TabFigure *-- Model

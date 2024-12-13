@@ -1,0 +1,17 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+}
+
+TabTemplate <|-- TabApertureShutter
+TabTemplate <|-- TabFigure
+
+TabApertureShutter *-- Model
+TabApertureShutter "1" *-- "6" TabFigure
+
+TabFigure *-- Model
