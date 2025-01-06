@@ -19,7 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import logging
+from copy import deepcopy
 
 import pytest
 from lsst.ts.mtdomegui import Model, TabUtility
@@ -42,5 +44,30 @@ def test_init(widget: TabUtility) -> None:
     assert len(widget._modes) == len(MTDome.SubSystemId)
     assert len(widget._indicators_capacitor) == 5
 
-    indicator = widget._indicators_capacitor["fuse"][0]
-    assert indicator.palette().color(QPalette.Base) == Qt.green
+
+@pytest.mark.asyncio
+async def test_set_signal_operational_mode(widget: TabUtility) -> None:
+
+    subsystem = MTDome.SubSystemId.MONCS
+    mode = MTDome.OperationalMode.DEGRADED
+    widget.model.report_operational_mode(subsystem, mode)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._modes[subsystem.name].text() == mode.name
+
+
+@pytest.mark.asyncio
+async def test_set_signal_telemetry(widget: TabUtility) -> None:
+
+    capacitor_bank = deepcopy(widget.model.status.capacitor_bank)
+    capacitor_bank["doorOpen"][0] = True
+
+    widget.model.report_capacitor_bank(capacitor_bank)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    indicator = widget._indicators_capacitor["doorOpen"][0]
+    assert indicator.palette().color(QPalette.Base) == Qt.red
