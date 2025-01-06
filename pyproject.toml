@@ -17,6 +17,7 @@ dependencies = [
     "qasync",
     "ts_xml",
     "ts_guitool",
+    "ts_mtdomecom",
 ]
 
 [tool.setuptools.dynamic]

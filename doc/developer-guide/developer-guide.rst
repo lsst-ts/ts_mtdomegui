@@ -13,6 +13,7 @@ Dependencies
 
 * `ts_xml <https://github.com/lsst-ts/ts_xml>`_
 * `ts_guitool <https://github.com/lsst-ts/ts_guitool>`_
+* `ts_mtdomecom <https://github.com/lsst-ts/ts_mtdomecom>`_
 
 .. _Architecture:
 
