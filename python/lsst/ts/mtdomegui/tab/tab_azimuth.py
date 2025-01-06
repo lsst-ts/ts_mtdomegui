@@ -32,9 +32,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+from qasync import asyncSlot
 
 from ..constants import NUM_DRIVE_AZIMUTH, NUM_POSITION_AZIMUTH, NUM_TEMPERATURE_AZIMUTH
 from ..model import Model
+from ..signals import SignalTelemetry
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
 from .tab_figure import TabFigure
 
@@ -67,6 +69,8 @@ class TabAzimuth(TabTemplate):
         self._buttons = self._create_buttons()
 
         self.set_widget_and_layout()
+
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
 
         self._set_default()
 
@@ -323,6 +327,71 @@ class TabAzimuth(TabTemplate):
 
         return create_group_box("Real-time Chart", layout)
 
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
+
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
+
+        signal.amcs.connect(self._callback_telemetry)
+
+    @asyncSlot()
+    async def _callback_telemetry(self, telemetry: dict) -> None:
+        """Callback to update the telemetry.
+
+        Parameters
+        ----------
+        telemetry : `dict`
+            Telemetry.
+        """
+
+        # Label
+        position_commanded = telemetry["positionCommanded"]
+        position_actual = telemetry["positionActual"]
+        self._status["position_commanded"].setText(  # type: ignore[union-attr]
+            f"{position_commanded:.2f} deg"
+        )
+        self._status["position_actual"].setText(f"{position_actual:.2f} deg")  # type: ignore[union-attr]
+
+        velocity_commanded = telemetry["velocityCommanded"]
+        velocity_actual = telemetry["velocityActual"]
+        self._status["velocity_commanded"].setText(  # type: ignore[union-attr]
+            f"{velocity_commanded:.2f} deg/sec"
+        )
+        self._status["velocity_actual"].setText(f"{velocity_actual:.2f} deg/sec")  # type: ignore[union-attr]
+
+        for idx in range(NUM_DRIVE_AZIMUTH):
+            self._status["drive_torque_commanded"][idx].setText(
+                f"{telemetry['driveTorqueCommanded'][idx]:.2f} J"
+            )
+            self._status["drive_torque_actual"][idx].setText(
+                f"{telemetry['driveTorqueActual'][idx]:.2f} J"
+            )
+            self._status["drive_current_actual"][idx].setText(
+                f"{telemetry['driveCurrentActual'][idx]:.2f} A"
+            )
+
+        for idx in range(NUM_TEMPERATURE_AZIMUTH):
+            self._status["drive_temperature"][idx].setText(
+                f"{telemetry['driveTemperature'][idx]:.2f} deg C"
+            )
+
+        # Real-time chart
+        self._figures["position"].append_data([position_commanded, position_actual])
+        self._figures["velocity"].append_data([velocity_commanded, velocity_actual])
+
+        self._figures["drive_torque"].append_data(telemetry["driveTorqueActual"])
+        self._figures["drive_current"].append_data(telemetry["driveCurrentActual"])
+        self._figures["drive_temperature"].append_data(telemetry["driveTemperature"])
+
+        self._figures["encoder_head"].append_data(telemetry["encoderHeadCalibrated"])
+        self._figures["position_encoder"].append_data(
+            telemetry["barcodeHeadCalibrated"]
+        )
+
     def _set_default(self) -> None:
         """Set the default values."""
 
@@ -334,17 +403,3 @@ class TabAzimuth(TabTemplate):
 
         self._states["target_position"].setText("0 deg")
         self._states["target_velocity"].setText("0 deg/sec")
-
-        self._status["position_commanded"].setText("0 deg")  # type: ignore[union-attr]
-        self._status["position_actual"].setText("0 deg")  # type: ignore[union-attr]
-
-        self._status["velocity_commanded"].setText("0 deg/sec")  # type: ignore[union-attr]
-        self._status["velocity_actual"].setText("0 deg/sec")  # type: ignore[union-attr]
-
-        for idx in range(NUM_DRIVE_AZIMUTH):
-            self._status["drive_torque_commanded"][idx].setText("0 J")
-            self._status["drive_torque_actual"][idx].setText("0 J")
-            self._status["drive_current_actual"][idx].setText("0 A")
-
-        for idx in range(NUM_TEMPERATURE_AZIMUTH):
-            self._status["drive_temperature"][idx].setText("0 deg C")

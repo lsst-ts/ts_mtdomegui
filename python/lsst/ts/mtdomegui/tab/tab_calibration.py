@@ -30,8 +30,10 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+from qasync import asyncSlot
 
 from ..model import Model
+from ..signals import SignalTelemetry
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
 from .tab_figure import TabFigure
 
@@ -64,7 +66,7 @@ class TabCalibration(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_default()
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_status(self) -> dict[str, QLabel]:
         """Create the status.
@@ -250,16 +252,57 @@ class TabCalibration(TabTemplate):
 
         return create_group_box("Real-time Chart", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
 
-        self._status["position_commanded"].setText("0")
-        self._status["position_actual"].setText("0")
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
 
-        self._status["drive_torque_commanded"].setText("0 J")
-        self._status["drive_torque_actual"].setText("0 J")
-        self._status["drive_current_actual"].setText("0 A")
+        signal.cscs.connect(self._callback_telemetry)
 
-        self._status["drive_temperature"].setText("0 deg C")
+    @asyncSlot()
+    async def _callback_telemetry(self, telemetry: dict) -> None:
+        """Callback to update the telemetry.
 
-        self._status["power_draw"].setText("0 W")
+        Parameters
+        ----------
+        telemetry : `dict`
+            Telemetry.
+        """
+
+        # Label
+        position_commanded = telemetry["positionCommanded"]
+        position_actual = telemetry["positionActual"]
+        self._status["position_commanded"].setText(f"{position_commanded:.2f}")
+        self._status["position_actual"].setText(f"{position_actual:.2f}")
+
+        self._status["drive_torque_commanded"].setText(
+            f"{telemetry['driveTorqueCommanded']:.2f} J"
+        )
+        self._status["drive_torque_actual"].setText(
+            f"{telemetry['driveTorqueActual']:.2f} J"
+        )
+        self._status["drive_current_actual"].setText(
+            f"{telemetry['driveCurrentActual']:.2f} A"
+        )
+
+        self._status["drive_temperature"].setText(
+            f"{telemetry['driveTemperature']:.2f} deg C"
+        )
+
+        power = telemetry["powerDraw"]
+        self._status["power_draw"].setText(f"{power:.2f} W")  # type: ignore[union-attr]
+
+        # Real-time chart
+        self._figures["position"].append_data([position_commanded, position_actual])
+
+        self._figures["drive_torque"].append_data([telemetry["driveTorqueActual"]])
+        self._figures["drive_current"].append_data([telemetry["driveCurrentActual"]])
+        self._figures["drive_temperature"].append_data([telemetry["driveTemperature"]])
+
+        self._figures["encoder_head"].append_data([telemetry["encoderHeadCalibrated"]])
+
+        self._figures["power"].append_data([power])

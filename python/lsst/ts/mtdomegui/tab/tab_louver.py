@@ -30,8 +30,11 @@ from lsst.ts.guitool import (
 )
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QPushButton, QVBoxLayout
+from qasync import asyncSlot
 
+from ..constants import NUM_DRIVE_LOUVER, NUM_TEMPERATURE_LOUVER
 from ..model import Model
+from ..signals import SignalTelemetry
 from .tab_figure import TabFigure
 from .tab_louver_single import TabLouverSingle
 
@@ -70,7 +73,7 @@ class TabLouver(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_default()
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_tabs(self) -> list[TabLouverSingle]:
         """Create the tabs.
@@ -180,7 +183,54 @@ class TabLouver(TabTemplate):
         layout = create_grid_layout_buttons(self._buttons["louver"], num_column)
         return create_group_box("Louver", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
 
-        self._power.setText("0 W")
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
+
+        signal.lcs.connect(self._callback_telemetry)
+
+    @asyncSlot()
+    async def _callback_telemetry(self, telemetry: dict) -> None:
+        """Callback to update the telemetry.
+
+        Parameters
+        ----------
+        telemetry : `dict`
+            Telemetry.
+        """
+
+        # Update each single louver
+        num = len(self._get_louver_names())
+        for idx in range(num):
+            self._tabs[idx].update_position(
+                telemetry["positionCommanded"][idx],
+                telemetry["positionActual"][idx],
+            )
+
+        for idx in range(num):
+            idx_start = idx * NUM_DRIVE_LOUVER
+            idx_end = idx_start + NUM_DRIVE_LOUVER
+            self._tabs[idx].update_drive(
+                telemetry["driveTorqueCommanded"][idx_start:idx_end],
+                telemetry["driveTorqueActual"][idx_start:idx_end],
+                telemetry["driveCurrentActual"][idx_start:idx_end],
+                telemetry["encoderHeadCalibrated"][idx_start:idx_end],
+            )
+
+        for idx in range(num):
+            idx_start = idx * NUM_TEMPERATURE_LOUVER
+            idx_end = idx_start + NUM_TEMPERATURE_LOUVER
+            self._tabs[idx].update_temperature(
+                telemetry["driveTemperature"][idx_start:idx_end],
+            )
+
+        power = telemetry["powerDraw"]
+        self._power.setText(f"{power:.2f} W")  # type: ignore[union-attr]
+
+        # Real-time chart
+        self._figure.append_data([power])

@@ -23,6 +23,7 @@ __all__ = ["TabApertureShutter"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
 from lsst.ts.mtdomecom import ResponseCode
+from lsst.ts.mtdomecom.mock_llc import NUM_SHUTTERS
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -32,9 +33,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+from qasync import asyncSlot
 
 from ..constants import NUM_DRIVE_SHUTTER, NUM_RESOLVER_SHUTTER, NUM_TEMPERATURE_SHUTTER
 from ..model import Model
+from ..signals import SignalTelemetry
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
 from .tab_figure import TabFigure
 
@@ -68,6 +71,8 @@ class TabApertureShutter(TabTemplate):
 
         self.set_widget_and_layout()
 
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
+
         self._set_default()
 
     def _create_states(self) -> dict[str, QLabel]:
@@ -95,14 +100,17 @@ class TabApertureShutter(TabTemplate):
             System status.
         """
 
+        position_actual = [create_label() for _ in range(NUM_SHUTTERS)]
+        position_commanded = [create_label() for _ in range(NUM_SHUTTERS)]
+
         drive_torque_actual = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
         drive_torque_commanded = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
         drive_current_actual = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
         drive_temperature = [create_label() for _ in range(NUM_TEMPERATURE_SHUTTER)]
 
         return {
-            "position_actual": create_label(),
-            "position_commanded": create_label(),
+            "position_actual": position_actual,
+            "position_commanded": position_commanded,
             "drive_torque_actual": drive_torque_actual,
             "drive_torque_commanded": drive_torque_commanded,
             "drive_current_actual": drive_current_actual,
@@ -237,8 +245,15 @@ class TabApertureShutter(TabTemplate):
         """
 
         layout = QFormLayout()
-        layout.addRow("Position (commanded):", self._status["position_commanded"])
-        layout.addRow("Position (actual):", self._status["position_actual"])
+
+        for idx in range(NUM_SHUTTERS):
+            layout.addRow(
+                f"Position {idx} (commanded):", self._status["position_commanded"][idx]
+            )
+            layout.addRow(
+                f"Position {idx} (actual):", self._status["position_actual"][idx]
+            )
+            add_empty_row_to_form_layout(layout)
 
         return create_group_box("Position", layout)
 
@@ -315,6 +330,68 @@ class TabApertureShutter(TabTemplate):
 
         return create_group_box("Real-time Chart", layout)
 
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
+
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
+
+        signal.apscs.connect(self._callback_telemetry)
+
+    @asyncSlot()
+    async def _callback_telemetry(self, telemetry: dict) -> None:
+        """Callback to update the telemetry.
+
+        Parameters
+        ----------
+        telemetry : `dict`
+            Telemetry.
+        """
+
+        # Label
+        position_commanded = telemetry["positionCommanded"]
+        position_actual = telemetry["positionActual"]
+        for idx in range(NUM_SHUTTERS):
+            self._status["position_commanded"][idx].setText(
+                f"{position_commanded[idx]:.2f} deg"
+            )
+            self._status["position_actual"][idx].setText(
+                f"{position_actual[idx]:.2f} deg"
+            )
+
+        for idx in range(NUM_DRIVE_SHUTTER):
+            self._status["drive_torque_commanded"][idx].setText(
+                f"{telemetry['driveTorqueCommanded'][idx]:.2f} J"
+            )
+            self._status["drive_torque_actual"][idx].setText(
+                f"{telemetry['driveTorqueActual'][idx]:.2f} J"
+            )
+            self._status["drive_current_actual"][idx].setText(
+                f"{telemetry['driveCurrentActual'][idx]:.2f} A"
+            )
+
+        for idx in range(NUM_TEMPERATURE_SHUTTER):
+            self._status["drive_temperature"][idx].setText(
+                f"{telemetry['driveTemperature'][idx]:.2f} deg C"
+            )
+
+        power = telemetry["powerDraw"]
+        self._status["power_draw"].setText(f"{power:.2f} W")  # type: ignore[union-attr]
+
+        # Real-time chart
+        self._figures["position"].append_data(position_commanded + position_actual)
+
+        self._figures["drive_torque"].append_data(telemetry["driveTorqueActual"])
+        self._figures["drive_current"].append_data(telemetry["driveCurrentActual"])
+        self._figures["drive_temperature"].append_data(telemetry["driveTemperature"])
+
+        self._figures["resolver"].append_data(telemetry["resolverHeadCalibrated"])
+
+        self._figures["power"].append_data([power])
+
     def _set_default(self) -> None:
         """Set the default values."""
 
@@ -323,16 +400,3 @@ class TabApertureShutter(TabTemplate):
         self._states["in_position"].setText("False")
 
         self._states["fault_code"].setText(ResponseCode.OK.name)
-
-        self._status["position_commanded"].setText("0 deg")  # type: ignore[union-attr]
-        self._status["position_actual"].setText("0 deg")  # type: ignore[union-attr]
-
-        self._status["power_draw"].setText("0 W")  # type: ignore[union-attr]
-
-        for idx in range(NUM_DRIVE_SHUTTER):
-            self._status["drive_torque_commanded"][idx].setText("0 J")
-            self._status["drive_torque_actual"][idx].setText("0 J")
-            self._status["drive_current_actual"][idx].setText("0 A")
-
-        for idx in range(NUM_TEMPERATURE_SHUTTER):
-            self._status["drive_temperature"][idx].setText("0 deg C")

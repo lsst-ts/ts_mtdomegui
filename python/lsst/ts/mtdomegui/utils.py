@@ -23,6 +23,7 @@ __all__ = [
     "combine_indicators",
     "update_boolean_indicator_status",
     "add_empty_row_to_form_layout",
+    "generate_dict_from_registry",
 ]
 
 from lsst.ts.guitool import ButtonStatus, TabTemplate, set_button, update_button_color
@@ -115,3 +116,49 @@ def create_buttons_with_tabs(
         )
 
     return buttons
+
+
+def generate_dict_from_registry(
+    registry: dict, component: str, default_number: float = 0.0
+) -> dict:
+    """Generate a dictionary data from the registry schema in ts_mtdomecom.
+
+    Parameters
+    ----------
+    registry : `dict`
+        Registry schema.
+    component : `str`
+        Component defined in the registry.
+    default_number: `float`, optional
+        Default number. This is used in the tests. (the default is 0.0)
+
+    Returns
+    -------
+    data : `dict`
+        Data.
+    """
+
+    def _generate_array(schema: dict) -> list:
+
+        specific_type = schema["items"][0]["type"]
+        num = schema["maxItems"]
+
+        if specific_type == "number":
+            return [default_number] * num
+        elif specific_type == "boolean":
+            return [False] * num
+        else:
+            return [None] * num
+
+    properties = registry[component]["properties"][component]["properties"]
+
+    data = dict()
+    for key, value in properties.items():
+        if value["type"] == "array":
+            data[key] = _generate_array(value)  # type: ignore[assignment]
+        elif value["type"] == "boolean":
+            data[key] = False  # type: ignore[assignment]
+        elif value["type"] == "number":
+            data[key] = default_number  # type: ignore[assignment]
+
+    return data

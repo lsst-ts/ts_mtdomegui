@@ -65,8 +65,6 @@ class TabLouverSingle(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_default()
-
     def _create_status(self) -> dict[str, QLabel | list[QLabel]]:
         """Create the status.
 
@@ -259,16 +257,73 @@ class TabLouverSingle(TabTemplate):
 
         return create_group_box("Real-time Chart", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def update_position(
+        self, position_commanded: float, position_actual: float
+    ) -> None:
+        """Update the position.
 
-        self._status["position_commanded"].setText("0 %")  # type: ignore[union-attr]
-        self._status["position_actual"].setText("0 %")  # type: ignore[union-attr]
+        Parameters
+        ----------
+        position_commanded : `float`
+            Commanded position.
+        position_actual : `float`
+            Actual position.
+        """
+
+        self._status["position_commanded"].setText(f"{position_commanded:.2f} %")  # type: ignore[union-attr]
+        self._status["position_actual"].setText(f"{position_actual:.2f} %")  # type: ignore[union-attr]
+
+        self._figures["position"].append_data([position_commanded, position_actual])
+
+    def update_drive(
+        self,
+        torque_commanded: list[float],
+        torque_actual: list[float],
+        current_actual: list[float],
+        encoder_head: list[float],
+    ) -> None:
+        """Update the drive.
+
+        Parameters
+        ----------
+        torque_commanded : `list` [`float`]
+            Commanded torque in J.
+        torque_actual : `list` [`float`]
+            Actual torque in J.
+        current_actual : `list` [`float`]
+            Actual current in A.
+        encoder_head : `list` [`float`]
+            Calibrated encoder head in deg.
+        """
 
         for idx in range(NUM_DRIVE_LOUVER):
-            self._status["drive_torque_commanded"][idx].setText("0 J")
-            self._status["drive_torque_actual"][idx].setText("0 J")
-            self._status["drive_current_actual"][idx].setText("0 A")
+            self._status["drive_torque_commanded"][idx].setText(
+                f"{torque_commanded[idx]:.2f} J"
+            )
+            self._status["drive_torque_actual"][idx].setText(
+                f"{torque_actual[idx]:.2f} J"
+            )
+            self._status["drive_current_actual"][idx].setText(
+                f"{current_actual[idx]:.2f} A"
+            )
+
+        self._figures["drive_torque"].append_data(torque_actual)
+        self._figures["drive_current"].append_data(current_actual)
+
+        self._figures["encoder_head"].append_data(encoder_head)
+
+    def update_temperature(self, temperature: list[float]) -> None:
+        """Update the temperature.
+
+        Parameters
+        ----------
+        temperature : `list` [`float`]
+            Temperature in deg C.
+        """
 
         for idx in range(NUM_TEMPERATURE_LOUVER):
-            self._status["drive_temperature"][idx].setText("0 deg C")
+            self._status["drive_temperature"][idx].setText(
+                f"{temperature[idx]:.2f} deg C"
+            )
+
+        self._figures["drive_temperature"].append_data(temperature)

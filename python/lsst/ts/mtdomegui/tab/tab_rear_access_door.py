@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QVBoxLayout,
 )
+from qasync import asyncSlot
 
 from ..constants import (
     NUM_DOOR_BRAKE,
@@ -46,6 +47,7 @@ from ..constants import (
     NUM_TEMPERATURE_DOOR,
 )
 from ..model import Model
+from ..signals import SignalTelemetry
 from ..utils import (
     add_empty_row_to_form_layout,
     combine_indicators,
@@ -84,7 +86,7 @@ class TabRearAccessDoor(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_default()
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_status(self) -> dict[str, QLabel | list[QLabel]]:
         """Create the status.
@@ -153,7 +155,12 @@ class TabRearAccessDoor(TabTemplate):
         """
 
         return {
-            "position": TabFigure("Position", self.model, "%", ["commanded", "actual"]),
+            "position": TabFigure(
+                "Position",
+                self.model,
+                "%",
+                ["commanded 0", "commanded 1", "actual 0", "actual 1"],
+            ),
             "drive_torque": TabFigure(
                 "Actual Drive Torque",
                 self.model,
@@ -358,26 +365,96 @@ class TabRearAccessDoor(TabTemplate):
 
         return create_group_box("Real-time Chart", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
 
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
+
+        signal.rad.connect(self._callback_telemetry)
+
+    @asyncSlot()
+    async def _callback_telemetry(self, telemetry: dict) -> None:
+        """Callback to update the telemetry.
+
+        Parameters
+        ----------
+        telemetry : `dict`
+            Telemetry.
+        """
+
+        # Label
+        position_commanded = telemetry["positionCommanded"]
+        position_actual = telemetry["positionActual"]
         for idx in range(NUM_DRIVE_DOOR):
-            self._status["position_commanded"][idx].setText("0")
-            self._status["position_actual"][idx].setText("0")
+            self._status["position_commanded"][idx].setText(
+                f"{position_commanded[idx]:.2f} %"
+            )
+            self._status["position_actual"][idx].setText(
+                f"{position_actual[idx]:.2f} %"
+            )
 
-            self._status["drive_torque_commanded"][idx].setText("0 J")
-            self._status["drive_torque_actual"][idx].setText("0 J")
-            self._status["drive_current_actual"][idx].setText("0 A")
+            self._status["drive_torque_commanded"][idx].setText(
+                f"{telemetry['driveTorqueCommanded'][idx]:.2f} J"
+            )
+            self._status["drive_torque_actual"][idx].setText(
+                f"{telemetry['driveTorqueActual'][idx]:.2f} J"
+            )
+            self._status["drive_current_actual"][idx].setText(
+                f"{telemetry['driveCurrentActual'][idx]:.2f} A"
+            )
 
         for idx in range(NUM_TEMPERATURE_DOOR):
-            self._status["drive_temperature"][idx].setText("0 deg C")
+            self._status["drive_temperature"][idx].setText(
+                f"{telemetry['driveTemperature'][idx]:.2f} deg C"
+            )
 
-        self._status["power_draw"].setText("0 W")  # type: ignore[union-attr]
+        power = telemetry["powerDraw"]
+        self._status["power_draw"].setText(f"{power:.2f} W")  # type: ignore[union-attr]
 
-        for indicators in self._indicators.values():
+        # Real-time chart
+        self._figures["position"].append_data(position_commanded + position_actual)
+
+        self._figures["drive_torque"].append_data(telemetry["driveTorqueActual"])
+        self._figures["drive_current"].append_data(telemetry["driveCurrentActual"])
+        self._figures["drive_temperature"].append_data(telemetry["driveTemperature"])
+
+        self._figures["resolver"].append_data(telemetry["resolverHeadCalibrated"])
+
+        self._figures["power"].append_data([power])
+
+        # Indicators
+        names = [
+            "limit_switch_open",
+            "limit_switch_close",
+            "pin",
+            "brake",
+            "photoelectric_sensor",
+            "curtain",
+        ]
+        fields = [
+            "openLimitSwitchEngaged",
+            "closeLimitSwitchEngaged",
+            "lockingPins",
+            "brakesEngaged",
+            "photoelectricSensorClear",
+            "lightCurtainClear",
+        ]
+        for name, field in zip(names, fields):
+            indicators = self._indicators[name]
+            values = telemetry[field]
+
             if isinstance(indicators, QRadioButton):
-                update_boolean_indicator_status(indicators, False)
+                update_boolean_indicator_status(indicators, values)
                 continue
 
-            for indicator in indicators:
-                update_boolean_indicator_status(indicator, False)
+            for indicator, value in zip(indicators, values):
+                # TODO: Wait for the DM-48350 to give the detail of enum
+                # value.
+                if field == "lockingPins":
+                    update_boolean_indicator_status(indicator, bool(value))
+                else:
+                    update_boolean_indicator_status(indicator, value)
