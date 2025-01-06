@@ -22,6 +22,7 @@
 __all__ = ["TabElevation"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.mtdomecom import ResponseCode
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -37,7 +38,6 @@ from ..constants import (
     NUM_RESOLVER_ELEVATION,
     NUM_TEMPERATURE_ELEVATION,
 )
-from ..enums import ResponseCode
 from ..model import Model
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
 from .tab_figure import TabFigure

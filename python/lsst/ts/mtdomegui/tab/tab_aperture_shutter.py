@@ -22,6 +22,7 @@
 __all__ = ["TabApertureShutter"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.mtdomecom import ResponseCode
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -33,7 +34,6 @@ from PySide6.QtWidgets import (
 )
 
 from ..constants import NUM_DRIVE_SHUTTER, NUM_RESOLVER_SHUTTER, NUM_TEMPERATURE_SHUTTER
-from ..enums import ResponseCode
 from ..model import Model
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
 from .tab_figure import TabFigure
