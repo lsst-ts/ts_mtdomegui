@@ -34,5 +34,7 @@ from .constants import *
 from .control_panel import *
 from .main_window import *
 from .model import *
+from .signals import *
+from .status import *
 from .tab import *
 from .utils import *
