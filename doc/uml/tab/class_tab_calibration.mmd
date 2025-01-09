@@ -6,12 +6,16 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class SignalTelemetry
 }
+
+Model *-- SignalTelemetry : emit()
 
 TabTemplate <|-- TabCalibration
 TabTemplate <|-- TabFigure
 
 TabCalibration *-- Model
 TabCalibration "1" *-- "6" TabFigure
+TabCalibration --> SignalTelemetry : connect()
 
 TabFigure *-- Model

@@ -18,8 +18,16 @@ MainWindow *-- ControlTabs
 MainWindow *-- ControlPanel
 MainWindow *-- TabSettings
 
+Model *-- Status
+Model *-- SignalInterlock : emit()
+Model *-- SignalState : emit()
+Model *-- SignalOperationalMode : emit()
+Model *-- SignalTelemetry : emit()
+
 ControlPanel *-- Model
 ControlPanel *-- TabInterlock
+ControlPanel --> SignalInterlock : connect()
+ControlPanel --> SignalState : connect()
 
 TabSettings *-- Model
 TabInterlock *-- Model

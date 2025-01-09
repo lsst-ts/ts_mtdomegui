@@ -7,7 +7,10 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class SignalTelemetry
 }
+
+Model *-- SignalTelemetry : emit()
 
 TabTemplate <|-- TabThermalSystem
 TabTemplate <|-- TabSelector
@@ -15,5 +18,6 @@ TabTemplate <|-- TabSelector
 TabThermalSystem *-- Model
 TabThermalSystem *-- TabSelector
 TabThermalSystem *-- FigureConstant
+TabThermalSystem --> SignalTelemetry : connect()
 
 TabSelector *-- Model
