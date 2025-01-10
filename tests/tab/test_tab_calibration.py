@@ -53,3 +53,39 @@ async def test_show_figure(qtbot: QtBot, widget: TabCalibration) -> None:
     await asyncio.sleep(1)
 
     assert widget._figures["position"].isVisible() is True
+
+
+@pytest.mark.asyncio
+async def test_set_signal_telemetry(widget: TabCalibration) -> None:
+
+    # TODO: Remove this workaround after the DM-48368 is fixed.
+    data_cscs = {
+        "positionActual": 1.0,
+        "positionCommanded": 1.0,
+        "driveTorqueActual": 1.0,
+        "driveTorqueCommanded": 1.0,
+        "driveCurrentActual": 1.0,
+        "driveTemperature": 1.0,
+        "encoderHeadRaw": 1.0,
+        "encoderHeadCalibrated": 1.0,
+        "powerDraw": 1.0,
+        "timestamp": 1.0,
+    }
+    widget.model.report_telemetry("cscs", data_cscs)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._status["position_commanded"].text() == "1.00"
+    assert widget._status["position_actual"].text() == "1.00"
+
+    assert widget._status["drive_torque_commanded"].text() == "1.00 J"
+    assert widget._status["drive_torque_actual"].text() == "1.00 J"
+    assert widget._status["drive_current_actual"].text() == "1.00 A"
+
+    assert widget._status["drive_temperature"].text() == "1.00 deg C"
+
+    assert widget._status["power_draw"].text() == "1.00 W"
+
+    for figure in widget._figures.values():
+        assert figure._data[0][-1] == 1.0

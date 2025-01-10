@@ -1,2 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline([], "ts-mtdomegui", "lsst.ts.mtdomegui", "noarch")
+CondaPipeline(["ts_config_mttcs"], "ts-mtdomegui", "lsst.ts.mtdomegui", "noarch")

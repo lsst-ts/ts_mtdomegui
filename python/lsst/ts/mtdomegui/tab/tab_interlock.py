@@ -124,3 +124,16 @@ class TabInterlock(TabTemplate):
         layout = create_grid_layout_buttons(self._indicators_interlock, num_column)
 
         return create_group_box("Interlock Status", layout)
+
+    def update_interlock_status(self, index: int, is_triggered: bool) -> None:
+        """ "Update the interlock status.
+
+        Parameters
+        ----------
+        index : `int`
+            Index of the interlock.
+        is_triggered : `bool`
+            Is triggered or not.
+        """
+
+        self._update_indicator_color(self._indicators_interlock[index], is_triggered)

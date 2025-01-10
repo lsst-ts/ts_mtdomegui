@@ -4,6 +4,8 @@
 #   the "sconsUtils" package.
 setupRequired(ts_xml)
 setupRequired(ts_guitool)
+setupRequired(ts_mtdomecom)
+setupRequired(ts_config_mttcs)
 
 envPrepend(PATH, ${PRODUCT_DIR}/bin)
 

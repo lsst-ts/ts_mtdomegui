@@ -23,7 +23,13 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import NUM_DRIVE_SHUTTER, NUM_TEMPERATURE_SHUTTER, Model
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import (
+    NUM_DRIVE_SHUTTER,
+    NUM_TEMPERATURE_SHUTTER,
+    Model,
+    generate_dict_from_registry,
+)
 from lsst.ts.mtdomegui.tab import TabApertureShutter
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
@@ -54,3 +60,28 @@ async def test_show_figure(qtbot: QtBot, widget: TabApertureShutter) -> None:
     await asyncio.sleep(1)
 
     assert widget._figures["position"].isVisible() is True
+
+
+@pytest.mark.asyncio
+async def test_set_signal_telemetry(widget: TabApertureShutter) -> None:
+
+    widget.model.report_telemetry(
+        "apscs", generate_dict_from_registry(registry, "ApSCS", default_number=1.0)
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._status["position_commanded"][0].text() == "1.00 deg"
+    assert widget._status["position_actual"][0].text() == "1.00 deg"
+
+    assert widget._status["drive_torque_commanded"][0].text() == "1.00 J"
+    assert widget._status["drive_torque_actual"][0].text() == "1.00 J"
+    assert widget._status["drive_current_actual"][0].text() == "1.00 A"
+
+    assert widget._status["drive_temperature"][0].text() == "1.00 deg C"
+
+    assert widget._status["power_draw"].text() == "1.00 W"
+
+    for figure in widget._figures.values():
+        assert figure._data[0][-1] == 1.0

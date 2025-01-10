@@ -19,22 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import typing
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import generate_dict_from_registry
 
-if typing.TYPE_CHECKING:
-    __version__ = "?"
-else:
-    try:
-        from .version import *
-    except ImportError:
-        __version__ = "?"
 
-from .application import *
-from .constants import *
-from .control_panel import *
-from .main_window import *
-from .model import *
-from .signals import *
-from .status import *
-from .tab import *
-from .utils import *
+def test_generate_dict_from_registry() -> None:
+
+    data = generate_dict_from_registry(registry, "RAD", default_number=1.0)
+
+    assert data["powerDraw"] == 1.0
+    assert data["photoelectricSensorClear"] is False
+
+    assert data["positionCommanded"][0] == 1.0
+    assert data["openLimitSwitchEngaged"][0] is False

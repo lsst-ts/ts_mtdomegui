@@ -6,7 +6,10 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class SignalTelemetry
 }
+
+Model *-- SignalTelemetry : emit()
 
 TabTemplate <|-- TabLouver
 TabTemplate <|-- TabLouverSingle
@@ -15,6 +18,7 @@ TabTemplate <|-- TabFigure
 TabLouver *-- Model
 TabLouver "1" *-- "34" TabLouverSingle
 TabLouver *-- TabFigure
+TabLouver --> SignalTelemetry : connect()
 
 TabLouverSingle *-- Model
 

@@ -23,9 +23,12 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import Model
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabRearAccessDoor
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QRadioButton
 from pytestqt.qtbot import QtBot
 
 
@@ -56,3 +59,35 @@ async def test_show_figure(qtbot: QtBot, widget: TabRearAccessDoor) -> None:
     await asyncio.sleep(1)
 
     assert widget._figures[name].isVisible() is True
+
+
+@pytest.mark.asyncio
+async def test_set_signal_telemetry(widget: TabRearAccessDoor) -> None:
+
+    widget.model.report_telemetry(
+        "rad", generate_dict_from_registry(registry, "RAD", default_number=1.0)
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._status["position_commanded"][0].text() == "1.00 %"
+    assert widget._status["position_actual"][0].text() == "1.00 %"
+
+    assert widget._status["drive_torque_commanded"][0].text() == "1.00 J"
+    assert widget._status["drive_torque_actual"][0].text() == "1.00 J"
+    assert widget._status["drive_current_actual"][0].text() == "1.00 A"
+
+    assert widget._status["drive_temperature"][0].text() == "1.00 deg C"
+
+    assert widget._status["power_draw"].text() == "1.00 W"
+
+    for figure in widget._figures.values():
+        assert figure._data[0][-1] == 1.0
+
+    for indicators in widget._indicators.values():
+        if isinstance(indicators, QRadioButton):
+            assert indicators.palette().color(QPalette.Base) == Qt.green
+        else:
+            for indicator in indicators:
+                assert indicator.palette().color(QPalette.Base) in (Qt.green, Qt.red)

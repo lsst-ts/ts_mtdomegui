@@ -23,7 +23,12 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import NUM_TEMPERATURE_THERMAL, Model
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import (
+    NUM_TEMPERATURE_THERMAL,
+    Model,
+    generate_dict_from_registry,
+)
 from lsst.ts.mtdomegui.tab import TabThermalSystem
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
@@ -81,3 +86,19 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
     assert widget._figure.get_points(0)[-1].y() == 0.1
     assert widget._figure.get_points(1)[-1].y() == 2.4
+
+
+@pytest.mark.asyncio
+async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
+
+    widget.model.report_telemetry(
+        "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._temperatures[0] == 1.00
+
+    for senser in widget._sensors:
+        assert senser.text() == "1.00 deg C"

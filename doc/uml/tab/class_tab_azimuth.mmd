@@ -6,12 +6,16 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class SignalTelemetry
 }
+
+Model *-- SignalTelemetry : emit()
 
 TabTemplate <|-- TabAzimuth
 TabTemplate <|-- TabFigure
 
 TabAzimuth *-- Model
 TabAzimuth "1" *-- "7" TabFigure
+TabAzimuth --> SignalTelemetry : connect()
 
 TabFigure *-- Model

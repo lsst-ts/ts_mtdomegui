@@ -23,7 +23,8 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import Model
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabLouver
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
@@ -68,3 +69,30 @@ async def test_show_louver(qtbot: QtBot, widget: TabLouver) -> None:
     await asyncio.sleep(1)
 
     assert widget._tabs[0].isVisible() is True
+
+
+@pytest.mark.asyncio
+async def test_set_signal_telemetry(widget: TabLouver) -> None:
+
+    widget.model.report_telemetry(
+        "lcs", generate_dict_from_registry(registry, "LCS", default_number=1.0)
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._power.text() == "1.00 W"
+    assert widget._figure._data[0][-1] == 1.0
+
+    for louver in widget._tabs:
+        assert louver._status["position_commanded"].text() == "1.00 %"
+        assert louver._status["position_actual"].text() == "1.00 %"
+
+        assert louver._status["drive_torque_commanded"][0].text() == "1.00 J"
+        assert louver._status["drive_torque_actual"][0].text() == "1.00 J"
+        assert louver._status["drive_current_actual"][0].text() == "1.00 A"
+
+        assert louver._status["drive_temperature"][0].text() == "1.00 deg C"
+
+        for figure in louver._figures.values():
+            assert figure._data[0][-1] == 1.0

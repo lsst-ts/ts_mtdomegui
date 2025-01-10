@@ -27,11 +27,14 @@ from lsst.ts.guitool import (
     create_label,
     create_radio_indicators,
 )
+from lsst.ts.mtdomecom.mock_llc import NUM_CAPACITOR_BANKS
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QLabel, QRadioButton, QVBoxLayout
+from qasync import asyncSlot
 
 from ..constants import SUBSYSTEMS
 from ..model import Model
+from ..signals import SignalOperationalMode, SignalTelemetry
 from ..utils import combine_indicators, update_boolean_indicator_status
 
 
@@ -61,7 +64,8 @@ class TabUtility(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_default()
+        self._set_signal_operational_mode(self.model.signals["operational_mode"])  # type: ignore[arg-type]
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_modes(self) -> dict[str, QLabel]:
         """Create the operational modes of sub-systems.
@@ -83,17 +87,15 @@ class TabUtility(TabTemplate):
 
         Returns
         -------
-        `dict`
+        indicators : `dict`
             Dictionary of the indicators of the capacitors.
         """
 
-        return {
-            "fuse": create_radio_indicators(2),
-            "smoke": create_radio_indicators(2),
-            "temperature": create_radio_indicators(2),
-            "voltage": create_radio_indicators(2),
-            "door": create_radio_indicators(2),
-        }
+        indicators = dict()
+        for name in self.model.status.capacitor_bank.keys():
+            indicators[name] = create_radio_indicators(NUM_CAPACITOR_BANKS)
+
+        return indicators
 
     def create_layout(self) -> QVBoxLayout:
 
@@ -141,12 +143,53 @@ class TabUtility(TabTemplate):
 
         return create_group_box("Capacitor Banks", layout)
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_operational_mode(self, signal: SignalOperationalMode) -> None:
+        """Set the operational mode signal.
 
-        for mode in self._modes.values():
-            mode.setText(MTDome.OperationalMode.NORMAL.name)
+        Parameters
+        ----------
+        signal : `SignalOperationalMode`
+            Signal.
+        """
 
-        for indicators in self._indicators_capacitor.values():
-            for indicator in indicators:
-                update_boolean_indicator_status(indicator, False)
+        signal.subsystem_mode.connect(self._callback_subsystem_mode)
+
+    @asyncSlot()
+    async def _callback_subsystem_mode(
+        self, subsystem_mode: tuple[MTDome.SubSystemId, MTDome.OperationalMode]
+    ) -> None:
+        """Callback of the subsystem's operational mode.
+
+        Parameters
+        ----------
+        subsystem_mode : `tuple`
+            Subsystem's operational mode.
+        """
+
+        self._modes[subsystem_mode[0].name].setText(subsystem_mode[1].name)
+
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
+
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
+
+        signal.cbcs.connect(self._callback_status_cbcs)
+
+    @asyncSlot()
+    async def _callback_status_cbcs(self, cbcs: dict[str, list[bool]]) -> None:
+        """Callback of the status of capacitor bank control system (CBCS).
+
+        Parameters
+        ----------
+        cbcs : `dict`
+            CBCS status.
+        """
+
+        for key, values in cbcs.items():
+            indicators = self._indicators_capacitor[key]
+            for indicator, value in zip(indicators, values):
+                update_boolean_indicator_status(indicator, value)

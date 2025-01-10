@@ -42,6 +42,7 @@ from qasync import asyncSlot
 
 from ..constants import NUM_TEMPERATURE_THERMAL
 from ..model import Model
+from ..signals import SignalTelemetry
 from .tab_selector import TabSelector
 
 
@@ -87,7 +88,7 @@ class TabThermalSystem(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._update_sensors()
+        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_sensors(self) -> list[QLabel]:
         """Create the sensors.
@@ -257,8 +258,28 @@ class TabThermalSystem(TabTemplate):
 
         self.check_duration_and_restart_timer(self._timer, self.model.duration_refresh)
 
-    def _update_sensors(self) -> None:
-        """Update the sensors."""
+    def _set_signal_telemetry(self, signal: SignalTelemetry) -> None:
+        """Set the telemetry signal.
+
+        Parameters
+        ----------
+        signal : `SignalTelemetry`
+            Signal.
+        """
+
+        signal.thcs.connect(self._callback_telemetry)
+
+    @asyncSlot()
+    async def _callback_telemetry(self, telemetry: dict) -> None:
+        """Callback to update the telemetry.
+
+        Parameters
+        ----------
+        telemetry : `dict`
+            Telemetry.
+        """
+
+        self._temperatures = telemetry["temperature"]
 
         for sensor, temperature in zip(self._sensors, self._temperatures):
             sensor.setText(f"{temperature:.2f} deg C")

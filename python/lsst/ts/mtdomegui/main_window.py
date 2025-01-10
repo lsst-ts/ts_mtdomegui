@@ -131,6 +131,8 @@ class MainWindow(QMainWindow):
 
         self._add_tool_bar()
 
+        self.model.report_default()
+
         if is_simulation_mode:
             self.log.info("Running the simulation mode.")
 

@@ -13,6 +13,7 @@ Dependencies
 
 * `ts_xml <https://github.com/lsst-ts/ts_xml>`_
 * `ts_guitool <https://github.com/lsst-ts/ts_guitool>`_
+* `ts_mtdomecom <https://github.com/lsst-ts/ts_mtdomecom>`_
 
 .. _Architecture:
 
@@ -32,6 +33,33 @@ mtdomegui
 * **MainWindow** is the main window of the application.
 * **Model** contains the main business logic in the application.
 * **ControlPanel** shows the current system status.
+* **Status** is a data class that has the current controller status.
+
+The model–view–controller (MVC) architecture is used in this module.
+In this design, the view always shows the data sent from the model.
+This helps minimize the business logic in view and makes testing easier.
+
+The `Qt signal <https://doc.qt.io/qt-6/signalsandslots.html>`_ is used to do the data exchange.
+The `emit()` and `connect()` in the class diagrams mean the class **emits** a specific signal and **connects** it to a specific callback function.
+Signals are held and emitted from the **Model** to simplify the management of signals.
+
+Qt provides its event loop that is different from the event loop in Python `asyncio <https://docs.python.org/3/library/asyncio.html>`_ library.
+The `qasync <https://github.com/CabbageDevelopment/qasync>`_ allows coroutines (`async/await` keywords) to be used in PyQt/PySide applications by providing an implementation of the PEP-3156 event-loop.
+For the other tasks in a loop to run, an awaitable must be called from another coroutine.
+This allow for the coroutine to claim CPU and performs its operations.
+Therefore `await asyncio.sleep()` calls are placed in unit tests calls, so the signal handling etc. can occur.
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_signals:
+
+mtdomegui.signals
+-----------------
+
+The available Qt signals are listed below:
+
+* **SignalInterlock** sends the current interlock status.
+* **SignalState** sends the current state..
+* **SignalOperationalMode** sends the current operational mode.
+* **SignalTelemetry** sends the telemetry.
 
 .. _lsst.ts.mtdomegui-modules_mtdomegui_tab:
 
