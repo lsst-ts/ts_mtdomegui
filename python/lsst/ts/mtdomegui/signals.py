@@ -24,12 +24,16 @@ __all__ = [
     "SignalState",
     "SignalOperationalMode",
     "SignalTelemetry",
+    "SignalTarget",
+    "SignalMotion",
+    "SignalFaultCode",
 ]
 
 from PySide6 import QtCore
 
 
 class SignalInterlock(QtCore.QObject):
+    """Interlock signal to send the current interlock status."""
 
     # List of the safety interlock status. This should be the same as the
     # "MTDome_interlocks" in ts_xml. But I found another
@@ -46,6 +50,7 @@ class SignalInterlock(QtCore.QObject):
 
 
 class SignalState(QtCore.QObject):
+    """State signal to send the current state."""
 
     # Bitmask of the brakes that are engaged. This is not fully defined yet.
     # See the "MTDome_logevent_brakesEngaged" in ts_xml.
@@ -68,10 +73,14 @@ class SignalState(QtCore.QObject):
 
 
 class SignalOperationalMode(QtCore.QObject):
+    """Operational mode signal to send the current operational mode of each
+    control system.
 
-    # A tuple of (subsystem, mode) with the enums defined in
-    # `lsst.ts.xml.enums.MTDome.SubSystemId` and
-    # `lsst.ts.xml.enums.MTDome.OperationalMode`.
+    A tuple of (subsystem, mode) with the enums defined in
+    `lsst.ts.xml.enums.MTDome.SubSystemId` and
+    `lsst.ts.xml.enums.MTDome.OperationalMode`.
+    """
+
     subsystem_mode = QtCore.Signal(object)
 
 
@@ -101,3 +110,33 @@ class SignalTelemetry(QtCore.QObject):
 
     # Dictionary object defined in the "thcs_status.py" in ts_mtdomecom.
     thcs = QtCore.Signal(object)
+
+
+class SignalTarget(QtCore.QObject):
+    """Target signal to send the current target.
+
+    A tuple of (position, velocity) in deg and deg/sec.
+    """
+
+    position_velocity_azimuth = QtCore.Signal(object)
+    position_velocity_elevation = QtCore.Signal(object)
+
+
+class SignalMotion(QtCore.QObject):
+    """Motion signal to send the current motion state.
+
+    A tuple of (motion_state, in_position). "motion_state" is an enum
+    `lsst.ts.xml.enums.MTDome.MotionState`. "in_position" is a boolean value.
+    """
+
+    azimuth_axis = QtCore.Signal(object)
+    elevation_axis = QtCore.Signal(object)
+    aperture_shutter = QtCore.Signal(object)
+
+
+class SignalFaultCode(QtCore.QObject):
+    """Fault code signal to send the current fault condition."""
+
+    azimuth_axis = QtCore.Signal(str)
+    elevation_axis = QtCore.Signal(str)
+    aperture_shutter = QtCore.Signal(str)
