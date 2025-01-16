@@ -73,7 +73,7 @@ class TabLouver(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_tabs(self) -> list[TabLouverSingle]:
         """Create the tabs.
