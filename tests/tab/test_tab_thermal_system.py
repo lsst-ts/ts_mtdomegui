@@ -91,7 +91,7 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
 
-    widget.model.report_telemetry(
+    widget.model.reporter.report_telemetry(
         "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
     )
 

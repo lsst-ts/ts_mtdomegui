@@ -64,7 +64,7 @@ async def test_show_figure(qtbot: QtBot, widget: TabRearAccessDoor) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabRearAccessDoor) -> None:
 
-    widget.model.report_telemetry(
+    widget.model.reporter.report_telemetry(
         "rad", generate_dict_from_registry(registry, "RAD", default_number=1.0)
     )
 

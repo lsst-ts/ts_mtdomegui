@@ -74,7 +74,7 @@ async def test_show_louver(qtbot: QtBot, widget: TabLouver) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabLouver) -> None:
 
-    widget.model.report_telemetry(
+    widget.model.reporter.report_telemetry(
         "lcs", generate_dict_from_registry(registry, "LCS", default_number=1.0)
     )
 

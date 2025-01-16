@@ -50,7 +50,7 @@ async def test_set_signal_operational_mode(widget: TabUtility) -> None:
 
     subsystem = MTDome.SubSystemId.MONCS
     mode = MTDome.OperationalMode.DEGRADED
-    widget.model.report_operational_mode(subsystem, mode)
+    widget.model.reporter.report_operational_mode(subsystem, mode)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
@@ -61,10 +61,10 @@ async def test_set_signal_operational_mode(widget: TabUtility) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabUtility) -> None:
 
-    capacitor_bank = deepcopy(widget.model.status.capacitor_bank)
+    capacitor_bank = deepcopy(widget.model.reporter.status.capacitor_bank)
     capacitor_bank["doorOpen"][0] = True
 
-    widget.model.report_capacitor_bank(capacitor_bank)
+    widget.model.reporter.report_capacitor_bank(capacitor_bank)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)

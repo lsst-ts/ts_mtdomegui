@@ -31,6 +31,7 @@ from lsst.ts.mtdomegui import (
     generate_dict_from_registry,
 )
 from lsst.ts.mtdomegui.tab import TabApertureShutter
+from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -65,7 +66,7 @@ async def test_show_figure(qtbot: QtBot, widget: TabApertureShutter) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabApertureShutter) -> None:
 
-    widget.model.report_telemetry(
+    widget.model.reporter.report_telemetry(
         "apscs", generate_dict_from_registry(registry, "ApSCS", default_number=1.0)
     )
 
@@ -85,3 +86,39 @@ async def test_set_signal_telemetry(widget: TabApertureShutter) -> None:
 
     for figure in widget._figures.values():
         assert figure._data[0][-1] == 1.0
+
+
+@pytest.mark.asyncio
+async def test_set_signal_state(widget: TabApertureShutter) -> None:
+
+    widget.model.reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["state"].text() == MTDome.EnabledState.ENABLED.name
+
+
+@pytest.mark.asyncio
+async def test_set_signal_motion(widget: TabApertureShutter) -> None:
+
+    widget.model.reporter.report_motion_aperture_shutter(
+        MTDome.MotionState.MOVING, True
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["motion"].text() == MTDome.MotionState.MOVING.name
+    assert widget._states["in_position"].text() == str(True)
+
+
+@pytest.mark.asyncio
+async def test_set_signal_fault_code(widget: TabApertureShutter) -> None:
+
+    widget.model.reporter.report_fault_code_aperture_shutter("Error")
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._window_fault_code.toPlainText() == "Error"
