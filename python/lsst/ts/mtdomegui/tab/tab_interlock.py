@@ -29,10 +29,10 @@ from lsst.ts.guitool import (
     set_button,
     update_button_color,
 )
+from lsst.ts.mtdomecom import MON_NUM_SENSORS
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
 
-from ..constants import NUM_INTERLOCK
 from ..model import Model
 
 
@@ -57,7 +57,7 @@ class TabInterlock(TabTemplate):
 
         self.model = model
 
-        self._indicators_interlock = self._create_indicators_interlock(NUM_INTERLOCK)
+        self._indicators_interlock = self._create_indicators_interlock(MON_NUM_SENSORS)
 
         self.set_widget_and_layout()
 
@@ -120,7 +120,7 @@ class TabInterlock(TabTemplate):
             Group.
         """
 
-        num_column = NUM_INTERLOCK // 4
+        num_column = MON_NUM_SENSORS // 4
         layout = create_grid_layout_buttons(self._indicators_interlock, num_column)
 
         return create_group_box("Interlock Status", layout)

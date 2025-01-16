@@ -21,6 +21,8 @@
 
 __all__ = ["TabSettings"]
 
+import math
+
 from lsst.ts.guitool import (
     LOG_LEVEL_MAXIMUM,
     LOG_LEVEL_MINIMUM,
@@ -36,6 +38,14 @@ from lsst.ts.guitool import (
     create_group_box,
     set_button,
 )
+from lsst.ts.mtdomecom import (
+    AMCS_AMAX,
+    AMCS_JMAX,
+    AMCS_VMAX,
+    LWSCS_AMAX,
+    LWSCS_JMAX,
+    LWSCS_VMAX,
+)
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -47,7 +57,6 @@ from PySide6.QtWidgets import (
 )
 from qasync import QApplication, asyncSlot
 
-from ..constants import MAX_ACCELERATION, MAX_JERK, MAX_VELOCITY
 from ..model import Model
 
 
@@ -73,8 +82,12 @@ class TabSettings(TabTemplate):
         self.model = model
 
         self._settings_app = self._create_settings_app()
-        self._settings_amcs = self._create_settings_cs()
-        self._settings_lwscs = self._create_settings_cs()
+        self._settings_amcs = self._create_settings_cs(
+            math.degrees(AMCS_JMAX), math.degrees(AMCS_AMAX), math.degrees(AMCS_VMAX)
+        )
+        self._settings_lwscs = self._create_settings_cs(
+            math.degrees(LWSCS_JMAX), math.degrees(LWSCS_AMAX), math.degrees(LWSCS_VMAX)
+        )
 
         self._buttons = self._create_buttons()
 
@@ -159,13 +172,25 @@ class TabSettings(TabTemplate):
         width = font_metrics.boundingRect(text).width()
         line_edit.setMinimumWidth(width + offset)
 
-    def _create_settings_cs(self, decimal: int = 2) -> dict:
+    def _create_settings_cs(
+        self,
+        max_jerk: float,
+        max_acceleration: float,
+        max_velocity: float,
+        decimal: int = 3,
+    ) -> dict:
         """Create the settings of the control system.
 
         Parameters
         ----------
+        max_jerk : `float`
+            Maximum jerk in deg/sec^3.
+        max_acceleration : `float`
+            Maximum acceleration in deg/sec^2.
+        max_velocity : `float`
+            Maximum velocity in deg/sec.
         decimal : `int`, optional
-            Decimal. (the default is 2)
+            Decimal. (the default is 3)
 
         Returns
         -------
@@ -176,19 +201,19 @@ class TabSettings(TabTemplate):
         tool_tip = "-1 means no value should be set."
         return {
             "jerk": create_double_spin_box(
-                "deg/sec^3", decimal, maximum=MAX_JERK, minimum=-1.0, tool_tip=tool_tip
+                "deg/sec^3", decimal, maximum=max_jerk, minimum=-1.0, tool_tip=tool_tip
             ),
             "acceleration": create_double_spin_box(
                 "deg/sec^2",
                 decimal,
-                maximum=MAX_ACCELERATION,
+                maximum=max_acceleration,
                 minimum=-1.0,
                 tool_tip=tool_tip,
             ),
             "velocity": create_double_spin_box(
                 "deg/sec",
                 decimal,
-                maximum=MAX_VELOCITY,
+                maximum=max_velocity,
                 minimum=-1.0,
                 tool_tip=tool_tip,
             ),

@@ -22,7 +22,8 @@
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import NUM_INTERLOCK, Model
+from lsst.ts.mtdomecom import MON_NUM_SENSORS
+from lsst.ts.mtdomegui import Model
 from lsst.ts.mtdomegui.tab import TabInterlock
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
@@ -39,7 +40,7 @@ def widget(qtbot: QtBot) -> TabInterlock:
 
 def test_init(widget: TabInterlock) -> None:
 
-    assert len(widget._indicators_interlock) == NUM_INTERLOCK
+    assert len(widget._indicators_interlock) == MON_NUM_SENSORS
 
 
 def test_update_indicator_color(widget: TabInterlock) -> None:

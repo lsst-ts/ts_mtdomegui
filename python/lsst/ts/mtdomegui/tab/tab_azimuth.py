@@ -22,6 +22,11 @@
 __all__ = ["TabAzimuth"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.mtdomecom import (
+    AMCS_NUM_MOTOR_TEMPERATURES,
+    AMCS_NUM_MOTORS,
+    AMCS_NUM_RESOLVERS,
+)
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -33,7 +38,6 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..constants import NUM_DRIVE_AZIMUTH, NUM_POSITION_AZIMUTH, NUM_TEMPERATURE_AZIMUTH
 from ..model import Model
 from ..signals import (
     SignalFaultCode,
@@ -113,10 +117,10 @@ class TabAzimuth(TabTemplate):
             System status.
         """
 
-        drive_torque_actual = [create_label() for _ in range(NUM_DRIVE_AZIMUTH)]
-        drive_torque_commanded = [create_label() for _ in range(NUM_DRIVE_AZIMUTH)]
-        drive_current_actual = [create_label() for _ in range(NUM_DRIVE_AZIMUTH)]
-        drive_temperature = [create_label() for _ in range(NUM_TEMPERATURE_AZIMUTH)]
+        drive_torque_actual = [create_label() for _ in range(AMCS_NUM_MOTORS)]
+        drive_torque_commanded = [create_label() for _ in range(AMCS_NUM_MOTORS)]
+        drive_current_actual = [create_label() for _ in range(AMCS_NUM_MOTORS)]
+        drive_temperature = [create_label() for _ in range(AMCS_NUM_MOTOR_TEMPERATURES)]
 
         return {
             "position_actual": create_label(),
@@ -149,31 +153,31 @@ class TabAzimuth(TabTemplate):
                 "Actual Drive Torque",
                 self.model,
                 "J",
-                [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
             "drive_current": TabFigure(
                 "Actual Drive Current",
                 self.model,
                 "A",
-                [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
             "drive_temperature": TabFigure(
                 "Drive Temperature",
                 self.model,
                 "deg C",
-                [str(idx) for idx in range(NUM_TEMPERATURE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTOR_TEMPERATURES)],
             ),
             "encoder_head": TabFigure(
                 "Calibrated Encoder Head",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
             "position_encoder": TabFigure(
                 "Calibrated Position Encoder",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_POSITION_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_RESOLVERS)],
             ),
         }
 
@@ -291,7 +295,7 @@ class TabAzimuth(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_DRIVE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTORS):
             layout.addRow(
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
@@ -301,7 +305,7 @@ class TabAzimuth(TabTemplate):
             )
             add_empty_row_to_form_layout(layout)
 
-        for idx in range(NUM_DRIVE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTORS):
             layout.addRow(
                 f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
             )
@@ -319,7 +323,7 @@ class TabAzimuth(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_TEMPERATURE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTOR_TEMPERATURES):
             layout.addRow(f"Temperature {idx}:", self._status["drive_temperature"][idx])
 
         return create_group_box("Drive Temperature", layout)
@@ -375,7 +379,7 @@ class TabAzimuth(TabTemplate):
         )
         self._status["velocity_actual"].setText(f"{velocity_actual:.2f} deg/sec")  # type: ignore[union-attr]
 
-        for idx in range(NUM_DRIVE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTORS):
             self._status["drive_torque_commanded"][idx].setText(
                 f"{telemetry['driveTorqueCommanded'][idx]:.2f} J"
             )
@@ -386,7 +390,7 @@ class TabAzimuth(TabTemplate):
                 f"{telemetry['driveCurrentActual'][idx]:.2f} A"
             )
 
-        for idx in range(NUM_TEMPERATURE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTOR_TEMPERATURES):
             self._status["drive_temperature"][idx].setText(
                 f"{telemetry['driveTemperature'][idx]:.2f} deg C"
             )

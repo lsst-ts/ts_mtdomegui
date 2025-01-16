@@ -21,12 +21,15 @@
 
 __all__ = ["TabCommand"]
 
+import math
+
 from lsst.ts.guitool import (
     TabTemplate,
     create_double_spin_box,
     create_group_box,
     set_button,
 )
+from lsst.ts.mtdomecom import AMCS_NUM_MOTORS, LWSCS_VMAX
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QComboBox,
@@ -38,14 +41,7 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..constants import (
-    MAX_POSITION,
-    MAX_TEMPERATURE,
-    MAX_VELOCITY,
-    NUM_DRIVE_AZIMUTH,
-    NUM_DRIVE_SHUTTER,
-    SUBSYSTEMS,
-)
+from ..constants import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, SUBSYSTEMS
 from ..model import Model
 from .tab_selector import TabSelector
 
@@ -98,7 +94,7 @@ class TabCommand(TabTemplate):
         names_louver = [
             f"{louver.name} ({idx})" for (idx, louver) in enumerate(MTDome.Louver)
         ]
-        names_drive_azimuth = [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)]
+        names_drive_azimuth = [str(idx) for idx in range(AMCS_NUM_MOTORS)]
         names_drive_shuttor = [str(idx) for idx in range(NUM_DRIVE_SHUTTER)]
 
         return {
@@ -107,13 +103,13 @@ class TabCommand(TabTemplate):
             "drive_shuttor": TabSelector("Shutter Drive", model, names_drive_shuttor),
         }
 
-    def _create_command_parameters(self, decimal: int = 2) -> dict:
+    def _create_command_parameters(self, decimal: int = 3) -> dict:
         """Create the command parameters.
 
         Parameters
         ----------
         decimal : `int`, optional
-            Decimal. (the default is 2)
+            Decimal. (the default is 3)
 
         Returns
         -------
@@ -132,8 +128,8 @@ class TabCommand(TabTemplate):
         velocity = create_double_spin_box(
             "deg/sec",
             decimal,
-            maximum=MAX_VELOCITY,
-            minimum=-MAX_VELOCITY,
+            maximum=math.degrees(LWSCS_VMAX),
+            minimum=-math.degrees(LWSCS_VMAX),
         )
 
         speed = create_double_spin_box(

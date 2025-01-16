@@ -23,10 +23,8 @@ __all__ = ["Status"]
 
 from dataclasses import dataclass, field
 
-from lsst.ts.mtdomecom import CBCS_NUM_CAPACITOR_BANKS
+from lsst.ts.mtdomecom import CBCS_NUM_CAPACITOR_BANKS, MON_NUM_SENSORS
 from lsst.ts.xml.enums import MTDome
-
-from .constants import NUM_INTERLOCK
 
 
 @dataclass
@@ -34,7 +32,7 @@ class Status:
     """System status."""
 
     # Interlocks.
-    interlocks: list[bool] = field(default_factory=lambda: [False] * NUM_INTERLOCK)
+    interlocks: list[bool] = field(default_factory=lambda: [False] * MON_NUM_SENSORS)
 
     # System state. See the `SignalState` for the enum of each field.
     # Put the default values of "lockingPinsEngaged" and "brakeEngaged" to -1

@@ -30,6 +30,7 @@ from lsst.ts.guitool import (
     create_label,
     set_button,
 )
+from lsst.ts.mtdomecom import THCS_NUM_SENSORS
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -40,7 +41,6 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..constants import NUM_TEMPERATURE_THERMAL
 from ..model import Model
 from ..signals import SignalTelemetry
 from .tab_selector import TabSelector
@@ -70,10 +70,10 @@ class TabThermalSystem(TabTemplate):
         self.model = model
 
         self._sensors = self._create_sensors()
-        self._temperatures = [0.0] * NUM_TEMPERATURE_THERMAL
+        self._temperatures = [0.0] * THCS_NUM_SENSORS
 
         # By default, show all the temperature data on the real-time chart
-        self._selections = list(range(NUM_TEMPERATURE_THERMAL))
+        self._selections = list(range(THCS_NUM_SENSORS))
 
         self._figure = self._create_figure()
 
@@ -99,7 +99,7 @@ class TabThermalSystem(TabTemplate):
             Sensors.
         """
 
-        return [create_label() for _ in range(NUM_TEMPERATURE_THERMAL)]
+        return [create_label() for _ in range(THCS_NUM_SENSORS)]
 
     def _create_figure(self, num_realtime: int = 200) -> FigureConstant:
         """Create the figure to show the temperature.

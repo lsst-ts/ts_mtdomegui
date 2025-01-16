@@ -22,6 +22,7 @@
 __all__ = ["TabLouverSingle"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -31,7 +32,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ..constants import NUM_DRIVE_LOUVER, NUM_TEMPERATURE_LOUVER
 from ..model import Model
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
 from .tab_figure import TabFigure
@@ -74,10 +74,14 @@ class TabLouverSingle(TabTemplate):
             System status.
         """
 
-        drive_torque_actual = [create_label() for _ in range(NUM_DRIVE_LOUVER)]
-        drive_torque_commanded = [create_label() for _ in range(NUM_DRIVE_LOUVER)]
-        drive_current_actual = [create_label() for _ in range(NUM_DRIVE_LOUVER)]
-        drive_temperature = [create_label() for _ in range(NUM_TEMPERATURE_LOUVER)]
+        drive_torque_actual = [create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)]
+        drive_torque_commanded = [
+            create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)
+        ]
+        drive_current_actual = [
+            create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)
+        ]
+        drive_temperature = [create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)]
 
         return {
             "position_actual": create_label(
@@ -111,25 +115,25 @@ class TabLouverSingle(TabTemplate):
                 f"{louver_name} Actual Drive Torque",
                 self.model,
                 "J",
-                [str(idx) for idx in range(NUM_DRIVE_LOUVER)],
+                [str(idx) for idx in range(LCS_NUM_MOTORS_PER_LOUVER)],
             ),
             "drive_current": TabFigure(
                 f"{louver_name} Actual Drive Current",
                 self.model,
                 "A",
-                [str(idx) for idx in range(NUM_DRIVE_LOUVER)],
+                [str(idx) for idx in range(LCS_NUM_MOTORS_PER_LOUVER)],
             ),
             "drive_temperature": TabFigure(
                 f"{louver_name} Drive Temperature",
                 self.model,
                 "deg C",
-                [str(idx) for idx in range(NUM_TEMPERATURE_LOUVER)],
+                [str(idx) for idx in range(LCS_NUM_MOTORS_PER_LOUVER)],
             ),
             "encoder_head": TabFigure(
                 f"{louver_name} Calibrated Encoder Head",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_DRIVE_LOUVER)],
+                [str(idx) for idx in range(LCS_NUM_MOTORS_PER_LOUVER)],
             ),
         }
 
@@ -195,7 +199,7 @@ class TabLouverSingle(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_DRIVE_LOUVER):
+        for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
             layout.addRow(
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
@@ -205,7 +209,7 @@ class TabLouverSingle(TabTemplate):
             )
             add_empty_row_to_form_layout(layout)
 
-        for idx in range(NUM_DRIVE_LOUVER):
+        for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
             layout.addRow(
                 f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
             )
@@ -223,7 +227,7 @@ class TabLouverSingle(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_TEMPERATURE_LOUVER):
+        for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
             layout.addRow(f"Temperature {idx}:", self._status["drive_temperature"][idx])
 
         return create_group_box("Drive Temperature", layout)
@@ -296,7 +300,7 @@ class TabLouverSingle(TabTemplate):
             Calibrated encoder head in deg.
         """
 
-        for idx in range(NUM_DRIVE_LOUVER):
+        for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
             self._status["drive_torque_commanded"][idx].setText(
                 f"{torque_commanded[idx]:.2f} J"
             )
@@ -321,7 +325,7 @@ class TabLouverSingle(TabTemplate):
             Temperature in deg C.
         """
 
-        for idx in range(NUM_TEMPERATURE_LOUVER):
+        for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
             self._status["drive_temperature"][idx].setText(
                 f"{temperature[idx]:.2f} deg C"
             )

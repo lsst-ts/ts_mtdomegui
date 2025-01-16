@@ -24,12 +24,7 @@ import logging
 
 import pytest
 from lsst.ts.mtdomecom.schema import registry
-from lsst.ts.mtdomegui import (
-    NUM_DRIVE_SHUTTER,
-    NUM_TEMPERATURE_SHUTTER,
-    Model,
-    generate_dict_from_registry,
-)
+from lsst.ts.mtdomegui import NUM_DRIVE_SHUTTER, Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabApertureShutter
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
@@ -47,7 +42,7 @@ def widget(qtbot: QtBot) -> TabApertureShutter:
 def test_init(widget: TabApertureShutter) -> None:
 
     assert len(widget._status["drive_torque_actual"]) == NUM_DRIVE_SHUTTER
-    assert len(widget._status["drive_temperature"]) == NUM_TEMPERATURE_SHUTTER
+    assert len(widget._status["drive_temperature"]) == NUM_DRIVE_SHUTTER
 
 
 @pytest.mark.asyncio

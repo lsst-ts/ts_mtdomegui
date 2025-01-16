@@ -23,13 +23,9 @@ import asyncio
 import logging
 
 import pytest
+from lsst.ts.mtdomecom import LWSCS_NUM_MOTORS
 from lsst.ts.mtdomecom.schema import registry
-from lsst.ts.mtdomegui import (
-    NUM_DRIVE_ELEVATION,
-    NUM_TEMPERATURE_ELEVATION,
-    Model,
-    generate_dict_from_registry,
-)
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabElevation
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
@@ -46,8 +42,8 @@ def widget(qtbot: QtBot) -> TabElevation:
 
 def test_init(widget: TabElevation) -> None:
 
-    assert len(widget._status["drive_torque_actual"]) == NUM_DRIVE_ELEVATION
-    assert len(widget._status["drive_temperature"]) == NUM_TEMPERATURE_ELEVATION
+    assert len(widget._status["drive_torque_actual"]) == LWSCS_NUM_MOTORS
+    assert len(widget._status["drive_temperature"]) == LWSCS_NUM_MOTORS
 
 
 @pytest.mark.asyncio

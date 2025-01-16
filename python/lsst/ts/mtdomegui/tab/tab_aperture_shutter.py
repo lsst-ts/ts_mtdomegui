@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..constants import NUM_DRIVE_SHUTTER, NUM_RESOLVER_SHUTTER, NUM_TEMPERATURE_SHUTTER
+from ..constants import NUM_DRIVE_SHUTTER
 from ..model import Model
 from ..signals import SignalFaultCode, SignalMotion, SignalState, SignalTelemetry
 from ..utils import (
@@ -111,7 +111,7 @@ class TabApertureShutter(TabTemplate):
         drive_torque_actual = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
         drive_torque_commanded = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
         drive_current_actual = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
-        drive_temperature = [create_label() for _ in range(NUM_TEMPERATURE_SHUTTER)]
+        drive_temperature = [create_label() for _ in range(NUM_DRIVE_SHUTTER)]
 
         return {
             "position_actual": position_actual,
@@ -157,13 +157,13 @@ class TabApertureShutter(TabTemplate):
                 "Drive Temperature",
                 self.model,
                 "deg C",
-                [str(idx) for idx in range(NUM_TEMPERATURE_SHUTTER)],
+                [str(idx) for idx in range(NUM_DRIVE_SHUTTER)],
             ),
             "resolver": TabFigure(
                 "Calibrated Resolver",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_RESOLVER_SHUTTER)],
+                [str(idx) for idx in range(NUM_DRIVE_SHUTTER)],
             ),
             "power": TabFigure(
                 "Total Power",
@@ -315,7 +315,7 @@ class TabApertureShutter(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_TEMPERATURE_SHUTTER):
+        for idx in range(NUM_DRIVE_SHUTTER):
             layout.addRow(f"Temperature {idx}:", self._status["drive_temperature"][idx])
 
         return create_group_box("Drive Temperature", layout)
@@ -378,7 +378,7 @@ class TabApertureShutter(TabTemplate):
                 f"{telemetry['driveCurrentActual'][idx]:.2f} A"
             )
 
-        for idx in range(NUM_TEMPERATURE_SHUTTER):
+        for idx in range(NUM_DRIVE_SHUTTER):
             self._status["drive_temperature"][idx].setText(
                 f"{telemetry['driveTemperature'][idx]:.2f} deg C"
             )
