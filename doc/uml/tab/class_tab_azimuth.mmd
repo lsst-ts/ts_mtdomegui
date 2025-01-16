@@ -6,10 +6,21 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class Reporter
   class SignalTelemetry
+  class SignalFaultCode
+  class SignalMotion
+  class SignalState
+  class SignalTarget
 }
 
-Model *-- SignalTelemetry : emit()
+Model *-- Reporter
+
+Reporter *-- SignalTelemetry : emit()
+Reporter *-- SignalFaultCode : emit()
+Reporter *-- SignalMotion : emit()
+Reporter *-- SignalState : emit()
+Reporter *-- SignalTarget : emit()
 
 TabTemplate <|-- TabAzimuth
 TabTemplate <|-- TabFigure
@@ -17,5 +28,9 @@ TabTemplate <|-- TabFigure
 TabAzimuth *-- Model
 TabAzimuth "1" *-- "7" TabFigure
 TabAzimuth --> SignalTelemetry : connect()
+TabAzimuth --> SignalFaultCode : connect()
+TabAzimuth --> SignalMotion : connect()
+TabAzimuth --> SignalState : connect()
+TabAzimuth --> SignalTarget : connect()
 
 TabFigure *-- Model

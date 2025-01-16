@@ -34,6 +34,7 @@ mtdomegui
 * **Model** contains the main business logic in the application.
 * **ControlPanel** shows the current system status.
 * **Status** is a data class that has the current controller status.
+* **Reporter** reports the system status and telemetry.
 
 The model–view–controller (MVC) architecture is used in this module.
 In this design, the view always shows the data sent from the model.
@@ -60,6 +61,9 @@ The available Qt signals are listed below:
 * **SignalState** sends the current state..
 * **SignalOperationalMode** sends the current operational mode.
 * **SignalTelemetry** sends the telemetry.
+* **SignalTarget** sends the target.
+* **SignalMotion** sends the motion status.
+* **SignalFaultCode** sends the fault code.
 
 .. _lsst.ts.mtdomegui-modules_mtdomegui_tab:
 

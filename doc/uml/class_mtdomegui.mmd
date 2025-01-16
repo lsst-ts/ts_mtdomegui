@@ -18,11 +18,16 @@ MainWindow *-- ControlTabs
 MainWindow *-- ControlPanel
 MainWindow *-- TabSettings
 
-Model *-- Status
-Model *-- SignalInterlock : emit()
-Model *-- SignalState : emit()
-Model *-- SignalOperationalMode : emit()
-Model *-- SignalTelemetry : emit()
+Model *-- Reporter
+
+Reporter *-- Status
+Reporter *-- SignalInterlock : emit()
+Reporter *-- SignalState : emit()
+Reporter *-- SignalOperationalMode : emit()
+Reporter *-- SignalTelemetry : emit()
+Reporter *-- SignalTarget : emit()
+Reporter *-- SignalMotion : emit()
+Reporter *-- SignalFaultCode : emit()
 
 ControlPanel *-- Model
 ControlPanel *-- TabInterlock
