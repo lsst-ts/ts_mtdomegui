@@ -21,6 +21,7 @@
 
 import asyncio
 import logging
+import math
 
 import pytest
 from lsst.ts.guitool import (
@@ -34,7 +35,15 @@ from lsst.ts.guitool import (
     REFRESH_FREQUENCY_MINIMUM,
     TIMEOUT_MINIMUM,
 )
-from lsst.ts.mtdomegui import MAX_ACCELERATION, MAX_JERK, MAX_VELOCITY, Model
+from lsst.ts.mtdomecom import (
+    AMCS_AMAX,
+    AMCS_JMAX,
+    AMCS_VMAX,
+    LWSCS_AMAX,
+    LWSCS_JMAX,
+    LWSCS_VMAX,
+)
+from lsst.ts.mtdomegui import Model
 from lsst.ts.mtdomegui.tab import TabSettings
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
@@ -92,22 +101,34 @@ def test_init(widget: TabSettings) -> None:
     assert widget._settings_app["point_size"].maximum() == POINT_SIZE_MAXIMUM
 
     assert widget._settings_amcs["jerk"].minimum() == -1.0
-    assert widget._settings_amcs["jerk"].maximum() == MAX_JERK
+    assert widget._settings_amcs["jerk"].maximum() == pytest.approx(
+        math.degrees(AMCS_JMAX)
+    )
 
     assert widget._settings_amcs["acceleration"].minimum() == -1.0
-    assert widget._settings_amcs["acceleration"].maximum() == MAX_ACCELERATION
+    assert widget._settings_amcs["acceleration"].maximum() == pytest.approx(
+        math.degrees(AMCS_AMAX)
+    )
 
     assert widget._settings_amcs["velocity"].minimum() == -1.0
-    assert widget._settings_amcs["velocity"].maximum() == MAX_VELOCITY
+    assert widget._settings_amcs["velocity"].maximum() == pytest.approx(
+        math.degrees(AMCS_VMAX)
+    )
 
     assert widget._settings_lwscs["jerk"].minimum() == -1.0
-    assert widget._settings_lwscs["jerk"].maximum() == MAX_JERK
+    assert widget._settings_lwscs["jerk"].maximum() == pytest.approx(
+        math.degrees(LWSCS_JMAX)
+    )
 
     assert widget._settings_lwscs["acceleration"].minimum() == -1.0
-    assert widget._settings_lwscs["acceleration"].maximum() == MAX_ACCELERATION
+    assert widget._settings_lwscs["acceleration"].maximum() == pytest.approx(
+        math.degrees(LWSCS_AMAX)
+    )
 
     assert widget._settings_lwscs["velocity"].minimum() == -1.0
-    assert widget._settings_lwscs["velocity"].maximum() == MAX_VELOCITY
+    assert widget._settings_lwscs["velocity"].maximum() == pytest.approx(
+        math.degrees(LWSCS_VMAX)
+    )
 
 
 @pytest.mark.asyncio

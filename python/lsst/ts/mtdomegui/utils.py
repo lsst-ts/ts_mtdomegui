@@ -23,12 +23,19 @@ __all__ = [
     "combine_indicators",
     "update_boolean_indicator_status",
     "add_empty_row_to_form_layout",
+    "create_window_fault_code",
     "generate_dict_from_registry",
 ]
 
 from lsst.ts.guitool import ButtonStatus, TabTemplate, set_button, update_button_color
 from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QPushButton, QRadioButton
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QHBoxLayout,
+    QPlainTextEdit,
+    QPushButton,
+    QRadioButton,
+)
 
 
 def combine_indicators(indicators: list[QRadioButton]) -> QHBoxLayout:
@@ -77,6 +84,27 @@ def add_empty_row_to_form_layout(layout: QFormLayout) -> None:
         Layout.
     """
     layout.addRow(" ", None)
+
+
+def create_window_fault_code(placeholder_text: str = "Fault code") -> QPlainTextEdit:
+    """Create the window of the fault code.
+
+    Parameters
+    ----------
+    placeholder_text : `str`, optional
+        Placeholder text. (the default is "Fault code")
+
+    Returns
+    -------
+    window : `PySide6.QtWidgets.QPlainTextEdit`
+        Window of the fault code.
+    """
+
+    window = QPlainTextEdit()
+    window.setPlaceholderText(placeholder_text)
+    window.setReadOnly(True)
+
+    return window
 
 
 def create_buttons_with_tabs(

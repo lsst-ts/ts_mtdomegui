@@ -6,6 +6,16 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.3.0:
+
+-------------
+0.3.0
+-------------
+
+* Add the **reporter.py**.
+* Add the signals of events.
+* Adapt the constants in **ts_mtdomecom**.
+
 .. _lsst.ts.mtdomegui-0.2.0:
 
 -------------

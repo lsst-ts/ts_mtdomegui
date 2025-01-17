@@ -79,8 +79,9 @@ class ControlPanel(QWidget):
 
         self.setLayout(self._create_layout())
 
-        self._set_signal_interlock(self.model.signals["interlock"])  # type: ignore[arg-type]
-        self._set_signal_state(self.model.signals["state"])  # type: ignore[arg-type]
+        signals = self.model.reporter.signals
+        self._set_signal_interlock(signals["interlock"])  # type: ignore[arg-type]
+        self._set_signal_state(signals["state"])  # type: ignore[arg-type]
 
     def _create_layout(self) -> QVBoxLayout:
         """Set the layout.

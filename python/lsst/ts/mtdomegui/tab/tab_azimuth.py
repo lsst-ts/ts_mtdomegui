@@ -22,7 +22,11 @@
 __all__ = ["TabAzimuth"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
-from lsst.ts.mtdomecom import ResponseCode
+from lsst.ts.mtdomecom import (
+    AMCS_NUM_MOTOR_TEMPERATURES,
+    AMCS_NUM_MOTORS,
+    AMCS_NUM_RESOLVERS,
+)
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -34,10 +38,19 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..constants import NUM_DRIVE_AZIMUTH, NUM_POSITION_AZIMUTH, NUM_TEMPERATURE_AZIMUTH
 from ..model import Model
-from ..signals import SignalTelemetry
-from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
+from ..signals import (
+    SignalFaultCode,
+    SignalMotion,
+    SignalState,
+    SignalTarget,
+    SignalTelemetry,
+)
+from ..utils import (
+    add_empty_row_to_form_layout,
+    create_buttons_with_tabs,
+    create_window_fault_code,
+)
 from .tab_figure import TabFigure
 
 
@@ -64,15 +77,19 @@ class TabAzimuth(TabTemplate):
 
         self._states = self._create_states()
         self._status = self._create_status()
+        self._window_fault_code = create_window_fault_code()
 
         self._figures = self._create_figures()
         self._buttons = self._create_buttons()
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
-
-        self._set_default()
+        signals = self.model.reporter.signals
+        self._set_signal_telemetry(signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_target(signals["target"])  # type: ignore[arg-type]
+        self._set_signal_state(signals["state"])  # type: ignore[arg-type]
+        self._set_signal_motion(signals["motion"])  # type: ignore[arg-type]
+        self._set_signal_fault_code(signals["fault_code"])  # type: ignore[arg-type]
 
     def _create_states(self) -> dict[str, QLabel]:
         """Create the states.
@@ -85,7 +102,6 @@ class TabAzimuth(TabTemplate):
 
         return {
             "state": create_label(),
-            "fault_code": create_label(),
             "motion": create_label(),
             "in_position": create_label(),
             "target_position": create_label(),
@@ -101,10 +117,10 @@ class TabAzimuth(TabTemplate):
             System status.
         """
 
-        drive_torque_actual = [create_label() for _ in range(NUM_DRIVE_AZIMUTH)]
-        drive_torque_commanded = [create_label() for _ in range(NUM_DRIVE_AZIMUTH)]
-        drive_current_actual = [create_label() for _ in range(NUM_DRIVE_AZIMUTH)]
-        drive_temperature = [create_label() for _ in range(NUM_TEMPERATURE_AZIMUTH)]
+        drive_torque_actual = [create_label() for _ in range(AMCS_NUM_MOTORS)]
+        drive_torque_commanded = [create_label() for _ in range(AMCS_NUM_MOTORS)]
+        drive_current_actual = [create_label() for _ in range(AMCS_NUM_MOTORS)]
+        drive_temperature = [create_label() for _ in range(AMCS_NUM_MOTOR_TEMPERATURES)]
 
         return {
             "position_actual": create_label(),
@@ -137,31 +153,31 @@ class TabAzimuth(TabTemplate):
                 "Actual Drive Torque",
                 self.model,
                 "J",
-                [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
             "drive_current": TabFigure(
                 "Actual Drive Current",
                 self.model,
                 "A",
-                [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
             "drive_temperature": TabFigure(
                 "Drive Temperature",
                 self.model,
                 "deg C",
-                [str(idx) for idx in range(NUM_TEMPERATURE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTOR_TEMPERATURES)],
             ),
             "encoder_head": TabFigure(
                 "Calibrated Encoder Head",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_DRIVE_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
             "position_encoder": TabFigure(
                 "Calibrated Position Encoder",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_POSITION_AZIMUTH)],
+                [str(idx) for idx in range(AMCS_NUM_RESOLVERS)],
             ),
         }
 
@@ -222,14 +238,14 @@ class TabAzimuth(TabTemplate):
             Group.
         """
 
-        layout = QFormLayout()
-        layout.addRow("State:", self._states["state"])
-        layout.addRow("Motion:", self._states["motion"])
-        layout.addRow("In position:", self._states["in_position"])
+        layout_form = QFormLayout()
+        layout_form.addRow("State:", self._states["state"])
+        layout_form.addRow("Motion:", self._states["motion"])
+        layout_form.addRow("In position:", self._states["in_position"])
 
-        add_empty_row_to_form_layout(layout)
-
-        layout.addRow("Fault code:", self._states["fault_code"])
+        layout = QVBoxLayout()
+        layout.addLayout(layout_form)
+        layout.addWidget(self._window_fault_code)
 
         return create_group_box("State", layout)
 
@@ -279,7 +295,7 @@ class TabAzimuth(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_DRIVE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTORS):
             layout.addRow(
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
@@ -289,7 +305,7 @@ class TabAzimuth(TabTemplate):
             )
             add_empty_row_to_form_layout(layout)
 
-        for idx in range(NUM_DRIVE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTORS):
             layout.addRow(
                 f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
             )
@@ -307,7 +323,7 @@ class TabAzimuth(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_TEMPERATURE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTOR_TEMPERATURES):
             layout.addRow(f"Temperature {idx}:", self._status["drive_temperature"][idx])
 
         return create_group_box("Drive Temperature", layout)
@@ -363,7 +379,7 @@ class TabAzimuth(TabTemplate):
         )
         self._status["velocity_actual"].setText(f"{velocity_actual:.2f} deg/sec")  # type: ignore[union-attr]
 
-        for idx in range(NUM_DRIVE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTORS):
             self._status["drive_torque_commanded"][idx].setText(
                 f"{telemetry['driveTorqueCommanded'][idx]:.2f} J"
             )
@@ -374,7 +390,7 @@ class TabAzimuth(TabTemplate):
                 f"{telemetry['driveCurrentActual'][idx]:.2f} A"
             )
 
-        for idx in range(NUM_TEMPERATURE_AZIMUTH):
+        for idx in range(AMCS_NUM_MOTOR_TEMPERATURES):
             self._status["drive_temperature"][idx].setText(
                 f"{telemetry['driveTemperature'][idx]:.2f} deg C"
             )
@@ -392,14 +408,102 @@ class TabAzimuth(TabTemplate):
             telemetry["barcodeHeadCalibrated"]
         )
 
-    def _set_default(self) -> None:
-        """Set the default values."""
+    def _set_signal_target(self, signal: SignalTarget) -> None:
+        """Set the target signal.
 
-        self._states["state"].setText(MTDome.EnabledState.DISABLED.name)
-        self._states["motion"].setText(MTDome.MotionState.STOPPED.name)
-        self._states["in_position"].setText("False")
+        Parameters
+        ----------
+        signal : `SignalTarget`
+            Signal.
+        """
 
-        self._states["fault_code"].setText(ResponseCode.OK.name)
+        signal.position_velocity_azimuth.connect(self._callback_target)
 
-        self._states["target_position"].setText("0 deg")
-        self._states["target_velocity"].setText("0 deg/sec")
+    @asyncSlot()
+    async def _callback_target(self, position_velocity: tuple[float, float]) -> None:
+        """Callback to update the target.
+
+        Parameters
+        ----------
+        position_velocity : `tuple`
+            A tuple of (position, velocity) in deg and deg/sec at azimuth
+            direction.
+        """
+
+        self._states["target_position"].setText(f"{position_velocity[0]:.2f} deg")
+        self._states["target_velocity"].setText(f"{position_velocity[1]:.2f} deg/sec")
+
+    def _set_signal_state(self, signal: SignalState) -> None:
+        """Set the state signal.
+
+        Parameters
+        ----------
+        signal : `SignalState`
+            Signal.
+        """
+
+        signal.azimuth_axis.connect(self._callback_update_state)
+
+    @asyncSlot()
+    async def _callback_update_state(self, state: int) -> None:
+        """Callback to update the state.
+
+        Parameters
+        ----------
+        state : `int`
+            State.
+        """
+
+        self._states["state"].setText(MTDome.EnabledState(state).name)
+
+    def _set_signal_motion(self, signal: SignalMotion) -> None:
+        """Set the motion signal.
+
+        Parameters
+        ----------
+        signal : `SignalMotion`
+            Signal.
+        """
+
+        signal.azimuth_axis.connect(self._callback_update_motion)
+
+    @asyncSlot()
+    async def _callback_update_motion(
+        self, motion: tuple[MTDome.MotionState, bool]
+    ) -> None:
+        """Callback to update the motion state.
+
+        Parameters
+        ----------
+        motion : `tuple`
+            A tuple of (motion_state, in_position).
+        """
+
+        self._states["motion"].setText(motion[0].name)
+        self._states["in_position"].setText(str(motion[1]))
+
+    def _set_signal_fault_code(self, signal: SignalFaultCode) -> None:
+        """Set the fault code signal.
+
+        Parameters
+        ----------
+        signal : `SignalFaultCode`
+            Signal.
+        """
+
+        signal.azimuth_axis.connect(self._callback_update_fault_code)
+
+    @asyncSlot()
+    async def _callback_update_fault_code(self, fault_code: str) -> None:
+        """Callback to update the fault code.
+
+        Parameters
+        ----------
+        fault_code : `tuple`
+            Fault code.
+        """
+
+        self._window_fault_code.clear()
+
+        if fault_code != "":
+            self._window_fault_code.setPlainText(fault_code)

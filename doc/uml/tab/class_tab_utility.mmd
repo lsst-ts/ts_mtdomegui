@@ -6,12 +6,15 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class Reporter
   class SignalOperationalMode
   class SignalTelemetry
 }
 
-Model *-- SignalOperationalMode : emit()
-Model *-- SignalTelemetry : emit()
+Model *-- Reporter
+
+Reporter *-- SignalOperationalMode : emit()
+Reporter *-- SignalTelemetry : emit()
 
 TabTemplate <|-- TabUtility
 

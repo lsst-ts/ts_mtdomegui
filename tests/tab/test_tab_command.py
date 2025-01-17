@@ -21,9 +21,11 @@
 
 import asyncio
 import logging
+import math
 
 import pytest
-from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, MAX_VELOCITY, Model
+from lsst.ts.mtdomecom import LWSCS_VMAX
+from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, Model
 from lsst.ts.mtdomegui.tab import TabCommand
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
@@ -45,8 +47,8 @@ def test_init(widget: TabCommand) -> None:
     assert widget._command_parameters["position"].maximum() == MAX_POSITION
     assert widget._command_parameters["position"].minimum() == -MAX_POSITION
 
-    assert widget._command_parameters["velocity"].maximum() == MAX_VELOCITY
-    assert widget._command_parameters["velocity"].minimum() == -MAX_VELOCITY
+    assert widget._command_parameters["velocity"].maximum() == math.degrees(LWSCS_VMAX)
+    assert widget._command_parameters["velocity"].minimum() == -math.degrees(LWSCS_VMAX)
 
     assert widget._command_parameters["temperature"].maximum() == MAX_TEMPERATURE
     assert widget._command_parameters["temperature"].minimum() == -MAX_TEMPERATURE

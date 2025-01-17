@@ -23,12 +23,9 @@ import asyncio
 import logging
 
 import pytest
+from lsst.ts.mtdomecom import THCS_NUM_SENSORS
 from lsst.ts.mtdomecom.schema import registry
-from lsst.ts.mtdomegui import (
-    NUM_TEMPERATURE_THERMAL,
-    Model,
-    generate_dict_from_registry,
-)
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabThermalSystem
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
@@ -44,7 +41,7 @@ def widget(qtbot: QtBot) -> TabThermalSystem:
 
 def test_init(widget: TabThermalSystem) -> None:
 
-    assert len(widget._sensors) == NUM_TEMPERATURE_THERMAL
+    assert len(widget._sensors) == THCS_NUM_SENSORS
 
     for button in widget._tab_selector._buttons["selection"]:
         assert button.isChecked() is True
@@ -66,7 +63,7 @@ async def test_show_selector(qtbot: QtBot, widget: TabThermalSystem) -> None:
 @pytest.mark.asyncio
 async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
-    assert len(widget._figure.chart().series()) == NUM_TEMPERATURE_THERMAL
+    assert len(widget._figure.chart().series()) == THCS_NUM_SENSORS
 
     # New selections
     selections = [0, 3]
@@ -91,7 +88,7 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
 
-    widget.model.report_telemetry(
+    widget.model.reporter.report_telemetry(
         "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
     )
 

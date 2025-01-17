@@ -27,7 +27,7 @@ from lsst.ts.guitool import (
     create_label,
     create_radio_indicators,
 )
-from lsst.ts.mtdomecom.mock_llc import NUM_CAPACITOR_BANKS
+from lsst.ts.mtdomecom import CBCS_NUM_CAPACITOR_BANKS
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QLabel, QRadioButton, QVBoxLayout
 from qasync import asyncSlot
@@ -64,8 +64,9 @@ class TabUtility(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_signal_operational_mode(self.model.signals["operational_mode"])  # type: ignore[arg-type]
-        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
+        signals = self.model.reporter.signals
+        self._set_signal_operational_mode(signals["operational_mode"])  # type: ignore[arg-type]
+        self._set_signal_telemetry(signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_modes(self) -> dict[str, QLabel]:
         """Create the operational modes of sub-systems.
@@ -92,8 +93,8 @@ class TabUtility(TabTemplate):
         """
 
         indicators = dict()
-        for name in self.model.status.capacitor_bank.keys():
-            indicators[name] = create_radio_indicators(NUM_CAPACITOR_BANKS)
+        for name in self.model.reporter.status.capacitor_bank.keys():
+            indicators[name] = create_radio_indicators(CBCS_NUM_CAPACITOR_BANKS)
 
         return indicators
 

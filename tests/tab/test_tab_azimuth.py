@@ -23,14 +23,11 @@ import asyncio
 import logging
 
 import pytest
+from lsst.ts.mtdomecom import AMCS_NUM_MOTOR_TEMPERATURES, AMCS_NUM_MOTORS
 from lsst.ts.mtdomecom.schema import registry
-from lsst.ts.mtdomegui import (
-    NUM_DRIVE_AZIMUTH,
-    NUM_TEMPERATURE_AZIMUTH,
-    Model,
-    generate_dict_from_registry,
-)
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabAzimuth
+from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -45,8 +42,8 @@ def widget(qtbot: QtBot) -> TabAzimuth:
 
 def test_init(widget: TabAzimuth) -> None:
 
-    assert len(widget._status["drive_torque_actual"]) == NUM_DRIVE_AZIMUTH
-    assert len(widget._status["drive_temperature"]) == NUM_TEMPERATURE_AZIMUTH
+    assert len(widget._status["drive_torque_actual"]) == AMCS_NUM_MOTORS
+    assert len(widget._status["drive_temperature"]) == AMCS_NUM_MOTOR_TEMPERATURES
 
 
 @pytest.mark.asyncio
@@ -65,7 +62,7 @@ async def test_show_figure(qtbot: QtBot, widget: TabAzimuth) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabAzimuth) -> None:
 
-    widget.model.report_telemetry(
+    widget.model.reporter.report_telemetry(
         "amcs", generate_dict_from_registry(registry, "AMCS", default_number=1.0)
     )
 
@@ -86,3 +83,49 @@ async def test_set_signal_telemetry(widget: TabAzimuth) -> None:
 
     for figure in widget._figures.values():
         assert figure._data[0][-1] == 1.0
+
+
+@pytest.mark.asyncio
+async def test_set_signal_target(widget: TabAzimuth) -> None:
+
+    widget.model.reporter.report_target_azimuth(1.0, 2.0)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["target_position"].text() == "1.00 deg"
+    assert widget._states["target_velocity"].text() == "2.00 deg/sec"
+
+
+@pytest.mark.asyncio
+async def test_set_signal_state(widget: TabAzimuth) -> None:
+
+    widget.model.reporter.report_state_azimuth_axis(MTDome.EnabledState.ENABLED)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["state"].text() == MTDome.EnabledState.ENABLED.name
+
+
+@pytest.mark.asyncio
+async def test_set_signal_motion(widget: TabAzimuth) -> None:
+
+    widget.model.reporter.report_motion_azimuth_axis(MTDome.MotionState.MOVING, True)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["motion"].text() == MTDome.MotionState.MOVING.name
+    assert widget._states["in_position"].text() == str(True)
+
+
+@pytest.mark.asyncio
+async def test_set_signal_fault_code(widget: TabAzimuth) -> None:
+
+    widget.model.reporter.report_fault_code_azimuth_axis("Error")
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._window_fault_code.toPlainText() == "Error"

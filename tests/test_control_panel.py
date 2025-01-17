@@ -74,10 +74,10 @@ def test_update_button_interlock(widget: ControlPanel) -> None:
 async def test_set_signal_interlock(widget: ControlPanel) -> None:
 
     # Interlocks
-    interlocks = deepcopy(widget.model.status.interlocks)
+    interlocks = deepcopy(widget.model.reporter.status.interlocks)
     interlocks[0] = True
 
-    widget.model.report_interlocks(interlocks)
+    widget.model.reporter.report_interlocks(interlocks)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
@@ -88,7 +88,7 @@ async def test_set_signal_interlock(widget: ControlPanel) -> None:
     widget._button_interlock.palette().color(QPalette.Button) == Qt.red
 
     # Locking pins
-    widget.model.report_state_locking_pins_engaged(1)
+    widget.model.reporter.report_state_locking_pins_engaged(1)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
@@ -99,10 +99,10 @@ async def test_set_signal_interlock(widget: ControlPanel) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: ControlPanel) -> None:
 
-    widget.model.report_system_azimuth_axis(MTDome.EnabledState.ENABLED)
-    widget.model.report_system_elevation_axis(MTDome.EnabledState.ENABLED)
-    widget.model.report_system_aperture_shutter(MTDome.EnabledState.ENABLED)
-    widget.model.report_system_power_mode(MTDome.PowerManagementMode.EMERGENCY)
+    widget.model.reporter.report_state_azimuth_axis(MTDome.EnabledState.ENABLED)
+    widget.model.reporter.report_state_elevation_axis(MTDome.EnabledState.ENABLED)
+    widget.model.reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
+    widget.model.reporter.report_state_power_mode(MTDome.PowerManagementMode.EMERGENCY)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)

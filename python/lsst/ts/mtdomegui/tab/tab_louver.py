@@ -28,11 +28,11 @@ from lsst.ts.guitool import (
     create_label,
     set_button,
 )
+from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QPushButton, QVBoxLayout
 from qasync import asyncSlot
 
-from ..constants import NUM_DRIVE_LOUVER, NUM_TEMPERATURE_LOUVER
 from ..model import Model
 from ..signals import SignalTelemetry
 from .tab_figure import TabFigure
@@ -73,7 +73,7 @@ class TabLouver(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_tabs(self) -> list[TabLouverSingle]:
         """Create the tabs.
@@ -213,8 +213,8 @@ class TabLouver(TabTemplate):
             )
 
         for idx in range(num):
-            idx_start = idx * NUM_DRIVE_LOUVER
-            idx_end = idx_start + NUM_DRIVE_LOUVER
+            idx_start = idx * LCS_NUM_MOTORS_PER_LOUVER
+            idx_end = idx_start + LCS_NUM_MOTORS_PER_LOUVER
             self._tabs[idx].update_drive(
                 telemetry["driveTorqueCommanded"][idx_start:idx_end],
                 telemetry["driveTorqueActual"][idx_start:idx_end],
@@ -223,8 +223,8 @@ class TabLouver(TabTemplate):
             )
 
         for idx in range(num):
-            idx_start = idx * NUM_TEMPERATURE_LOUVER
-            idx_end = idx_start + NUM_TEMPERATURE_LOUVER
+            idx_start = idx * LCS_NUM_MOTORS_PER_LOUVER
+            idx_end = idx_start + LCS_NUM_MOTORS_PER_LOUVER
             self._tabs[idx].update_temperature(
                 telemetry["driveTemperature"][idx_start:idx_end],
             )

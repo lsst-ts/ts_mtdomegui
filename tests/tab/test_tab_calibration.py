@@ -23,7 +23,8 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import Model
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabCalibration
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
@@ -58,20 +59,9 @@ async def test_show_figure(qtbot: QtBot, widget: TabCalibration) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabCalibration) -> None:
 
-    # TODO: Remove this workaround after the DM-48368 is fixed.
-    data_cscs = {
-        "positionActual": 1.0,
-        "positionCommanded": 1.0,
-        "driveTorqueActual": 1.0,
-        "driveTorqueCommanded": 1.0,
-        "driveCurrentActual": 1.0,
-        "driveTemperature": 1.0,
-        "encoderHeadRaw": 1.0,
-        "encoderHeadCalibrated": 1.0,
-        "powerDraw": 1.0,
-        "timestamp": 1.0,
-    }
-    widget.model.report_telemetry("cscs", data_cscs)
+    widget.model.reporter.report_telemetry(
+        "cscs", generate_dict_from_registry(registry, "CSCS", default_number=1.0)
+    )
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)

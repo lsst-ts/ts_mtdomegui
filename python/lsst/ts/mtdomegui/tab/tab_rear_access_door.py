@@ -27,6 +27,11 @@ from lsst.ts.guitool import (
     create_label,
     create_radio_indicators,
 )
+from lsst.ts.mtdomecom import (
+    RAD_NUM_DOORS,
+    RAD_NUM_LIMIT_SWITCHES,
+    RAD_NUM_LOCKING_PINS,
+)
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -38,14 +43,6 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
-from ..constants import (
-    NUM_DOOR_BRAKE,
-    NUM_DOOR_LIMIT_SWITCH,
-    NUM_DOOR_LOCKING_PIN,
-    NUM_DRIVE_DOOR,
-    NUM_RESOLVER_DOOR,
-    NUM_TEMPERATURE_DOOR,
-)
 from ..model import Model
 from ..signals import SignalTelemetry
 from ..utils import (
@@ -86,7 +83,7 @@ class TabRearAccessDoor(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
 
     def _create_status(self) -> dict[str, QLabel | list[QLabel]]:
         """Create the status.
@@ -101,19 +98,19 @@ class TabRearAccessDoor(TabTemplate):
             create_label(
                 tool_tip="Measured position of the rear access door (percent open)."
             )
-            for _ in range(NUM_DRIVE_DOOR)
+            for _ in range(RAD_NUM_DOORS)
         ]
         position_commanded = [
             create_label(
                 tool_tip="Commanded position of the rear access door (percent open)."
             )
-            for _ in range(NUM_DRIVE_DOOR)
+            for _ in range(RAD_NUM_DOORS)
         ]
 
-        drive_torque_actual = [create_label() for _ in range(NUM_DRIVE_DOOR)]
-        drive_torque_commanded = [create_label() for _ in range(NUM_DRIVE_DOOR)]
-        drive_current_actual = [create_label() for _ in range(NUM_DRIVE_DOOR)]
-        drive_temperature = [create_label() for _ in range(NUM_DRIVE_DOOR)]
+        drive_torque_actual = [create_label() for _ in range(RAD_NUM_DOORS)]
+        drive_torque_commanded = [create_label() for _ in range(RAD_NUM_DOORS)]
+        drive_current_actual = [create_label() for _ in range(RAD_NUM_DOORS)]
+        drive_temperature = [create_label() for _ in range(RAD_NUM_DOORS)]
 
         return {
             "position_actual": position_actual,
@@ -137,10 +134,10 @@ class TabRearAccessDoor(TabTemplate):
         """
 
         return {
-            "limit_switch_open": create_radio_indicators(NUM_DOOR_LIMIT_SWITCH),
-            "limit_switch_close": create_radio_indicators(NUM_DOOR_LIMIT_SWITCH),
-            "pin": create_radio_indicators(NUM_DOOR_LOCKING_PIN),
-            "brake": create_radio_indicators(NUM_DOOR_BRAKE),
+            "limit_switch_open": create_radio_indicators(RAD_NUM_LIMIT_SWITCHES),
+            "limit_switch_close": create_radio_indicators(RAD_NUM_LIMIT_SWITCHES),
+            "pin": create_radio_indicators(RAD_NUM_LOCKING_PINS),
+            "brake": create_radio_indicators(RAD_NUM_DOORS),
             "photoelectric_sensor": create_radio_indicators(1)[0],
             "curtain": create_radio_indicators(1)[0],
         }
@@ -165,25 +162,25 @@ class TabRearAccessDoor(TabTemplate):
                 "Actual Drive Torque",
                 self.model,
                 "J",
-                [str(idx) for idx in range(NUM_DRIVE_DOOR)],
+                [str(idx) for idx in range(RAD_NUM_DOORS)],
             ),
             "drive_current": TabFigure(
                 "Actual Drive Current",
                 self.model,
                 "A",
-                [str(idx) for idx in range(NUM_DRIVE_DOOR)],
+                [str(idx) for idx in range(RAD_NUM_DOORS)],
             ),
             "drive_temperature": TabFigure(
                 "Drive Temperature",
                 self.model,
                 "deg C",
-                [str(idx) for idx in range(NUM_TEMPERATURE_DOOR)],
+                [str(idx) for idx in range(RAD_NUM_DOORS)],
             ),
             "resolver": TabFigure(
                 "Calibrated Resolver",
                 self.model,
                 "deg",
-                [str(idx) for idx in range(NUM_RESOLVER_DOOR)],
+                [str(idx) for idx in range(RAD_NUM_DOORS)],
             ),
             "power": TabFigure(
                 "Total Power",
@@ -243,7 +240,7 @@ class TabRearAccessDoor(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_DRIVE_DOOR):
+        for idx in range(RAD_NUM_DOORS):
             layout.addRow(
                 f"Position {idx} (commanded):",
                 self._status["position_commanded"][idx],
@@ -253,7 +250,7 @@ class TabRearAccessDoor(TabTemplate):
                 self._status["position_actual"][idx],
             )
 
-            if idx != (NUM_DRIVE_DOOR - 1):
+            if idx != (RAD_NUM_DOORS - 1):
                 add_empty_row_to_form_layout(layout)
 
         return create_group_box("Position", layout)
@@ -269,7 +266,7 @@ class TabRearAccessDoor(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_DRIVE_DOOR):
+        for idx in range(RAD_NUM_DOORS):
             layout.addRow(
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
@@ -279,7 +276,7 @@ class TabRearAccessDoor(TabTemplate):
             )
             add_empty_row_to_form_layout(layout)
 
-        for idx in range(NUM_DRIVE_DOOR):
+        for idx in range(RAD_NUM_DOORS):
             layout.addRow(
                 f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
             )
@@ -297,7 +294,7 @@ class TabRearAccessDoor(TabTemplate):
 
         layout = QFormLayout()
 
-        for idx in range(NUM_TEMPERATURE_DOOR):
+        for idx in range(RAD_NUM_DOORS):
             layout.addRow(f"Temperature {idx}:", self._status["drive_temperature"][idx])
 
         return create_group_box("Drive Temperature", layout)
@@ -389,7 +386,7 @@ class TabRearAccessDoor(TabTemplate):
         # Label
         position_commanded = telemetry["positionCommanded"]
         position_actual = telemetry["positionActual"]
-        for idx in range(NUM_DRIVE_DOOR):
+        for idx in range(RAD_NUM_DOORS):
             self._status["position_commanded"][idx].setText(
                 f"{position_commanded[idx]:.2f} %"
             )
@@ -407,7 +404,7 @@ class TabRearAccessDoor(TabTemplate):
                 f"{telemetry['driveCurrentActual'][idx]:.2f} A"
             )
 
-        for idx in range(NUM_TEMPERATURE_DOOR):
+        for idx in range(RAD_NUM_DOORS):
             self._status["drive_temperature"][idx].setText(
                 f"{telemetry['driveTemperature'][idx]:.2f} deg C"
             )
