@@ -32,7 +32,6 @@ from lsst.ts.guitool import (
     PORT_MINIMUM,
     REFRESH_FREQUENCY_MAXIMUM,
     REFRESH_FREQUENCY_MINIMUM,
-    TIMEOUT_MINIMUM,
     TabTemplate,
     create_double_spin_box,
     create_group_box,
@@ -58,6 +57,7 @@ from PySide6.QtWidgets import (
 from qasync import QApplication, asyncSlot
 
 from ..model import Model
+from ..signals import SignalConfig
 
 
 class TabSettings(TabTemplate):
@@ -93,6 +93,8 @@ class TabSettings(TabTemplate):
 
         self.set_widget_and_layout()
 
+        self._set_signal_config(self.model.reporter.signals["config"])  # type: ignore[arg-type]
+
     def _create_settings_app(self) -> dict:
         """Create the application settings.
 
@@ -105,16 +107,12 @@ class TabSettings(TabTemplate):
         settings = {
             "host": QLineEdit(),
             "port": QSpinBox(),
-            "timeout_connection": QSpinBox(),
             "log_level": QSpinBox(),
             "refresh_frequency": QSpinBox(),
             "point_size": QSpinBox(),
         }
 
         settings["port"].setRange(PORT_MINIMUM, PORT_MAXIMUM)
-
-        settings["timeout_connection"].setMinimum(TIMEOUT_MINIMUM)
-        settings["timeout_connection"].setSuffix(" sec")
 
         settings["log_level"].setRange(LOG_LEVEL_MINIMUM, LOG_LEVEL_MAXIMUM)
         settings["log_level"].setToolTip(
@@ -136,9 +134,6 @@ class TabSettings(TabTemplate):
         connection_information = self.model.connection_information
         settings["host"].setText(connection_information["host"])
         settings["port"].setValue(connection_information["port"])
-        settings["timeout_connection"].setValue(
-            connection_information["timeout_connection"]
-        )
 
         settings["log_level"].setValue(self.model.log.level)
 
@@ -259,9 +254,6 @@ class TabSettings(TabTemplate):
         connection_information = self.model.connection_information
         connection_information["host"] = self._settings_app["host"].text()
         connection_information["port"] = self._settings_app["port"].value()
-        connection_information["timeout_connection"] = self._settings_app[
-            "timeout_connection"
-        ].value()
 
     @asyncSlot()
     async def _callback_apply_general(self) -> None:
@@ -325,9 +317,6 @@ class TabSettings(TabTemplate):
         layout_tcpip = QFormLayout()
         layout_tcpip.addRow("Host name:", self._settings_app["host"])
         layout_tcpip.addRow("Port:", self._settings_app["port"])
-        layout_tcpip.addRow(
-            "Connection timeout:", self._settings_app["timeout_connection"]
-        )
 
         layout = QVBoxLayout()
         layout.addLayout(layout_tcpip)
@@ -397,3 +386,45 @@ class TabSettings(TabTemplate):
         layout.addWidget(self._buttons["apply_lwscs"])
 
         return create_group_box("Elevation (Light Wind Screen) Control System", layout)
+
+    def _set_signal_config(self, signal: SignalConfig) -> None:
+        """Set the config signal.
+
+        Parameters
+        ----------
+        signal : `SignalConfig`
+            Signal.
+        """
+
+        signal.amcs.connect(self._callback_config_amcs)
+        signal.lwscs.connect(self._callback_config_lwscs)
+
+    @asyncSlot()
+    async def _callback_config_amcs(self, config: dict) -> None:
+        """Callback to update the configuration of the azimuth motion control
+        system (AMCS).
+
+        Parameters
+        ----------
+        config : `dict`
+            Configuration.
+        """
+
+        self._settings_amcs["jerk"].setValue(config["jmax"])
+        self._settings_amcs["acceleration"].setValue(config["amax"])
+        self._settings_amcs["velocity"].setValue(config["vmax"])
+
+    @asyncSlot()
+    async def _callback_config_lwscs(self, config: dict) -> None:
+        """Callback to update the configuration of the elevation (light and
+        wind screen) control system (LWSCS).
+
+        Parameters
+        ----------
+        config : `dict`
+            Configuration.
+        """
+
+        self._settings_lwscs["jerk"].setValue(config["jmax"])
+        self._settings_lwscs["acceleration"].setValue(config["amax"])
+        self._settings_lwscs["velocity"].setValue(config["vmax"])
