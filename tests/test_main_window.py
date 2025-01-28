@@ -22,6 +22,7 @@
 import asyncio
 
 import pytest
+from lsst.ts.guitool import get_config_dir, read_yaml_file
 from lsst.ts.mtdomegui import MainWindow
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QToolBar
@@ -43,6 +44,17 @@ def test_init(widget: MainWindow) -> None:
     actions = tool_bar.actions()
 
     assert len(actions) == 4
+
+    connection_information = widget.model.connection_information
+    configuration = _get_config()
+
+    assert connection_information["host"] == configuration["host"]
+    assert connection_information["port"] == configuration["port"]
+
+
+def _get_config() -> dict:
+    filepath = get_config_dir("MTDome/v3") / "default_gui.yaml"
+    return read_yaml_file(filepath)
 
 
 def test_get_action(widget: MainWindow) -> None:

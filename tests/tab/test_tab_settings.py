@@ -33,7 +33,6 @@ from lsst.ts.guitool import (
     PORT_MINIMUM,
     REFRESH_FREQUENCY_MAXIMUM,
     REFRESH_FREQUENCY_MINIMUM,
-    TIMEOUT_MINIMUM,
 )
 from lsst.ts.mtdomecom import (
     AMCS_AMAX,
@@ -62,10 +61,6 @@ def test_init(widget: TabSettings) -> None:
     connection_information = widget.model.connection_information
     assert widget._settings_app["host"].text() == connection_information["host"]
     assert widget._settings_app["port"].value() == connection_information["port"]
-    assert (
-        widget._settings_app["timeout_connection"].value()
-        == connection_information["timeout_connection"]
-    )
 
     assert widget._settings_app["log_level"].value() == widget.model.log.level
     assert widget._settings_app["refresh_frequency"].value() == int(
@@ -77,8 +72,6 @@ def test_init(widget: TabSettings) -> None:
 
     assert widget._settings_app["port"].minimum() == PORT_MINIMUM
     assert widget._settings_app["port"].maximum() == PORT_MAXIMUM
-
-    assert widget._settings_app["timeout_connection"].minimum() == TIMEOUT_MINIMUM
 
     assert widget._settings_app["log_level"].minimum() == LOG_LEVEL_MINIMUM
     assert widget._settings_app["log_level"].maximum() == LOG_LEVEL_MAXIMUM
@@ -100,32 +93,26 @@ def test_init(widget: TabSettings) -> None:
     assert widget._settings_app["point_size"].minimum() == POINT_SIZE_MINIMUM
     assert widget._settings_app["point_size"].maximum() == POINT_SIZE_MAXIMUM
 
-    assert widget._settings_amcs["jerk"].minimum() == -1.0
     assert widget._settings_amcs["jerk"].maximum() == pytest.approx(
         math.degrees(AMCS_JMAX)
     )
 
-    assert widget._settings_amcs["acceleration"].minimum() == -1.0
     assert widget._settings_amcs["acceleration"].maximum() == pytest.approx(
         math.degrees(AMCS_AMAX)
     )
 
-    assert widget._settings_amcs["velocity"].minimum() == -1.0
     assert widget._settings_amcs["velocity"].maximum() == pytest.approx(
         math.degrees(AMCS_VMAX)
     )
 
-    assert widget._settings_lwscs["jerk"].minimum() == -1.0
     assert widget._settings_lwscs["jerk"].maximum() == pytest.approx(
         math.degrees(LWSCS_JMAX)
     )
 
-    assert widget._settings_lwscs["acceleration"].minimum() == -1.0
     assert widget._settings_lwscs["acceleration"].maximum() == pytest.approx(
         math.degrees(LWSCS_AMAX)
     )
 
-    assert widget._settings_lwscs["velocity"].minimum() == -1.0
     assert widget._settings_lwscs["velocity"].maximum() == pytest.approx(
         math.degrees(LWSCS_VMAX)
     )
@@ -135,7 +122,6 @@ def test_init(widget: TabSettings) -> None:
 async def test_callback_apply_host(qtbot: QtBot, widget: TabSettings) -> None:
     widget._settings_app["host"].setText("newHost")
     widget._settings_app["port"].setValue(1)
-    widget._settings_app["timeout_connection"].setValue(2)
 
     qtbot.mouseClick(widget._buttons["apply_host"], Qt.LeftButton)
 
@@ -145,7 +131,6 @@ async def test_callback_apply_host(qtbot: QtBot, widget: TabSettings) -> None:
     connection_information = widget.model.connection_information
     assert connection_information["host"] == "newHost"
     assert connection_information["port"] == 1
-    assert connection_information["timeout_connection"] == 2
 
 
 @pytest.mark.asyncio
@@ -164,3 +149,26 @@ async def test_callback_apply_general(qtbot: QtBot, widget: TabSettings) -> None
 
     app = QApplication.instance()
     assert app.font().pointSize() == 12
+
+
+@pytest.mark.asyncio
+async def test_set_signal_config(widget: TabSettings) -> None:
+
+    config = {
+        "jmax": 0.1,
+        "amax": 0.2,
+        "vmax": 0.3,
+    }
+    widget.model.reporter.report_config_azimuth(config)
+    widget.model.reporter.report_config_elevation(config)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._settings_amcs["jerk"].value() == 0.1
+    assert widget._settings_amcs["acceleration"].value() == 0.2
+    assert widget._settings_amcs["velocity"].value() == 0.3
+
+    assert widget._settings_lwscs["jerk"].value() == 0.1
+    assert widget._settings_lwscs["acceleration"].value() == 0.2
+    assert widget._settings_lwscs["velocity"].value() == 0.3

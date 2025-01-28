@@ -23,6 +23,7 @@ import asyncio
 import logging
 
 import pytest
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import NUM_DRIVE_SHUTTER, Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabApertureShutter
@@ -98,14 +99,14 @@ async def test_set_signal_state(widget: TabApertureShutter) -> None:
 async def test_set_signal_motion(widget: TabApertureShutter) -> None:
 
     widget.model.reporter.report_motion_aperture_shutter(
-        MTDome.MotionState.MOVING, True
+        [MTDome.MotionState.MOVING] * APSCS_NUM_SHUTTERS, [True] * APSCS_NUM_SHUTTERS
     )
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._states["motion"].text() == MTDome.MotionState.MOVING.name
-    assert widget._states["in_position"].text() == str(True)
+    assert widget._states["motion"].text() == "MOVING, MOVING"
+    assert widget._states["in_position"].text() == "True, True"
 
 
 @pytest.mark.asyncio

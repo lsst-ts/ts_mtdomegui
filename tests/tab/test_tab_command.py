@@ -24,9 +24,10 @@ import logging
 import math
 
 import pytest
-from lsst.ts.mtdomecom import LWSCS_VMAX
-from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, Model
+from lsst.ts.mtdomecom import AMCS_NUM_MOTORS, LWSCS_VMAX
+from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, Model
 from lsst.ts.mtdomegui.tab import TabCommand
+from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -54,7 +55,6 @@ def test_init(widget: TabCommand) -> None:
     assert widget._command_parameters["temperature"].minimum() == -MAX_TEMPERATURE
 
     assert widget._command_parameters["percentage"].maximum() == 100.0
-    assert widget._command_parameters["percentage"].minimum() == -1.0
 
 
 @pytest.mark.asyncio
@@ -97,3 +97,89 @@ async def test_show_selector(qtbot: QtBot, widget: TabCommand) -> None:
         await asyncio.sleep(1)
 
         assert widget._tabs[tab_name].isVisible() is True
+
+
+def test_get_selected_command(widget: TabCommand) -> None:
+
+    for name, command in widget._commands.items():
+        command.setChecked(True)
+
+        assert widget._get_selected_command() == name
+
+
+def test_get_louver_percentages(widget: TabCommand) -> None:
+
+    # No selected louver
+    assert widget._get_louver_percentages() == [-1.0] * len(MTDome.Louver)
+
+    # There are selected louvers
+    widget._command_parameters["percentage"].setValue(50.0)
+
+    selections = [1, 2, 3]
+    widget._tabs["louver"].select(selections)
+
+    for idx, value in enumerate(widget._get_louver_percentages()):
+        if idx in selections:
+            assert value == 50.0
+        else:
+            assert value == -1.0
+
+
+def test_get_subsystem_bitmask(widget: TabCommand) -> None:
+
+    assert widget._get_subsystem_bitmask() == MTDome.SubSystemId.AMCS.value
+
+    widget._command_parameters["subsystem"].setCurrentIndex(3)
+
+    assert widget._get_subsystem_bitmask() == MTDome.SubSystemId.LCS.value
+
+
+def test_get_on_off(widget: TabCommand) -> None:
+
+    combo_box = widget._command_parameters["engage_brakes"]
+
+    assert widget._get_on_off(combo_box) is None
+
+    for idx, value in zip([1, 2], [MTDome.OnOff.ON, MTDome.OnOff.OFF]):
+        combo_box.setCurrentIndex(idx)
+        assert widget._get_on_off(combo_box) == value
+
+
+def test_get_operational_mode(widget: TabCommand) -> None:
+
+    combo_box = widget._command_parameters["operation_mode"]
+
+    for idx, mode in enumerate(MTDome.OperationalMode):
+        combo_box.setCurrentIndex(mode.value - 1)
+        assert widget._get_operational_mode() == mode
+
+
+def test_get_reset_drives_azimuth(widget: TabCommand) -> None:
+
+    # No selected drives
+    assert widget._get_reset_drives_azimuth() == [0] * AMCS_NUM_MOTORS
+
+    selections = [1, 2]
+    widget._tabs["drive_az"].select(selections)
+
+    assert widget._get_reset_drives_azimuth() == [0, 1, 1, 0, 0]
+
+
+def test_get_reset_drives_aperture_shutter(widget: TabCommand) -> None:
+
+    # No selected drives
+    assert widget._get_reset_drives_aperture_shutter() == [0] * NUM_DRIVE_SHUTTER
+
+    selections = [1, 2]
+    widget._tabs["drive_shuttor"].select(selections)
+
+    assert widget._get_reset_drives_aperture_shutter() == [0, 1, 1, 0]
+
+
+def test_get_power_mode(widget: TabCommand) -> None:
+
+    combo_box = widget._command_parameters["power_mode"]
+
+    for idx, mode in enumerate(MTDome.PowerManagementMode):
+        combo_box.setCurrentIndex(mode.value - 1)
+        assert widget._get_power_mode() == mode

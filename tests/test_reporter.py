@@ -23,6 +23,7 @@ import logging
 from copy import deepcopy
 
 import pytest
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
 from lsst.ts.mtdomegui import Reporter
 from lsst.ts.xml.enums import MTDome
 from pytestqt.qtbot import QtBot
@@ -36,7 +37,7 @@ def reporter() -> Reporter:
 
 
 def test_init(reporter: Reporter) -> None:
-    assert len(reporter.signals) == 7
+    assert len(reporter.signals) == 8
 
 
 def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
@@ -154,6 +155,32 @@ def test_report_capacitor_bank(qtbot: QtBot, reporter: Reporter) -> None:
     assert reporter.status.capacitor_bank == capacitor_bank
 
 
+def test_report_config_azimuth(qtbot: QtBot, reporter: Reporter) -> None:
+
+    config = {
+        "jmax": 0.1,
+        "amax": 0.2,
+        "vmax": 0.3,
+    }
+    with qtbot.waitSignal(reporter.signals["config"].amcs, timeout=TIMEOUT):
+        reporter.report_config_azimuth(config)
+
+    assert reporter.status.config_amcs == config
+
+
+def test_report_config_elevation(qtbot: QtBot, reporter: Reporter) -> None:
+
+    config = {
+        "jmax": 0.1,
+        "amax": 0.2,
+        "vmax": 0.3,
+    }
+    with qtbot.waitSignal(reporter.signals["config"].lwscs, timeout=TIMEOUT):
+        reporter.report_config_elevation(config)
+
+    assert reporter.status.config_lwscs == config
+
+
 def test_report_telemetry(qtbot: QtBot, reporter: Reporter) -> None:
 
     with qtbot.waitSignal(reporter.signals["telemetry"].amcs, timeout=TIMEOUT):
@@ -191,7 +218,10 @@ def test_report_motion_elevation_axis(qtbot: QtBot, reporter: Reporter) -> None:
 def test_report_motion_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> None:
 
     with qtbot.waitSignal(reporter.signals["motion"].aperture_shutter, timeout=TIMEOUT):
-        reporter.report_motion_aperture_shutter(MTDome.MotionState.MOVING, True)
+        reporter.report_motion_aperture_shutter(
+            [MTDome.MotionState.MOVING] * APSCS_NUM_SHUTTERS,
+            [True] * APSCS_NUM_SHUTTERS,
+        )
 
 
 def test_report_fault_code_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
