@@ -27,6 +27,7 @@ __all__ = [
     "SignalTarget",
     "SignalMotion",
     "SignalFaultCode",
+    "SignalConfig",
 ]
 
 from PySide6 import QtCore
@@ -127,6 +128,9 @@ class SignalMotion(QtCore.QObject):
 
     A tuple of (motion_state, in_position). "motion_state" is an enum
     `lsst.ts.xml.enums.MTDome.MotionState`. "in_position" is a boolean value.
+
+    Note for the "aperture_shutter", it would be (motion_states, in_positions),
+    which means both of the elements are list.
     """
 
     azimuth_axis = QtCore.Signal(object)
@@ -140,3 +144,14 @@ class SignalFaultCode(QtCore.QObject):
     azimuth_axis = QtCore.Signal(str)
     elevation_axis = QtCore.Signal(str)
     aperture_shutter = QtCore.Signal(str)
+
+
+class SignalConfig(QtCore.QObject):
+    """Config signal to send the current configuration."""
+
+    # Configuration dictionary of the azimuth motion control system (AMCS).
+    amcs = QtCore.Signal(object)
+
+    # Configuration dictionary of the light and wind screen control system
+    # (LWSCS).
+    lwscs = QtCore.Signal(object)
