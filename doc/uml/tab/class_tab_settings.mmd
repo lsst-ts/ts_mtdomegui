@@ -6,8 +6,15 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class Reporter
+  class SignalConfig
 }
+
+Model *-- Reporter
+
+Reporter *-- SignalConfig : emit()
 
 TabTemplate <|-- TabSettings
 
 TabSettings *-- Model
+TabSettings --> SignalConfig : connect()

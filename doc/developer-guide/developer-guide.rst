@@ -64,6 +64,7 @@ The available Qt signals are listed below:
 * **SignalTarget** sends the target.
 * **SignalMotion** sends the motion status.
 * **SignalFaultCode** sends the fault code.
+* **SignalConfig** sends the configuration of subsystem.
 
 .. _lsst.ts.mtdomegui-modules_mtdomegui_tab:
 

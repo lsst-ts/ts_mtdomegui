@@ -6,6 +6,19 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.0:
+
+-------------
+0.4.0
+-------------
+
+* Add the **SignalConfig**.
+* Fix the **TabAperatureShutter** that the motion state and in-position are list.
+* Update the **Reporter** to report the configuration and **TabSettings** to show the configuration.
+* Support the TCP/IP communication with the controller.
+* Update the **MainWindow** to connect/disconnect the controller.
+* Read the configuration from **ts_config_mttcs**.
+
 .. _lsst.ts.mtdomegui-0.3.0:
 
 -------------
