@@ -35,6 +35,7 @@ from lsst.ts.guitool import (
     TabTemplate,
     create_double_spin_box,
     create_group_box,
+    run_command,
     set_button,
 )
 from lsst.ts.mtdomecom import (
@@ -44,6 +45,7 @@ from lsst.ts.mtdomecom import (
     LWSCS_AMAX,
     LWSCS_JMAX,
     LWSCS_VMAX,
+    LlcName,
 )
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -193,24 +195,21 @@ class TabSettings(TabTemplate):
             Settings of the control system.
         """
 
-        tool_tip = "-1 means no value should be set."
         return {
             "jerk": create_double_spin_box(
-                "deg/sec^3", decimal, maximum=max_jerk, minimum=-1.0, tool_tip=tool_tip
+                "deg/sec^3",
+                decimal,
+                maximum=max_jerk,
             ),
             "acceleration": create_double_spin_box(
                 "deg/sec^2",
                 decimal,
                 maximum=max_acceleration,
-                minimum=-1.0,
-                tool_tip=tool_tip,
             ),
             "velocity": create_double_spin_box(
                 "deg/sec",
                 decimal,
                 maximum=max_velocity,
-                minimum=-1.0,
-                tool_tip=tool_tip,
             ),
         }
 
@@ -278,14 +277,54 @@ class TabSettings(TabTemplate):
         """Callback of the apply-azimuth-settings button. This will apply the
         new AMCS settings to controller."""
 
-        self.model.log.info("Apply the AMCS settings to the controller.")
+        # Check the connection status
+        if not await run_command(self.model.assert_is_connected):
+            return
+
+        # Run the command
+        settings = [
+            {"target": "jmax", "setting": [self._settings_amcs["jerk"].value()]},
+            {
+                "target": "amax",
+                "setting": [self._settings_amcs["acceleration"].value()],
+            },
+            {
+                "target": "vmax",
+                "setting": [self._settings_amcs["velocity"].value()],
+            },
+        ]
+        await run_command(
+            self.model.mtdome_com.config_llcs,  # type: ignore[union-attr]
+            LlcName.AMCS,
+            settings,
+        )
 
     @asyncSlot()
     async def _callback_apply_lwscs(self) -> None:
         """Callback of the apply-elevation-settings button. This will apply the
         new LWSCS settings to controller."""
 
-        self.model.log.info("Apply the elevation (LWSCS) settings to the controller.")
+        # Check the connection status
+        if not await run_command(self.model.assert_is_connected):
+            return
+
+        # Run the command
+        settings = [
+            {"target": "jmax", "setting": [self._settings_lwscs["jerk"].value()]},
+            {
+                "target": "amax",
+                "setting": [self._settings_lwscs["acceleration"].value()],
+            },
+            {
+                "target": "vmax",
+                "setting": [self._settings_lwscs["velocity"].value()],
+            },
+        ]
+        await run_command(
+            self.model.mtdome_com.config_llcs,  # type: ignore[union-attr]
+            LlcName.LWSCS,
+            settings,
+        )
 
     def create_layout(self) -> QVBoxLayout:
 
