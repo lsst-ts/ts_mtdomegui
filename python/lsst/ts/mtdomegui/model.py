@@ -21,47 +21,21 @@
 
 __all__ = ["Model"]
 
-import asyncio
 import logging
 import math
 import types
 import typing
 
 from lsst.ts.mtdomecom import (
-    COMMANDS_REPLIED_PERIOD,
-    CommandName,
     LlcName,
     LlcNameDict,
     MTDomeCom,
+    ValidSimulationMode,
     motion_state_translations,
 )
 from lsst.ts.xml.enums import MTDome
 
 from .reporter import Reporter
-
-# Remove these keys from the telemetry because they are not used.
-_KEYS_TO_REMOVE = {
-    "status",
-    "timestamp",
-    "operationalMode",
-    "appliedConfiguration",
-}
-
-# Polling periods [sec] for the lower level components.
-# The values are from the ts_mtdome.
-_AMCS_STATUS_PERIOD = 0.2
-_APSCS_STATUS_PERIOD = 0.5
-_CBCS_STATUS_PERIOD = 0.5
-_CSCS_STATUS_PERIOD = 0.5
-_LCS_STATUS_PERIOD = 0.5
-_LWSCS_STATUS_PERIOD = 0.5
-_MONCS_STATUS_PERIOD = 0.5
-_RAD_STATUS_PERIOD = 0.5
-_THCS_STATUS_PERIOD = 0.5
-
-# Polling period [sec] for the task that checks if any commands are waiting to
-# be issued.
-_COMMAND_QUEUE_PERIOD = 1.0
 
 
 class Model:
@@ -92,24 +66,7 @@ class Model:
         Reporter to report the status and telemetry.
     mtdome_com : `lsst.ts.mtdomecom.MTDomeCom`
         TCP/IP interface to the MTDome controller.
-    periodic_tasks : `list` [`asyncio.Task`]
-        List of periodic tasks.
     """
-
-    # All methods and the intervals at which they are executed. Not all
-    # subsystems are supported at moment (especially for the rotating part).
-    # See ts_mtdome.
-    all_methods_and_intervals = {
-        CommandName.STATUS_AMCS: _AMCS_STATUS_PERIOD,
-        # CommandName.STATUS_APSCS: _APSCS_STATUS_PERIOD,
-        CommandName.STATUS_CBCS: _CBCS_STATUS_PERIOD,
-        # CommandName.STATUS_CSCS: _CSCS_STATUS_PERIOD,
-        # CommandName.STATUS_LCS: _LCS_STATUS_PERIOD,
-        # CommandName.STATUS_LWSCS: _LWSCS_STATUS_PERIOD,
-        # CommandName.STATUS_MONCS: _MONCS_STATUS_PERIOD,
-        # CommandName.STATUS_RAD: _RAD_STATUS_PERIOD,
-        # CommandName.STATUS_THCS: _THCS_STATUS_PERIOD,
-    }
 
     def __init__(
         self,
@@ -123,7 +80,6 @@ class Model:
         self.log = log
         self._is_simulation_mode = is_simulation_mode
 
-        # TODO: Put this into the ts_config_mttcs in DM-48109.
         self.connection_information = {
             "host": host,
             "port": port,
@@ -134,8 +90,6 @@ class Model:
         self.reporter = Reporter(self.log)
 
         self.mtdome_com: MTDomeCom | None = None
-
-        self.periodic_tasks: list[asyncio.Task] = list()
 
     async def connect(self) -> None:
         """Connect to the controller.
@@ -148,8 +102,37 @@ class Model:
             (object,),
             {key: value for key, value in self.connection_information.items()},
         )()
+
+        simulation_mode = (
+            ValidSimulationMode.SIMULATION_WITH_MOCK_CONTROLLER
+            if self._is_simulation_mode
+            else ValidSimulationMode.NORMAL_OPERATIONS
+        )
+
+        telemetry_callbacks = (
+            {
+                LlcName.AMCS: self.callback_status_amcs,
+                LlcName.APSCS: self.callback_status_apscs,
+                LlcName.CBCS: self.callback_status_cbcs,
+                LlcName.CSCS: self.callback_status_cscs,
+                LlcName.LCS: self.callback_status_lcs,
+                LlcName.LWSCS: self.callback_status_lwscs,
+                LlcName.MONCS: self.callback_status_moncs,
+                LlcName.RAD: self.callback_status_rad,
+                LlcName.THCS: self.callback_status_thcs,
+            }
+            if self._is_simulation_mode
+            else {
+                LlcName.AMCS: self.callback_status_amcs,
+                LlcName.CBCS: self.callback_status_cbcs,
+            }
+        )
+
         self.mtdome_com = MTDomeCom(
-            self.log, config, simulation_mode=self._is_simulation_mode
+            self.log,
+            config,
+            simulation_mode=simulation_mode,
+            telemetry_callbacks=telemetry_callbacks,
         )
 
         try:
@@ -171,77 +154,6 @@ class Model:
 
         self.reporter.report_state_power_mode(self.mtdome_com.power_management_mode)
 
-        # Start polling for the status of the lower level components
-        # periodically.
-        await self.start_periodic_tasks()
-
-        self.log.info("connected")
-
-    async def start_periodic_tasks(self) -> None:
-        """Start all periodic tasks."""
-
-        await self.cancel_periodic_tasks()
-
-        for method, interval in self.all_methods_and_intervals.items():
-            funcion = getattr(self, method)
-            self.periodic_tasks.append(
-                asyncio.create_task(self.one_periodic_task(funcion, interval))
-            )
-
-        # Workaround the mypy check
-        assert self.mtdome_com is not None
-
-        self.periodic_tasks.append(
-            asyncio.create_task(
-                self.one_periodic_task(
-                    self.mtdome_com.check_all_commands_have_replies,
-                    COMMANDS_REPLIED_PERIOD,
-                )
-            )
-        )
-
-        self.periodic_tasks.append(
-            asyncio.create_task(
-                self.one_periodic_task(
-                    self.mtdome_com.process_command_queue,
-                    _COMMAND_QUEUE_PERIOD,
-                )
-            )
-        )
-
-    async def cancel_periodic_tasks(self) -> None:
-        """Cancel all periodic tasks."""
-
-        while self.periodic_tasks:
-            periodic_task = self.periodic_tasks.pop()
-            periodic_task.cancel()
-            await periodic_task
-
-    async def one_periodic_task(self, method: typing.Callable, interval: float) -> None:
-        """Run one method forever at the specified interval.
-
-        Parameters
-        ----------
-        method : `typing.Callable`
-            The coroutine to run periodically.
-        interval : `float`
-            The interval at which to run the status method in second.
-        """
-
-        self.log.debug(f"Starting periodic task {method=} with {interval=}")
-
-        try:
-            while True:
-                await method()
-                await asyncio.sleep(interval)
-
-        except asyncio.CancelledError:
-            # Ignore because the task was canceled on purpose.
-            pass
-
-        except Exception:
-            self.log.exception(f"one_periodic_task({method}) has stopped.")
-
     async def disconnect(self) -> None:
         """Disconnect from the controller, if connected, and stop the
         mock controller, if running.
@@ -250,10 +162,6 @@ class Model:
         """
 
         self.log.info("disconnect.")
-
-        # Stop all periodic tasks, including polling for the status of the
-        # lower level components.
-        await self.cancel_periodic_tasks()
 
         # Disconnect from the controller
         if self.is_connected():
@@ -285,32 +193,26 @@ class Model:
             True if the controller is connected. False otherwise.
         """
 
-        return (
-            self.mtdome_com is not None
-            and self.mtdome_com.client is not None
-            and self.mtdome_com.client.connected
-        )
+        return self.mtdome_com is not None and self.mtdome_com.connected
 
-    async def request_llc_status_and_report(self, llc_name: LlcName) -> None:
-        """Generic method for retrieving the status of a lower level component
-        (LLC) and report it.
+    async def report_llc_status(self, llc_name: LlcName, status: dict) -> None:
+        """Report the status of lower level component (LLC).
 
         Parameters
         ----------
-        llc_name: enum `lsst.ts.mtdomecom.LlcName`
+        llc_name : enum `lsst.ts.mtdomecom.LlcName`
             The name of LLC.
+        status : `dict`
+            System status.
         """
 
-        # Workaround the mypy check
+        # Workaround of the mypy check
         assert self.mtdome_com is not None
 
-        # Retrieve the status
-        try:
-            status = await self.mtdome_com.request_llc_status(llc_name)
-
-        except ValueError:
-            self.log.error(f"Failed to retrieve the status of {llc_name!r}.")
-
+        # If there is only the "exception" key, it means that the status
+        # reporting has failed. Return without reporting the status.
+        if list(status.keys()) == ["exception"]:
+            self.log.error(f"Failed to report the status of {llc_name!r}.")
             return
 
         self._report_operational_mode(llc_name, status["status"])
@@ -319,7 +221,9 @@ class Model:
         self._check_errors_and_report(llc_name, status["status"])
 
         # Remove some keys because they are not reported in the telemetry
-        processed_telemetry = self._remove_keys_from_dict(status)
+        processed_telemetry = self.mtdome_com.remove_keys_from_dict(
+            status, {"timestamp"}
+        )
 
         # Report the telemetry
         match llc_name:
@@ -335,15 +239,10 @@ class Model:
                 pass
 
             case LlcName.CBCS:
-                # There is the bug in the simulator at the moment to publish
-                # the float value instead of boolean.
-                # TODO: DM-48698 fix this.
-                if type(processed_telemetry["fuseIntervention"][0]) is not bool:
-                    processed_telemetry["fuseIntervention"] = [
-                        bool(value) for value in processed_telemetry["fuseIntervention"]
-                    ]
-
-                self.reporter.report_capacitor_bank(processed_telemetry)
+                processed_telemetry_update = self.mtdome_com.remove_keys_from_dict(
+                    processed_telemetry, {"status"}
+                )
+                self.reporter.report_capacitor_bank(processed_telemetry_update)
 
             case _:
                 self.reporter.report_telemetry(
@@ -592,126 +491,109 @@ class Model:
 
             self.reporter.report_motion_aperture_shutter(motion_states, in_positions)
 
-    def _remove_keys_from_dict(
-        self, dict_with_too_many_keys: dict[str, typing.Any]
-    ) -> dict[str, typing.Any]:
-        """
-        Return a copy of a dict with specified items removed.
+    async def callback_status_amcs(self, status: dict) -> None:
+        """Callback to report the status of azimuth motion control system
+        (AMCS).
 
         Parameters
         ----------
-        dict_with_too_many_keys : `dict`
-            The dict where to remove the keys from.
-
-        Returns
-        -------
-        `dict`
-            A dict with the same keys as the given dict but with the given keys
-            removed.
+        status : `dict`
+            System status.
         """
 
-        return {
-            x: dict_with_too_many_keys[x]
-            for x in dict_with_too_many_keys
-            if x not in _KEYS_TO_REMOVE
-        }
+        await self.report_llc_status(LlcName.AMCS, status)
 
-    async def statusAMCS(self) -> None:
-        """Azimuth motion control system (AMCS) status command as the periodic
-        callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_apscs(self, status: dict) -> None:
+        """Callback to report the status of aperture shutter control system
+        (ApSCS).
 
-        This command will be used to request the full status of the AMCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.AMCS)
+        await self.report_llc_status(LlcName.APSCS, status)
 
-    async def statusApSCS(self) -> None:
-        """Aperture shutter control system (ApSCS) status command as the
-        periodic callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_cbcs(self, status: dict) -> None:
+        """Callback to report the status of capacitor banks control system
+        (CBCS).
 
-        This command will be used to request the full status of the ApSCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.APSCS)
+        await self.report_llc_status(LlcName.CBCS, status)
 
-    async def statusCBCS(self) -> None:
-        """Capacitor banks control system (CBCS) status command as the periodic
-        callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_cscs(self, status: dict) -> None:
+        """Callback to report the status of calibration screen control system
+        (CSCS).
 
-        This command will be used to request the full status of the CBCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.CBCS)
+        await self.report_llc_status(LlcName.CSCS, status)
 
-    async def statusCSCS(self) -> None:
-        """Calibration screen control system (CSCS) status command as the
-        periodic callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_lcs(self, status: dict) -> None:
+        """Callback to report the status of louvers control system (LCS).
 
-        This command will be used to request the full status of the CSCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.CSCS)
+        await self.report_llc_status(LlcName.LCS, status)
 
-    async def statusLCS(self) -> None:
-        """Louvers control system (LCS) status command as the periodic callback
-        function, which is defined in enum `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_lwscs(self, status: dict) -> None:
+        """Callback to report the status of light and wind screen control
+        system (LWSCS).
 
-        This command will be used to request the full status of the LCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.LCS)
+        await self.report_llc_status(LlcName.LWSCS, status)
 
-    async def statusLWSCS(self) -> None:
-        """Light and wind screen control system (LWSCS) status command as the
-        periodic callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_moncs(self, status: dict) -> None:
+        """Callback to report the status of monitoring control system (MonCS).
 
-        This command will be used to request the full status of the LWSCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.LWSCS)
+        await self.report_llc_status(LlcName.MONCS, status)
 
-    async def statusMonCS(self) -> None:
-        """Monitoring control system (MonCS) status command as the periodic
-        callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_rad(self, status: dict) -> None:
+        """Callback to report the status of rear access door (RAD).
 
-        This command will be used to request the full status of the MonCS lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.MONCS)
+        await self.report_llc_status(LlcName.RAD, status)
 
-    async def statusRAD(self) -> None:
-        """Rear access door (RAD) status command as the periodic callback
-        function, which is defined in enum `lsst.ts.mtdomecom.CommandName`.
+    async def callback_status_thcs(self, status: dict) -> None:
+        """Callback to report the status of thermal control system (ThCS).
 
-        This command will be used to request the full status of the RAD lower
-        level component.
+        Parameters
+        ----------
+        status : `dict`
+            System status.
         """
 
-        await self.request_llc_status_and_report(LlcName.RAD)
-
-    async def statusThCS(self) -> None:
-        """Thermal control system (ThCS) status command as the periodic
-        callback function, which is defined in enum
-        `lsst.ts.mtdomecom.CommandName`.
-
-        This command will be used to request the full status of the ThCS lower
-        level component.
-        """
-
-        await self.request_llc_status_and_report(LlcName.THCS)
+        await self.report_llc_status(LlcName.THCS, status)
 
     async def __aenter__(self) -> object:
         """This is an overridden function to support the asynchronous context

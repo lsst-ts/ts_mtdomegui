@@ -484,9 +484,9 @@ class TabCommand(TabTemplate):
 
         match name:
             case "exit_fault":
-                # TODO: DM-48678. This should support the subsystem selection.
                 await run_command(
                     self.model.mtdome_com.exit_fault,  # type: ignore[union-attr]
+                    self._get_subsystem_bitmask(),
                 )
 
             case "home":

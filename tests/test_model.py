@@ -54,7 +54,6 @@ def test_init(model: Model) -> None:
 async def test_connect(model_async: Model) -> None:
 
     assert model_async.is_connected() is True
-    assert len(model_async.periodic_tasks) != 0
 
 
 def test_assert_is_connected(model: Model) -> None:
@@ -69,7 +68,6 @@ async def test_disconnect(model_async: Model) -> None:
     await model_async.disconnect()
 
     assert model_async.is_connected() is False
-    assert len(model_async.periodic_tasks) == 0
 
 
 @pytest.mark.asyncio
@@ -216,19 +214,3 @@ def test_check_errors_and_report_aperture_shutter(qtbot: QtBot, model: Model) ->
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         model._check_errors_and_report_aperture_shutter(status)
-
-
-def test_remove_keys_from_dict(model: Model) -> None:
-
-    data_original = {
-        "status": 1,
-        "timestamp": 2,
-        "operationalMode": 3,
-        "appliedConfiguration": 4,
-        "foo": 5,
-    }
-
-    data_processed = model._remove_keys_from_dict(data_original)
-
-    assert id(data_processed) != id(data_original)
-    assert data_processed == {"foo": 5}
