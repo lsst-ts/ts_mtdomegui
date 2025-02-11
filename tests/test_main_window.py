@@ -49,11 +49,11 @@ def test_init(widget: MainWindow) -> None:
     configuration = _get_config()
 
     assert connection_information["host"] == configuration["host"]
-    assert connection_information["port"] == configuration["port"]
+    assert connection_information["port"] == configuration["eui_port"]
 
 
 def _get_config() -> dict:
-    filepath = get_config_dir("MTDome/v3") / "default_gui.yaml"
+    filepath = get_config_dir("MTDome/v4") / "_summit.yaml"
     return read_yaml_file(filepath)
 
 

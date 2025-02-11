@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
 
         return log_dir / name
 
-    def _create_model(self, is_simulation_mode: bool, version: str = "v3") -> Model:
+    def _create_model(self, is_simulation_mode: bool, version: str = "v4") -> Model:
         """Create the model.
 
         Parameters
@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
         is_simulation_mode : `bool`
             Is the simulation mode or not.
         version : `str`, optional
-            Version of the configuration file. (the default is "v3")
+            Version of the configuration file. (the default is "v4")
 
         Returns
         -------
@@ -241,13 +241,13 @@ class MainWindow(QMainWindow):
         """
 
         # Read the yaml file
-        filepath = get_config_dir(f"MTDome/{version}") / "default_gui.yaml"
+        filepath = get_config_dir(f"MTDome/{version}") / "_summit.yaml"
         default_settings = read_yaml_file(filepath)
 
         return Model(
             self.log,
             host=default_settings["host"],
-            port=default_settings["port"],
+            port=default_settings["eui_port"],
             is_simulation_mode=is_simulation_mode,
         )
 
