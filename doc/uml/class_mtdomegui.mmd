@@ -28,6 +28,7 @@ Reporter *-- SignalTelemetry : emit()
 Reporter *-- SignalTarget : emit()
 Reporter *-- SignalMotion : emit()
 Reporter *-- SignalFaultCode : emit()
+Reporter *-- SignalConfig : emit()
 
 ControlPanel *-- Model
 ControlPanel *-- TabInterlock
@@ -35,6 +36,8 @@ ControlPanel --> SignalInterlock : connect()
 ControlPanel --> SignalState : connect()
 
 TabSettings *-- Model
+TabSettings --> SignalConfig : connect()
+
 TabInterlock *-- Model
 
 ControlTabs "1" *-- "9" TabTemplate

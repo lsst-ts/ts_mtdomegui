@@ -23,10 +23,12 @@ __all__ = ["Reporter"]
 
 import logging
 
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.xml.enums import MTDome
 
 from .signals import (
+    SignalConfig,
     SignalFaultCode,
     SignalInterlock,
     SignalMotion,
@@ -70,6 +72,7 @@ class Reporter:
             "target": SignalTarget(),
             "motion": SignalMotion(),
             "fault_code": SignalFaultCode(),
+            "config": SignalConfig(),
         }
 
     def report_default(self) -> None:
@@ -99,7 +102,10 @@ class Reporter:
 
         self.report_motion_azimuth_axis(MTDome.MotionState.STOPPED, False)
         self.report_motion_elevation_axis(MTDome.MotionState.STOPPED, False)
-        self.report_motion_aperture_shutter(MTDome.MotionState.STOPPED, False)
+        self.report_motion_aperture_shutter(
+            [MTDome.MotionState.STOPPED] * APSCS_NUM_SHUTTERS,
+            [False] * APSCS_NUM_SHUTTERS,
+        )
 
     def report_interlocks(self, interlocks: list[bool]) -> None:
         """Report the interlocks.
@@ -249,6 +255,34 @@ class Reporter:
             self.status.capacitor_bank = capacitor_bank
             self.signals["telemetry"].cbcs.emit(capacitor_bank)  # type: ignore[attr-defined]
 
+    def report_config_azimuth(self, config: dict[str, float]) -> None:
+        """Report the configuration of the azimuth motion control system
+        (AMCS).
+
+        Parameters
+        ----------
+        config : `dict`
+            Configuration.
+        """
+
+        if self.status.config_amcs != config:
+            self.status.config_amcs = config
+            self.signals["config"].amcs.emit(config)  # type: ignore[attr-defined]
+
+    def report_config_elevation(self, config: dict[str, float]) -> None:
+        """Report the configuration of the elevation (light and wind screen)
+        control system (LWSCS).
+
+        Parameters
+        ----------
+        config : `dict`
+            Configuration.
+        """
+
+        if self.status.config_lwscs != config:
+            self.status.config_lwscs = config
+            self.signals["config"].lwscs.emit(config)  # type: ignore[attr-defined]
+
     def report_telemetry(self, field: str, telemetry: dict) -> None:
         """Report the telemetry.
 
@@ -323,20 +357,21 @@ class Reporter:
         self.signals["motion"].elevation_axis.emit((motion_state, in_position))  # type: ignore[attr-defined]
 
     def report_motion_aperture_shutter(
-        self, motion_state: MTDome.MotionState, in_position: bool
+        self, motion_states: list[MTDome.MotionState], in_positions: list[bool]
     ) -> None:
         """Report the motion of the aperture shutter.
 
         Parameters
         ----------
-        motion_state : enum `MTDome.MotionState`
-            Motion state.
-        in_position : `bool`
-            True if the aperture shutter is in position. Otherwise, False.
+        motion_states : `list` [enum `MTDome.MotionState`]
+            List of the Motion states.
+        in_positions : `list` [`bool`]
+            List of the in-position. True if the aperture shutter is in
+            position. Otherwise, False.
         """
 
         self.signals["motion"].aperture_shutter.emit(  # type: ignore[attr-defined]
-            (motion_state, in_position)
+            (motion_states, in_positions)
         )
 
     def report_fault_code_azimuth_axis(self, fault_code: str) -> None:

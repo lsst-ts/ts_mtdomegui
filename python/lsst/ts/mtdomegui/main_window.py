@@ -26,7 +26,16 @@ import pathlib
 import sys
 from datetime import datetime
 
-from lsst.ts.guitool import ControlTabs, QMessageBoxAsync, get_button_action
+from lsst.ts.guitool import (
+    ControlTabs,
+    QMessageBoxAsync,
+    get_button_action,
+    get_config_dir,
+    prompt_dialog_critical,
+    prompt_dialog_warning,
+    read_yaml_file,
+    run_command,
+)
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMainWindow, QToolBar, QVBoxLayout, QWidget
@@ -93,10 +102,7 @@ class MainWindow(QMainWindow):
             log=log,
         )
 
-        self.model = Model(
-            self.log,
-            is_simulation_mode=is_simulation_mode,
-        )
+        self.model = self._create_model(is_simulation_mode)
         self._control_panel = ControlPanel(self.model)
 
         # Control tabs
@@ -218,6 +224,33 @@ class MainWindow(QMainWindow):
 
         return log_dir / name
 
+    def _create_model(self, is_simulation_mode: bool, version: str = "v4") -> Model:
+        """Create the model.
+
+        Parameters
+        ----------
+        is_simulation_mode : `bool`
+            Is the simulation mode or not.
+        version : `str`, optional
+            Version of the configuration file. (the default is "v4")
+
+        Returns
+        -------
+        `Model`
+            Model object.
+        """
+
+        # Read the yaml file
+        filepath = get_config_dir(f"MTDome/{version}") / "_summit.yaml"
+        default_settings = read_yaml_file(filepath)
+
+        return Model(
+            self.log,
+            host=default_settings["host"],
+            port=default_settings["eui_port"],
+            is_simulation_mode=is_simulation_mode,
+        )
+
     def _create_layout(self) -> QVBoxLayout:
         """Create the layout.
 
@@ -263,11 +296,21 @@ class MainWindow(QMainWindow):
         action_exit = self._get_action("Exit")
         action_exit.setEnabled(False)
 
-        dialog = self._create_dialog_exit()
-        result = await dialog.show()
+        if self.model.is_connected():
+            await prompt_dialog_warning(
+                "_callback_exit()",
+                (
+                    "The controller is still connected. Please disconnect "
+                    "it before exiting the user interface."
+                ),
+            )
 
-        if result == QMessageBoxAsync.Ok:
-            QApplication.instance().quit()
+        else:
+            dialog = self._create_dialog_exit()
+            result = await dialog.show()
+
+            if result == QMessageBoxAsync.Ok:
+                QApplication.instance().quit()
 
         action_exit.setEnabled(True)
 
@@ -293,7 +336,7 @@ class MainWindow(QMainWindow):
 
         Returns
         -------
-        dialog : `QMessageBoxAsync`
+        dialog : `lsst.ts.guitool.QMessageBoxAsync`
             Exit dialog.
         """
 
@@ -315,13 +358,51 @@ class MainWindow(QMainWindow):
     async def _callback_connect(self) -> None:
         """Callback function to connect to the controller."""
 
-        self.log.info("Connect to the controller.")
+        action_connect = self._get_action("Connect")
+        action_connect.setEnabled(False)
+
+        if self.model.is_connected():
+            await prompt_dialog_warning(
+                "_callback_connect()", "The controller is already connected."
+            )
+
+        else:
+            try:
+                await run_command(self.model.connect)
+
+            except Exception as error:
+                await prompt_dialog_critical(
+                    "_callback_connect",
+                    f"Cannot connect to the controller - {error}",
+                )
+
+        action_connect.setEnabled(True)
 
     @asyncSlot()
     async def _callback_disconnect(self) -> None:
-        """Callback function to disconnect from the controller."""
+        """Callback function to disconnect from the controller.
 
-        self.log.info("Disconnect from the controller.")
+        The 'connect', 'disconnect' and 'exit' actions will be disabled before
+        disconnecting and re-enabled after the controller is disconnected. That
+        prevents the operator from trying to connect as asynchronous tasks are
+        being closed during the disconnection command, thus preventing
+        unpredictable application behavior.
+        """
+
+        action_connect = self._get_action("Connect")
+        action_connect.setEnabled(False)
+
+        action_disconnect = self._get_action("Disconnect")
+        action_disconnect.setEnabled(False)
+
+        action_exit = self._get_action("Exit")
+        action_exit.setEnabled(False)
+
+        await run_command(self.model.disconnect)
+
+        action_connect.setEnabled(True)
+        action_disconnect.setEnabled(True)
+        action_exit.setEnabled(True)
 
     @asyncSlot()
     async def _callback_settings(self) -> None:

@@ -433,18 +433,20 @@ class TabApertureShutter(TabTemplate):
 
     @asyncSlot()
     async def _callback_update_motion(
-        self, motion: tuple[MTDome.MotionState, bool]
+        self, motion: tuple[list[MTDome.MotionState], list[bool]]
     ) -> None:
         """Callback to update the motion state.
 
         Parameters
         ----------
         motion : `tuple`
-            A tuple of (motion_state, in_position).
+            A tuple of (motion_states, in_positions).
         """
 
-        self._states["motion"].setText(motion[0].name)
-        self._states["in_position"].setText(str(motion[1]))
+        self._states["motion"].setText(", ".join([value.name for value in motion[0]]))
+        self._states["in_position"].setText(
+            ", ".join([str(value) for value in motion[1]])
+        )
 
     def _set_signal_fault_code(self, signal: SignalFaultCode) -> None:
         """Set the fault code signal.

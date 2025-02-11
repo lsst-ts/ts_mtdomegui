@@ -66,3 +66,21 @@ class Status:
             }
         )
     )
+
+    # Configuration of the azimuth motion control system (AMCS).
+    config_amcs: dict[str, float] = field(
+        default_factory=lambda: {
+            "jmax": 0.0,
+            "amax": 0.0,
+            "vmax": 0.0,
+        }
+    )
+
+    # Configuration of the light and wind screen control system (LWSCS).
+    config_lwscs: dict[str, float] = field(
+        default_factory=lambda: {
+            "jmax": 0.0,
+            "amax": 0.0,
+            "vmax": 0.0,
+        }
+    )

@@ -27,9 +27,11 @@ from lsst.ts.guitool import (
     TabTemplate,
     create_double_spin_box,
     create_group_box,
+    prompt_dialog_warning,
+    run_command,
     set_button,
 )
-from lsst.ts.mtdomecom import AMCS_NUM_MOTORS, LWSCS_VMAX
+from lsst.ts.mtdomecom import AMCS_NUM_MOTORS, DOME_AZIMUTH_OFFSET, LWSCS_VMAX
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QComboBox,
@@ -149,10 +151,9 @@ class TabCommand(TabTemplate):
             "%",
             decimal,
             maximum=100.0,
-            minimum=-1.0,
             tool_tip=(
                 "Desired percent open of each louver: 0 is fully closed,\n"
-                "100 is fully open, -1 is don't move."
+                "100 is fully opened."
             ),
         )
 
@@ -170,10 +171,12 @@ class TabCommand(TabTemplate):
             power_mode.addItem(mode.name)
 
         action = QComboBox()
+        action.addItem("")
         for specific_action in MTDome.OnOff:
             action.addItem(specific_action.name)
 
         engage_brakes = QComboBox()
+        engage_brakes.addItem("")
         for specific_action in MTDome.OnOff:
             engage_brakes.addItem(specific_action.name)
         engage_brakes.setToolTip("Engage the brakes (on) or not (off).")
@@ -468,7 +471,306 @@ class TabCommand(TabTemplate):
     async def _callback_send_command(self) -> None:
         """Callback of the send-command button to command the controller."""
 
-        self.model.log.info("Send the command.")
+        # Check the connection status
+        if not await run_command(self.model.assert_is_connected):
+            return
+
+        # Check the selected command and run the command
+        name = self._get_selected_command()
+        self.model.log.info(f"Send the command: {name}.")
+
+        # Workaround the mypy check
+        assert self.model.mtdome_com is not None
+
+        match name:
+            case "exit_fault":
+                await run_command(
+                    self.model.mtdome_com.exit_fault,  # type: ignore[union-attr]
+                    self._get_subsystem_bitmask(),
+                )
+
+            case "home":
+                await run_command(
+                    self.model.mtdome_com.home,  # type: ignore[union-attr]
+                    self._get_subsystem_bitmask(),
+                )
+
+            case "crawl_az":
+                velocity = self._command_parameters["velocity"].value()
+                if await run_command(
+                    self.model.mtdome_com.crawl_az,  # type: ignore[union-attr]
+                    velocity,
+                ):
+                    self.model.reporter.report_target_azimuth(float("nan"), velocity)
+
+            case "crawl_el":
+                velocity = self._command_parameters["velocity"].value()
+                if await run_command(
+                    self.model.mtdome_com.crawl_el,  # type: ignore[union-attr]
+                    velocity,
+                ):
+                    self.model.reporter.report_target_elevation(float("nan"), velocity)
+
+            case "move_az":
+                position = self._command_parameters["position"].value()
+                velocity = self._command_parameters["velocity"].value()
+                if await run_command(
+                    self.model.mtdome_com.move_az,  # type: ignore[union-attr]
+                    position,
+                    velocity,
+                ):
+                    self.model.reporter.report_target_azimuth(position, velocity)
+
+            case "move_el":
+                position = self._command_parameters["position"].value()
+                if await run_command(
+                    self.model.mtdome_com.move_el,  # type: ignore[union-attr]
+                    position,
+                ):
+                    self.model.reporter.report_target_elevation(position, 0.0)
+
+            case "park":
+                if await run_command(
+                    self.model.mtdome_com.park,  # type: ignore[union-attr]
+                ):
+                    # See the ts_mtdome for the "360.0 - DOME_AZIMUTH_OFFSET"
+                    self.model.reporter.report_target_azimuth(
+                        360.0 - DOME_AZIMUTH_OFFSET, 0.0
+                    )
+
+            case "set_louvers":
+                await run_command(
+                    self.model.mtdome_com.set_louvers,  # type: ignore[union-attr]
+                    self._get_louver_percentages(),
+                )
+
+            case "close_louvers":
+                await run_command(
+                    self.model.mtdome_com.close_louvers,  # type: ignore[union-attr]
+                )
+
+            case "close_shutter":
+                await run_command(
+                    self.model.mtdome_com.close_shutter,  # type: ignore[union-attr]
+                )
+
+            case "open_shutter":
+                await run_command(
+                    self.model.mtdome_com.open_shutter,  # type: ignore[union-attr]
+                )
+
+            case "stop":
+                subsystem_bitmask = self._get_subsystem_bitmask()
+                engage_brakes = self._get_on_off(
+                    self._command_parameters["engage_brakes"]
+                )
+                if engage_brakes is None:
+                    await prompt_dialog_warning(
+                        "_callback_send_command()",
+                        ("The engage brakes can not be empty."),
+                    )
+                    return
+
+                else:
+                    await run_command(
+                        self.model.mtdome_com.stop_sub_systems,  # type: ignore[union-attr]
+                        subsystem_bitmask,
+                        engage_brakes.value,
+                    )
+
+            case "set_temperature":
+                await run_command(
+                    self.model.mtdome_com.set_temperature,  # type: ignore[union-attr]
+                    self._command_parameters["temperature"].value(),
+                )
+
+            case "set_operational_mode":
+                await run_command(
+                    self.model.mtdome_com.set_operational_mode,  # type: ignore[union-attr]
+                    self._get_operational_mode(),
+                    self._get_subsystem_bitmask(),
+                )
+
+            case "reset_drives_az":
+                await run_command(
+                    self.model.mtdome_com.reset_drives_az,  # type: ignore[union-attr]
+                    self._get_reset_drives_azimuth(),
+                )
+
+            case "set_zero_az":
+                await run_command(
+                    self.model.mtdome_com.set_zero_az,  # type: ignore[union-attr]
+                )
+
+            case "reset_drives_shutter":
+                await run_command(
+                    self.model.mtdome_com.reset_drives_shutter,  # type: ignore[union-attr]
+                    self._get_reset_drives_aperture_shutter(),
+                )
+
+            case "fans":
+                await run_command(
+                    self.model.mtdome_com.fans,  # type: ignore[union-attr]
+                    self._command_parameters["speed"].value(),
+                )
+
+            case "inflate":
+                action = self._get_on_off(self._command_parameters["action"])
+                if action is None:
+                    await prompt_dialog_warning(
+                        "_callback_send_command()",
+                        ("The action can not be empty."),
+                    )
+                    return
+
+                else:
+                    await run_command(
+                        self.model.mtdome_com.inflate,  # type: ignore[union-attr]
+                        action,
+                    )
+
+            case "set_power_management_mode":
+                mode = self._get_power_mode()
+                if await run_command(
+                    self.model.mtdome_com.set_power_management_mode,  # type: ignore[union-attr]
+                    mode,
+                ):
+                    self.model.reporter.report_state_power_mode(mode)
+
+            case _:
+                # Should not reach here
+                self.model.log.error(f"Unknown command: {name}.")
+
+    def _get_selected_command(self) -> str:
+        """Get the selected command.
+
+        Returns
+        -------
+        name : `str`
+            Selected command.
+        """
+
+        for name, commmand in self._commands.items():
+            if commmand.isChecked():
+                return name
+
+        return ""
+
+    def _get_louver_percentages(self) -> list[float]:
+        """Get the louver percentages.
+
+        -1.0 means "do not move".
+
+        Returns
+        -------
+        percentages : `list` [`float`]
+            Percentages.
+        """
+
+        percentage = self._command_parameters["percentage"].value()
+
+        percentages = [-1.0] * len(MTDome.Louver)
+        for selection in self._tabs["louver"].get_selection():
+            percentages[selection] = percentage
+
+        return percentages
+
+    def _get_subsystem_bitmask(self) -> int:
+        """Get the subsystem's bitmask.
+
+        Returns
+        -------
+        `int`
+            Subsystem's bitmask.
+        """
+
+        return list(MTDome.SubSystemId)[
+            self._command_parameters["subsystem"].currentIndex()
+        ].value
+
+    def _get_on_off(self, combo_box: QComboBox) -> MTDome.OnOff | None:
+        """Get the on/off status.
+
+        Parameters
+        ----------
+        combo_box : `PySide6.QtWidgets.QComboBox`
+            Combo box with the on/off status.
+
+        Returns
+        -------
+        enum `MTDome.OnOff` or None
+            On/Off status. If no selection, return None.
+        """
+
+        match combo_box.currentIndex():
+            case 1:
+                return MTDome.OnOff.ON
+
+            case 2:
+                return MTDome.OnOff.OFF
+
+            case _:
+                return None
+
+    def _get_operational_mode(self) -> MTDome.OperationalMode:
+        """Get the operational mode.
+
+        Returns
+        -------
+        enum `MTDome.OperationalMode`
+            Operational mode.
+        """
+
+        # The index of the combo box is 0-based, but the OperationalMode is
+        # 1-based.
+        return MTDome.OperationalMode(
+            self._command_parameters["operation_mode"].currentIndex() + 1
+        )
+
+    def _get_reset_drives_azimuth(self) -> list[int]:
+        """Get the reset azimuth drives.
+
+        Returns
+        -------
+        reset_drives : `list` [`int`]
+            Reset azimuth drives. 0 means no reset, 1 means reset.
+        """
+
+        reset_drives = [0] * AMCS_NUM_MOTORS
+        for idx in self._tabs["drive_az"].get_selection():
+            reset_drives[idx] = 1
+
+        return reset_drives
+
+    def _get_reset_drives_aperture_shutter(self) -> list[int]:
+        """Get the reset aperture shutter drives.
+
+        Returns
+        -------
+        reset_drives : `list` [`int`]
+            Reset aperture shutter drives. 0 means no reset, 1 means reset.
+        """
+
+        reset_drives = [0] * NUM_DRIVE_SHUTTER
+        for idx in self._tabs["drive_shuttor"].get_selection():
+            reset_drives[idx] = 1
+
+        return reset_drives
+
+    def _get_power_mode(self) -> MTDome.PowerManagementMode:
+        """Get the power management mode.
+
+        Returns
+        -------
+        enum `MTDome.PowerManagementMode`
+            Power management mode.
+        """
+
+        # The index of the combo box is 0-based, but the PowerManagementMode is
+        # 1-based.
+        return MTDome.PowerManagementMode(
+            self._command_parameters["power_mode"].currentIndex() + 1
+        )
 
     def create_layout(self) -> QHBoxLayout:
 
