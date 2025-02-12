@@ -21,6 +21,7 @@
 
 __all__ = ["TabAzimuth"]
 
+import numpy as np
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
 from lsst.ts.mtdomecom import (
     AMCS_NUM_MOTOR_TEMPERATURES,
@@ -396,6 +397,11 @@ class TabAzimuth(TabTemplate):
             )
 
         # Real-time chart
+
+        # In the crawing, the commanded position is NaN
+        if np.isnan(position_commanded):
+            position_commanded = position_actual
+
         self._figures["position"].append_data([position_commanded, position_actual])
         self._figures["velocity"].append_data([velocity_commanded, velocity_actual])
 
