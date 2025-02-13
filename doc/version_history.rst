@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.1:
+
+-------------
+0.4.1
+-------------
+
+* Fix the received NaN in the azimuth table when crawing.
+
 .. _lsst.ts.mtdomegui-0.4.0:
 
 -------------
