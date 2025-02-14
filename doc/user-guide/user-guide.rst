@@ -177,15 +177,15 @@ You can click the buttons to see the realtime charts as well.
 
 .. _lsst.ts.mtdomegui-user_shutter:
 
-Aperature Shutter
+Aperture Shutter
 -----------------
 
 .. figure:: ../screenshot/shutter.png
   :width: 550
 
-  Aperature shutter control system.
+  Aperture shutter control system.
 
-You can see the status of aperature shutter control system in this table.
+You can see the status of aperture shutter control system in this table.
 It shows the current state and motion state.
 If there is the fault, you will see the error message in the table.
 When the dome opens or closes the shutter, you will see the current position, torque, motor current, drive temperature, and power here.
