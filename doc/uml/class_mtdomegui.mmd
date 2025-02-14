@@ -1,5 +1,9 @@
 classDiagram
 
+namespace mtdomecom {
+  class MTDomeCom
+}
+
 namespace guitool {
   class ControlTabs
   class TabTemplate
@@ -19,6 +23,7 @@ MainWindow *-- ControlPanel
 MainWindow *-- TabSettings
 
 Model *-- Reporter
+Model *-- MTDomeCom
 
 Reporter *-- Status
 Reporter *-- SignalInterlock : emit()
