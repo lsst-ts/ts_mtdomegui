@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.2:
+
+-------------
+0.4.2
+-------------
+
+* Add the user guide.
+
 .. _lsst.ts.mtdomegui-0.4.1:
 
 -------------
