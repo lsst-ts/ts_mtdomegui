@@ -35,6 +35,7 @@ mtdomegui
 * **ControlPanel** shows the current system status.
 * **Status** is a data class that has the current controller status.
 * **Reporter** reports the system status and telemetry.
+* **MTDomeCom** is the controller to communicate with the low-level controller.
 
 The model–view–controller (MVC) architecture is used in this module.
 In this design, the view always shows the data sent from the model.

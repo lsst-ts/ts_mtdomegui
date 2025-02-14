@@ -22,6 +22,17 @@ This package also supports the `conda <https://docs.conda.io/en/latest>`_ packag
 
 The badges above navigate to the GitHub repository for the tool code.
 
+.. _User_Documentation:
+
+User Documentation
+==================
+
+Observatory operators and other interested parties should consult the user guide for insights into the main telescope dome GUI operations.
+
+.. toctree::
+    user-guide/user-guide
+    :maxdepth: 1
+
 .. _Development_Documentation:
 
 Development Documentation
