@@ -124,6 +124,7 @@ class Model:
             if self._is_simulation_mode
             else {
                 LlcName.AMCS: self.callback_status_amcs,
+                LlcName.APSCS: self.callback_status_apscs,
                 LlcName.CBCS: self.callback_status_cbcs,
             }
         )

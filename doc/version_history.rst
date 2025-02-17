@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.3:
+
+-------------
+0.4.3
+-------------
+
+* Allow to query the shutter status.
+
 .. _lsst.ts.mtdomegui-0.4.2:
 
 -------------
