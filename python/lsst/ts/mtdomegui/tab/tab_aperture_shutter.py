@@ -361,10 +361,10 @@ class TabApertureShutter(TabTemplate):
         position_actual = telemetry["positionActual"]
         for idx in range(APSCS_NUM_SHUTTERS):
             self._status["position_commanded"][idx].setText(
-                f"{position_commanded[idx]:.2f} deg"
+                f"{position_commanded[idx]:.2f} %"
             )
             self._status["position_actual"][idx].setText(
-                f"{position_actual[idx]:.2f} deg"
+                f"{position_actual[idx]:.2f} %"
             )
 
         for idx in range(NUM_DRIVE_SHUTTER):

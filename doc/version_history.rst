@@ -13,6 +13,7 @@ Version History
 -------------
 
 * Allow to query the shutter status.
+* Fix the unit of position of the shutter.
 
 .. _lsst.ts.mtdomegui-0.4.2:
 

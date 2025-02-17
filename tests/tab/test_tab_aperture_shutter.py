@@ -69,8 +69,8 @@ async def test_set_signal_telemetry(widget: TabApertureShutter) -> None:
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._status["position_commanded"][0].text() == "1.00 deg"
-    assert widget._status["position_actual"][0].text() == "1.00 deg"
+    assert widget._status["position_commanded"][0].text() == "1.00 %"
+    assert widget._status["position_actual"][0].text() == "1.00 %"
 
     assert widget._status["drive_torque_commanded"][0].text() == "1.00 J"
     assert widget._status["drive_torque_actual"][0].text() == "1.00 J"
