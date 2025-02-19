@@ -88,8 +88,8 @@ async def test_set_signal_telemetry(widget: TabLouver) -> None:
         assert louver._status["position_commanded"].text() == "1.00 %"
         assert louver._status["position_actual"].text() == "1.00 %"
 
-        assert louver._status["drive_torque_commanded"][0].text() == "1.00 J"
-        assert louver._status["drive_torque_actual"][0].text() == "1.00 J"
+        assert louver._status["drive_torque_commanded"][0].text() == "1.00 N*m"
+        assert louver._status["drive_torque_actual"][0].text() == "1.00 N*m"
         assert louver._status["drive_current_actual"][0].text() == "1.00 A"
 
         assert louver._status["drive_temperature"][0].text() == "1.00 deg C"

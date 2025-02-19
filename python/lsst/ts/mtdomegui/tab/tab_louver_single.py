@@ -114,7 +114,7 @@ class TabLouverSingle(TabTemplate):
             "drive_torque": TabFigure(
                 f"{louver_name} Actual Drive Torque",
                 self.model,
-                "J",
+                "N*m",
                 [str(idx) for idx in range(LCS_NUM_MOTORS_PER_LOUVER)],
             ),
             "drive_current": TabFigure(
@@ -291,9 +291,9 @@ class TabLouverSingle(TabTemplate):
         Parameters
         ----------
         torque_commanded : `list` [`float`]
-            Commanded torque in J.
+            Commanded torque in N*m.
         torque_actual : `list` [`float`]
-            Actual torque in J.
+            Actual torque in N*m.
         current_actual : `list` [`float`]
             Actual current in A.
         encoder_head : `list` [`float`]
@@ -302,10 +302,10 @@ class TabLouverSingle(TabTemplate):
 
         for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
             self._status["drive_torque_commanded"][idx].setText(
-                f"{torque_commanded[idx]:.2f} J"
+                f"{torque_commanded[idx]:.2f} N*m"
             )
             self._status["drive_torque_actual"][idx].setText(
-                f"{torque_actual[idx]:.2f} J"
+                f"{torque_actual[idx]:.2f} N*m"
             )
             self._status["drive_current_actual"][idx].setText(
                 f"{current_actual[idx]:.2f} A"

@@ -74,8 +74,8 @@ async def test_set_signal_telemetry(widget: TabRearAccessDoor) -> None:
     assert widget._status["position_commanded"][0].text() == "1.00 %"
     assert widget._status["position_actual"][0].text() == "1.00 %"
 
-    assert widget._status["drive_torque_commanded"][0].text() == "1.00 J"
-    assert widget._status["drive_torque_actual"][0].text() == "1.00 J"
+    assert widget._status["drive_torque_commanded"][0].text() == "1.00 N*m"
+    assert widget._status["drive_torque_actual"][0].text() == "1.00 N*m"
     assert widget._status["drive_current_actual"][0].text() == "1.00 A"
 
     assert widget._status["drive_temperature"][0].text() == "1.00 deg C"

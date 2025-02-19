@@ -105,7 +105,7 @@ class TabCalibration(TabTemplate):
             "drive_torque": TabFigure(
                 "Actual Drive Torque",
                 self.model,
-                "J",
+                "N*m",
                 ["torque"],
             ),
             "drive_current": TabFigure(
@@ -280,10 +280,10 @@ class TabCalibration(TabTemplate):
         self._status["position_actual"].setText(f"{position_actual:.2f}")
 
         self._status["drive_torque_commanded"].setText(
-            f"{telemetry['driveTorqueCommanded']:.2f} J"
+            f"{telemetry['driveTorqueCommanded']:.2f} N*m"
         )
         self._status["drive_torque_actual"].setText(
-            f"{telemetry['driveTorqueActual']:.2f} J"
+            f"{telemetry['driveTorqueActual']:.2f} N*m"
         )
         self._status["drive_current_actual"].setText(
             f"{telemetry['driveCurrentActual']:.2f} A"

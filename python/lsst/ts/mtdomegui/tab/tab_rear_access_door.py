@@ -161,7 +161,7 @@ class TabRearAccessDoor(TabTemplate):
             "drive_torque": TabFigure(
                 "Actual Drive Torque",
                 self.model,
-                "J",
+                "N*m",
                 [str(idx) for idx in range(RAD_NUM_DOORS)],
             ),
             "drive_current": TabFigure(
@@ -395,10 +395,10 @@ class TabRearAccessDoor(TabTemplate):
             )
 
             self._status["drive_torque_commanded"][idx].setText(
-                f"{telemetry['driveTorqueCommanded'][idx]:.2f} J"
+                f"{telemetry['driveTorqueCommanded'][idx]:.2f} N*m"
             )
             self._status["drive_torque_actual"][idx].setText(
-                f"{telemetry['driveTorqueActual'][idx]:.2f} J"
+                f"{telemetry['driveTorqueActual'][idx]:.2f} N*m"
             )
             self._status["drive_current_actual"][idx].setText(
                 f"{telemetry['driveCurrentActual'][idx]:.2f} A"
