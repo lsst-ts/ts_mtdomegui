@@ -75,8 +75,8 @@ async def test_set_signal_telemetry(widget: TabAzimuth) -> None:
     assert widget._status["velocity_commanded"].text() == "1.00 deg/sec"
     assert widget._status["velocity_actual"].text() == "1.00 deg/sec"
 
-    assert widget._status["drive_torque_commanded"][0].text() == "1.00 J"
-    assert widget._status["drive_torque_actual"][0].text() == "1.00 J"
+    assert widget._status["drive_torque_commanded"][0].text() == "1.00 N*m"
+    assert widget._status["drive_torque_actual"][0].text() == "1.00 N*m"
     assert widget._status["drive_current_actual"][0].text() == "1.00 A"
 
     assert widget._status["drive_temperature"][0].text() == "1.00 deg C"
