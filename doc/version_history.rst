@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.4:
+
+-------------
+0.4.4
+-------------
+
+* Update the ``TabCommand._callback_send_command()`` to disable and enable the command button in the running of command.
+* Do not wrap the callback functions in the **MTDomeCom**.
+
 .. _lsst.ts.mtdomegui-0.4.3:
 
 -------------
