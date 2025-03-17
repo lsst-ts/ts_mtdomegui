@@ -475,6 +475,8 @@ class TabCommand(TabTemplate):
         if not await run_command(self.model.assert_is_connected):
             return
 
+        self._button_send_command.setEnabled(False)
+
         # Check the selected command and run the command
         name = self._get_selected_command()
         self.model.log.info(f"Send the command: {name}.")
@@ -569,6 +571,7 @@ class TabCommand(TabTemplate):
                         "_callback_send_command()",
                         ("The engage brakes can not be empty."),
                     )
+                    self._button_send_command.setEnabled(True)
                     return
 
                 else:
@@ -621,6 +624,7 @@ class TabCommand(TabTemplate):
                         "_callback_send_command()",
                         ("The action can not be empty."),
                     )
+                    self._button_send_command.setEnabled(True)
                     return
 
                 else:
@@ -640,6 +644,8 @@ class TabCommand(TabTemplate):
             case _:
                 # Should not reach here
                 self.model.log.error(f"Unknown command: {name}.")
+
+        self._button_send_command.setEnabled(True)
 
     def _get_selected_command(self) -> str:
         """Get the selected command.
