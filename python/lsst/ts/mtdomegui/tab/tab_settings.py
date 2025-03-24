@@ -281,6 +281,8 @@ class TabSettings(TabTemplate):
         if not await run_command(self.model.assert_is_connected):
             return
 
+        self._buttons["apply_amcs"].setEnabled(False)
+
         # Run the command
         settings = [
             {"target": "jmax", "setting": [self._settings_amcs["jerk"].value()]},
@@ -299,6 +301,8 @@ class TabSettings(TabTemplate):
             settings,
         )
 
+        self._buttons["apply_amcs"].setEnabled(True)
+
     @asyncSlot()
     async def _callback_apply_lwscs(self) -> None:
         """Callback of the apply-elevation-settings button. This will apply the
@@ -307,6 +311,8 @@ class TabSettings(TabTemplate):
         # Check the connection status
         if not await run_command(self.model.assert_is_connected):
             return
+
+        self._buttons["apply_lwscs"].setEnabled(False)
 
         # Run the command
         settings = [
@@ -325,6 +331,8 @@ class TabSettings(TabTemplate):
             LlcName.LWSCS,
             settings,
         )
+
+        self._buttons["apply_lwscs"].setEnabled(True)
 
     def create_layout(self) -> QVBoxLayout:
 
