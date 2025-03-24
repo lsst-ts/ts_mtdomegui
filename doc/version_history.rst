@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.5:
+
+-------------
+0.4.5
+-------------
+
+* Update the ``TabSettings._callback_apply_amcs()`` and ``TabSettings._callback_apply_lwscs()`` to disable and enable the command button in the running of command.
+* Add the **error_handling.rst** and **capacitor-bank.rst**.
+
 .. _lsst.ts.mtdomegui-0.4.4:
 
 -------------
