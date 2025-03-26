@@ -33,6 +33,21 @@ Observatory operators and other interested parties should consult the user guide
     user-guide/user-guide
     :maxdepth: 1
 
+.. toctree::
+    user-guide/capacitor-bank
+    :maxdepth: 1
+
+.. _Error_Handling_Documentation:
+
+Error Handling Documentation
+============================
+
+The possible error of MT dome and the related handling to recover the system are recorded here.
+
+.. toctree::
+    error-handling/error-handling
+    :maxdepth: 1
+
 .. _Development_Documentation:
 
 Development Documentation

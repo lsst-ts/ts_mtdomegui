@@ -65,11 +65,32 @@ You can do the following things:
 
 #. General settings of application. You can use the different `logging level <https://docs.python.org/3/library/logging.html#logging-levels>`_ to support the debugging if needed. The log file will be in the ``/rubin/dome/log`` directory. If it does not exist in file system, the log file will be in the ``$HOME`` directory.
 
-#. Settings of the azimuth control system. You can modify the maximum jerk, acceleration, and velocity.
+#. Settings of the azimuth motion control system (AMCS). You can modify the maximum jerk, acceleration, and velocity.
 
 #. Settings of the elevation control system. You can modify the maximum jerk, acceleration, and velocity.
 
 After the modification of settings, you can click the related **Apply** button to use the new values.
+To reach the full performance of dome, you need to connect it with the :ref:`Capacitor_Bank`.
+
+AMCS can apply the following settings in the full performance:
+
+* Jmax = 3.0 deg/s3
+* Amax = 0.85 deg/s2
+* Vmax = 1.5 deg/s
+
+Be aware that this configuration requires the capacitors banks to be switched on and connected to the DC bus.
+If this is not the case, the active front end (AFE) will fail.
+The system will go to the fault state because the voltage on the DC bus drops below a threshold set by Phase.
+You will need to perform a ``resetDrivesAz()`` (and ``exitFaultAz()``) to restore the system.
+
+In case the capacitor banks are not connected or are not switched on, you must use the following parameters instead:
+
+* Jmax = 3.0 deg/s3
+* Amax = 0.25 deg/s2
+* Vmax = 1.0 deg/s
+
+And the ``moveAz()`` command will not fail the AFE.
+Be aware that the ``config()`` command is accepted only if the dome is in **STATIONARY** state (stopped with brakes engaged) or **PARKED** state.
 
 .. _lsst.ts.mtdomegui-user_exit:
 
@@ -115,6 +136,8 @@ For example, the command to reset the azimuth drives would need this:
   Reset azimuth drives command.
 
 After selecting the command and changing the parameters, you can click the **Send Command** button to send the command to the control system.
+You will need to be the current commander to control the dome.
+See the :ref:`Hardware_Selector` for more information.
 
 .. _lsst.ts.mtdomegui-user_utility:
 
