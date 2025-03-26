@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.6:
+
+-------------
+0.4.6
+-------------
+
+* Remove the ``wrap_callbacks_with_async_task`` argument when calling ``MTDomeCom()``.
+
 .. _lsst.ts.mtdomegui-0.4.5:
 
 -------------
