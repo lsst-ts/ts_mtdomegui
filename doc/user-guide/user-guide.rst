@@ -80,6 +80,8 @@ AMCS can apply the following settings in the full performance:
 
 Be aware that this configuration requires the capacitors banks to be switched on and connected to the DC bus.
 If this is not the case, the active front end (AFE) will fail.
+The system will go to the fault state because the voltage on the DC bus drops below a threshold set by Phase.
+You will need to perform a ``resetDrivesAz()`` (and ``exitFaultAz()``) to restore the system.
 
 In case the capacitor banks are not connected or are not switched on, you must use the following parameters instead:
 
