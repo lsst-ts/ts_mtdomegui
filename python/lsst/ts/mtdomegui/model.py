@@ -134,7 +134,6 @@ class Model:
             config,
             simulation_mode=simulation_mode,
             telemetry_callbacks=telemetry_callbacks,
-            wrap_callbacks_with_async_task=False,
         )
 
         try:
