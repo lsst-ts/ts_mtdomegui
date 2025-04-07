@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.7:
+
+-------------
+0.4.7
+-------------
+
+* Get the status of thermal control system.
+* Use the first 5 elements of the azimuth temperature telemetry.
+
 .. _lsst.ts.mtdomegui-0.4.6:
 
 -------------

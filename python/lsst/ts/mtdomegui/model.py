@@ -119,13 +119,13 @@ class Model:
                 LlcName.LWSCS: self.callback_status_lwscs,
                 LlcName.MONCS: self.callback_status_moncs,
                 LlcName.RAD: self.callback_status_rad,
-                LlcName.THCS: self.callback_status_thcs,
             }
             if self._is_simulation_mode
             else {
                 LlcName.AMCS: self.callback_status_amcs,
                 LlcName.APSCS: self.callback_status_apscs,
                 LlcName.CBCS: self.callback_status_cbcs,
+                LlcName.THCS: self.callback_status_thcs,
             }
         )
 
