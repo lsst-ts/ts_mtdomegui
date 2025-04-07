@@ -23,7 +23,7 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomecom import AMCS_NUM_MOTOR_TEMPERATURES, AMCS_NUM_MOTORS
+from lsst.ts.mtdomecom import AMCS_NUM_MOTORS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabAzimuth
@@ -43,7 +43,7 @@ def widget(qtbot: QtBot) -> TabAzimuth:
 def test_init(widget: TabAzimuth) -> None:
 
     assert len(widget._status["drive_torque_actual"]) == AMCS_NUM_MOTORS
-    assert len(widget._status["drive_temperature"]) == AMCS_NUM_MOTOR_TEMPERATURES
+    assert len(widget._status["drive_temperature"]) == AMCS_NUM_MOTORS
 
 
 @pytest.mark.asyncio
