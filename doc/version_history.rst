@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.8:
+
+-------------
+0.4.8
+-------------
+
+* Improve the ``setup.py`` to support the version of Python 3.11 and 3.12.
+* Improve the document of capacitor bank.
+
 .. _lsst.ts.mtdomegui-0.4.7:
 
 -------------
