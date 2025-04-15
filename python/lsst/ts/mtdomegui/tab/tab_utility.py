@@ -35,7 +35,12 @@ from qasync import asyncSlot
 from ..constants import SUBSYSTEMS
 from ..model import Model
 from ..signals import SignalOperationalMode, SignalTelemetry
-from ..utils import combine_indicators, update_boolean_indicator_status
+from ..utils import (
+    combine_indicators,
+    create_buttons_with_tabs,
+    update_boolean_indicator_status,
+)
+from .tab_figure import TabFigure
 
 
 class TabUtility(TabTemplate):
@@ -62,6 +67,9 @@ class TabUtility(TabTemplate):
         self._modes = self._create_modes()
         self._indicators_capacitor = self._create_indicators()
 
+        self._figures = {"voltage": TabFigure("Voltage", self.model, "V", ["voltage"])}
+        self._buttons = create_buttons_with_tabs(["Voltage"], self._figures)
+
         self.set_widget_and_layout()
 
         signals = self.model.reporter.signals
@@ -83,7 +91,7 @@ class TabUtility(TabTemplate):
 
         return modes
 
-    def _create_indicators(self) -> dict[str, list[QRadioButton]]:
+    def _create_indicators(self) -> dict[str, list[QRadioButton] | QLabel]:
         """Create the indicators of the capacitors.
 
         Returns
@@ -96,6 +104,8 @@ class TabUtility(TabTemplate):
         for name in self.model.reporter.status.capacitor_bank.keys():
             indicators[name] = create_radio_indicators(CBCS_NUM_CAPACITOR_BANKS)
 
+        indicators["dcBusVoltage"] = create_label()
+
         return indicators
 
     def create_layout(self) -> QVBoxLayout:
@@ -103,6 +113,7 @@ class TabUtility(TabTemplate):
         layout = QVBoxLayout()
         layout.addWidget(self._create_group_mode())
         layout.addWidget(self._create_group_capacitor())
+        layout.addWidget(self._create_group_realtime_chart())
 
         return layout
 
@@ -130,6 +141,9 @@ class TabUtility(TabTemplate):
             Group.
         """
 
+        layout = QFormLayout()
+        layout.addRow("DC bus voltage:", self._indicators_capacitor["dcBusVoltage"])
+
         names = [
             "Fuse intervention",
             "Smoke detected",
@@ -137,12 +151,25 @@ class TabUtility(TabTemplate):
             "Low residual voltage",
             "Door open",
         ]
-
-        layout = QFormLayout()
         for name, indicators in zip(names, self._indicators_capacitor.values()):
             layout.addRow(f"{name}:", combine_indicators(indicators))
 
         return create_group_box("Capacitor Banks", layout)
+
+    def _create_group_realtime_chart(self) -> QGroupBox:
+        """Create the group of real-time chart.
+
+        Returns
+        -------
+        group : `PySide6.QtWidgets.QGroupBox`
+            Group.
+        """
+
+        layout = QVBoxLayout()
+        for button in self._buttons.values():
+            layout.addWidget(button)
+
+        return create_group_box("Real-time Chart", layout)
 
     def _set_signal_operational_mode(self, signal: SignalOperationalMode) -> None:
         """Set the operational mode signal.
@@ -179,6 +206,7 @@ class TabUtility(TabTemplate):
         """
 
         signal.cbcs.connect(self._callback_status_cbcs)
+        signal.cbcs_voltage.connect(self._callback_status_cbcs_voltage)
 
     @asyncSlot()
     async def _callback_status_cbcs(self, cbcs: dict[str, list[bool]]) -> None:
@@ -194,3 +222,16 @@ class TabUtility(TabTemplate):
             indicators = self._indicators_capacitor[key]
             for indicator, value in zip(indicators, values):
                 update_boolean_indicator_status(indicator, value)
+
+    @asyncSlot()
+    async def _callback_status_cbcs_voltage(self, voltage: float) -> None:
+        """Callback of the capacitor bank voltage.
+
+        Parameters
+        ----------
+        voltage : `float`
+            Voltage of the capacitor bank.
+        """
+
+        self._indicators_capacitor["dcBusVoltage"].setText(f"{voltage:.2f} V")  # type: ignore[union-attr]
+        self._figures["voltage"].append_data([voltage])

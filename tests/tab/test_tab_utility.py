@@ -42,7 +42,7 @@ def widget(qtbot: QtBot) -> TabUtility:
 def test_init(widget: TabUtility) -> None:
 
     assert len(widget._modes) == len(MTDome.SubSystemId)
-    assert len(widget._indicators_capacitor) == 5
+    assert len(widget._indicators_capacitor) == 6
 
 
 @pytest.mark.asyncio
@@ -63,6 +63,7 @@ async def test_set_signal_telemetry(widget: TabUtility) -> None:
 
     capacitor_bank = deepcopy(widget.model.reporter.status.capacitor_bank)
     capacitor_bank["doorOpen"][0] = True
+    capacitor_bank["dcBusVoltage"] = 1.2345
 
     widget.model.reporter.report_capacitor_bank(capacitor_bank)
 
@@ -71,3 +72,5 @@ async def test_set_signal_telemetry(widget: TabUtility) -> None:
 
     indicator = widget._indicators_capacitor["doorOpen"][0]
     assert indicator.palette().color(QPalette.Base) == Qt.red
+
+    assert widget._indicators_capacitor["dcBusVoltage"].text() == "1.23 V"

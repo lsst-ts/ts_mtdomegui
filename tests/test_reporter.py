@@ -54,6 +54,7 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
         reporter.signals["telemetry"].amcs,
         reporter.signals["telemetry"].apscs,
         reporter.signals["telemetry"].cbcs,
+        reporter.signals["telemetry"].cbcs_voltage,
         reporter.signals["telemetry"].cscs,
         reporter.signals["telemetry"].lcs,
         reporter.signals["telemetry"].lwscs,
@@ -148,11 +149,19 @@ def test_report_capacitor_bank(qtbot: QtBot, reporter: Reporter) -> None:
 
     capacitor_bank = deepcopy(reporter.status.capacitor_bank)
     capacitor_bank["doorOpen"][0] = True
+    capacitor_bank["dcBusVoltage"] = 1.0
 
-    with qtbot.waitSignal(reporter.signals["telemetry"].cbcs, timeout=TIMEOUT):
+    with qtbot.waitSignals(
+        [
+            reporter.signals["telemetry"].cbcs,
+            reporter.signals["telemetry"].cbcs_voltage,
+        ],
+        timeout=TIMEOUT,
+    ):
         reporter.report_capacitor_bank(capacitor_bank)
 
     assert reporter.status.capacitor_bank == capacitor_bank
+    assert "dcBusVoltage" not in capacitor_bank
 
 
 def test_report_config_azimuth(qtbot: QtBot, reporter: Reporter) -> None:
