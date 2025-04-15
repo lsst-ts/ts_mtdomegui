@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.9:
+
+-------------
+0.4.9
+-------------
+
+* Support the DC bus voltage of capacitor banks.
+
 .. _lsst.ts.mtdomegui-0.4.8:
 
 -------------
