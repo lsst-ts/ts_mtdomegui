@@ -160,6 +160,13 @@ In addition, there are the indicators of the capacity bank.
 The green color means everything is fine, and the red color means there is an issue.
 If you see any indicator to be red, you need to check the capacity bank to see what is going on.
 
+You can base on the DC bus voltage to know the capacitor banks are connected or not.
+If the voltage is lower than 25 V, you will see the "Low residual voltage" indicator to be red.
+If the capacitor banks are connected and there is no issue, once the control system receives the ``moveAz()`` command, they will begin to charge until 690 V to do the movement.
+Otherwise, you should see the voltage keeps low after issuing the ``moveAz()`` command.
+Then, you know maybe they are not connected or something went wrong (such as the blowing fuses or others).
+If the capacitor banks are not connected, the azimuth control system can only run the degraded mode.
+
 .. _lsst.ts.mtdomegui-user_azimuth:
 
 Azimuth

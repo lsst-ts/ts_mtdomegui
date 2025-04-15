@@ -91,6 +91,7 @@ class Reporter:
             self.report_operational_mode(subsystem, MTDome.OperationalMode.NORMAL)
 
         self.report_telemetry("cbcs", self.status.capacitor_bank)
+        self.signals["telemetry"].cbcs_voltage.emit(0.0)  # type: ignore[attr-defined]
 
         for component in ["AMCS", "LWSCS", "ApSCS", "LCS", "ThCS", "RAD", "CSCS"]:
             self.report_telemetry(
@@ -242,7 +243,9 @@ class Reporter:
                 (subsystem, mode)
             )
 
-    def report_capacitor_bank(self, capacitor_bank: dict[str, list[bool]]) -> None:
+    def report_capacitor_bank(
+        self, capacitor_bank: dict[str, list[bool] | float]
+    ) -> None:
         """Report the status of the capacitor bank.
 
         Parameters
@@ -251,8 +254,15 @@ class Reporter:
             Status of the capacitor bank.
         """
 
+        # TODO: Remove this check once the summit supports it.
+        if "dcBusVoltage" in capacitor_bank:
+            self.signals["telemetry"].cbcs_voltage.emit(  # type: ignore[attr-defined]
+                capacitor_bank["dcBusVoltage"]
+            )
+            capacitor_bank.pop("dcBusVoltage")
+
         if self.status.capacitor_bank != capacitor_bank:
-            self.status.capacitor_bank = capacitor_bank
+            self.status.capacitor_bank = capacitor_bank  # type: ignore[assignment]
             self.signals["telemetry"].cbcs.emit(capacitor_bank)  # type: ignore[attr-defined]
 
     def report_config_azimuth(self, config: dict[str, float]) -> None:

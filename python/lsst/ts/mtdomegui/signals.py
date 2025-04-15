@@ -94,8 +94,11 @@ class SignalTelemetry(QtCore.QObject):
     # Dictionary object defined in the "apscs_status.py" in ts_mtdomecom.
     apscs = QtCore.Signal(object)
 
-    # Dictionary object defined in the "cbcs_status.py" in ts_mtdomecom.
+    # Dictionary object defined in the "cbcs_status.py" in ts_mtdomecom (as the
+    # event).
     cbcs = QtCore.Signal(object)
+    # DC bus voltage of the capacitor bank in Volt.
+    cbcs_voltage = QtCore.Signal(float)
 
     # Dictionary object defined in the "cscs_status.py" in ts_mtdomecom.
     cscs = QtCore.Signal(object)
