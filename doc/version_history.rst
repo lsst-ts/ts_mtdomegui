@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.10:
+
+-------------
+0.4.10
+-------------
+
+* Add the **QT_QPA_PLATFORM** to ``meta.yaml`` to fix the test section of conda recipe.
+
 .. _lsst.ts.mtdomegui-0.4.9:
 
 -------------
