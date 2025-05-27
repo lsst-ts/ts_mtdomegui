@@ -21,8 +21,10 @@
 
 __all__ = ["Model"]
 
+import asyncio
 import logging
 import math
+import re
 import types
 import typing
 
@@ -171,7 +173,8 @@ class Model:
             assert self.mtdome_com is not None
 
             await self.mtdome_com.disconnect()
-            self.mtdome_com = None
+
+        self.mtdome_com = None
 
     def assert_is_connected(self) -> None:
         """Assert the connection is established.
@@ -213,7 +216,14 @@ class Model:
         # If there is only the "exception" key, it means that the status
         # reporting has failed. Return without reporting the status.
         if list(status.keys()) == ["exception"]:
-            self.log.error(f"Failed to report the status of {llc_name!r}.")
+            fault_code = self._get_exception_detail(status["exception"][-1])
+            self.log.error(
+                f"Failed to report the status of {llc_name!r}: {fault_code}."
+            )
+
+            self._report_exception_fault_code(llc_name, fault_code)
+
+            await asyncio.sleep(1.0)
             return
 
         self._report_operational_mode(llc_name, status["status"])
@@ -249,6 +259,57 @@ class Model:
                 self.reporter.report_telemetry(
                     llc_name.name.lower(), processed_telemetry
                 )
+
+    def _get_exception_detail(self, message: str) -> str:
+        """Get the exception detail.
+
+        Parameters
+        ----------
+        message : `str`
+            Message.
+
+        Returns
+        -------
+        `str`
+            Exception detail.
+        """
+
+        result = re.match(r"\A(\w+Error):\s([\w, \s]+)", message)
+        if result is not None:
+            return result.group(2)
+        else:
+            return ""
+
+    def _report_exception_fault_code(self, llc_name: LlcName, fault_code: str) -> None:
+        """Report the exception fault code.
+
+        Parameters
+        ----------
+        llc_name : enum `lsst.ts.mtdomecom.LlcName`
+            The name of LLC.
+        fault_code : `str`
+            Fault code.
+        """
+
+        # The communication issue with the rotating cRIO will not generate the
+        # error code for us to use in the self._get_fault_code() to fault the
+        # subsystem. Therefore, we need to base on the error message to do so
+        # instead.
+        if "by the rotating part" in fault_code:
+            match llc_name:
+
+                case LlcName.APSCS:
+                    self.reporter.report_state_aperture_shutter(
+                        MTDome.EnabledState.FAULT
+                    )
+                    self.reporter.report_fault_code_aperture_shutter(fault_code)
+
+                case LlcName.LWSCS:
+                    self.reporter.report_state_elevation_axis(MTDome.EnabledState.FAULT)
+                    self.reporter.report_fault_code_elevation_axis(fault_code)
+
+                case _:
+                    pass
 
     def _report_operational_mode(
         self, llc_name: LlcName, status: dict[str, typing.Any]

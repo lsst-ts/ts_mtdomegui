@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.11:
+
+-------------
+0.4.11
+-------------
+
+* Improve the disconnection and failed communication with the rotating cRIO.
+
 .. _lsst.ts.mtdomegui-0.4.10:
 
 -------------

@@ -79,6 +79,35 @@ async def test_low_level_component_status(qtbot: QtBot, model_async: Model) -> N
         await asyncio.sleep(1.0)
 
 
+def test_get_exception_detail(model: Model) -> None:
+
+    assert (
+        model._get_exception_detail(
+            "ValueError: Command statusApSCS was not received by the rotating part"
+        )
+        == "Command statusApSCS was not received by the rotating part"
+    )
+
+    assert model._get_exception_detail("Not expected message") == ""
+
+
+def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
+
+    signals = [
+        model.reporter.signals["state"].aperture_shutter,
+        model.reporter.signals["state"].elevation_axis,
+        model.reporter.signals["fault_code"].aperture_shutter,
+        model.reporter.signals["fault_code"].elevation_axis,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
+        model._report_exception_fault_code(
+            LlcName.APSCS, "fault_code by the rotating part"
+        )
+        model._report_exception_fault_code(
+            LlcName.LWSCS, "fault_code by the rotating part"
+        )
+
+
 def test_report_operational_mode(model: Model) -> None:
 
     mode = MTDome.OperationalMode.DEGRADED
