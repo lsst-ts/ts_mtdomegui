@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.12:
+
+-------------
+0.4.12
+-------------
+
+* Ensure that aperture shutter InPosition is correct.
+
 .. _lsst.ts.mtdomegui-0.4.11:
 
 -------------
