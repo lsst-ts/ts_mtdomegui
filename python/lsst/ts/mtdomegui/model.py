@@ -548,6 +548,8 @@ class Model:
                     in [
                         MTDome.MotionState.STOPPED,
                         MTDome.MotionState.STOPPED_BRAKED,
+                        MTDome.MotionState.CLOSED,
+                        MTDome.MotionState.OPEN,
                     ]
                 )
 
