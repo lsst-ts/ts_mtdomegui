@@ -24,7 +24,6 @@ __all__ = ["Model"]
 import asyncio
 import logging
 import math
-import re
 import types
 import typing
 
@@ -32,6 +31,7 @@ from lsst.ts.mtdomecom import (
     LlcName,
     LlcNameDict,
     MTDomeCom,
+    ResponseCode,
     ValidSimulationMode,
     motion_state_translations,
 )
@@ -215,13 +215,17 @@ class Model:
 
         # If there is only the "exception" key, it means that the status
         # reporting has failed. Return without reporting the status.
-        if list(status.keys()) == ["exception"]:
-            fault_code = self._get_exception_detail(status["exception"][-1])
+        if "exception" in status.keys():
+            exception_message = str(status["exception"])
             self.log.error(
-                f"Failed to report the status of {llc_name!r}: {fault_code}."
+                f"Failed to report the status of {llc_name!r}: {exception_message}"
             )
 
-            self._report_exception_fault_code(llc_name, fault_code)
+            self._report_exception_fault_code(
+                llc_name,
+                status["response_code"],
+                exception_message,
+            )
 
             await asyncio.sleep(1.0)
             return
@@ -260,53 +264,40 @@ class Model:
                     llc_name.name.lower(), processed_telemetry
                 )
 
-    def _get_exception_detail(self, message: str) -> str:
-        """Get the exception detail.
-
-        Parameters
-        ----------
-        message : `str`
-            Message.
-
-        Returns
-        -------
-        `str`
-            Exception detail.
-        """
-
-        result = re.match(r"\A(\w+Error):\s([\w, \s]+)", message)
-        if result is not None:
-            return result.group(2)
-        else:
-            return ""
-
-    def _report_exception_fault_code(self, llc_name: LlcName, fault_code: str) -> None:
+    def _report_exception_fault_code(
+        self, llc_name: LlcName, response_code: ResponseCode, exception_message: str
+    ) -> None:
         """Report the exception fault code.
 
         Parameters
         ----------
         llc_name : enum `lsst.ts.mtdomecom.LlcName`
             The name of LLC.
-        fault_code : `str`
-            Fault code.
+        response_code : `lsst.ts.mtdomecom.ResponseCode`
+            Response code.
+        exception_message : `str`
+            Exception message.
         """
 
         # The communication issue with the rotating cRIO will not generate the
         # error code for us to use in the self._get_fault_code() to fault the
-        # subsystem. Therefore, we need to base on the error message to do so
-        # instead.
-        if "by the rotating part" in fault_code:
+        # subsystem. Therefore, we need to base on the exception message to do
+        # so instead.
+        if response_code in [
+            ResponseCode.ROTATING_PART_NOT_RECEIVED,
+            ResponseCode.ROTATING_PART_NOT_REPLIED,
+        ]:
             match llc_name:
 
                 case LlcName.APSCS:
                     self.reporter.report_state_aperture_shutter(
                         MTDome.EnabledState.FAULT
                     )
-                    self.reporter.report_fault_code_aperture_shutter(fault_code)
+                    self.reporter.report_fault_code_aperture_shutter(exception_message)
 
                 case LlcName.LWSCS:
                     self.reporter.report_state_elevation_axis(MTDome.EnabledState.FAULT)
-                    self.reporter.report_fault_code_elevation_axis(fault_code)
+                    self.reporter.report_fault_code_elevation_axis(exception_message)
 
                 case _:
                     pass

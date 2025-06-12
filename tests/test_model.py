@@ -25,7 +25,7 @@ import math
 
 import pytest
 import pytest_asyncio
-from lsst.ts.mtdomecom import LlcName
+from lsst.ts.mtdomecom import LlcName, ResponseCode
 from lsst.ts.mtdomegui import Model
 from lsst.ts.xml.enums import MTDome
 from pytestqt.qtbot import QtBot
@@ -42,6 +42,15 @@ def model() -> Model:
 async def model_async() -> Model:
     async with Model(logging.getLogger(), is_simulation_mode=True) as model_sim:
         await model_sim.connect()
+
+        yield model_sim
+
+
+@pytest_asyncio.fixture
+async def model_async_communication_error() -> Model:
+    async with Model(logging.getLogger(), is_simulation_mode=True) as model_sim:
+        await model_sim.connect()
+        model_sim.communication_error = True
 
         yield model_sim
 
@@ -79,16 +88,17 @@ async def test_low_level_component_status(qtbot: QtBot, model_async: Model) -> N
         await asyncio.sleep(1.0)
 
 
-def test_get_exception_detail(model: Model) -> None:
+@pytest.mark.asyncio
+async def test_report_exception_communication_error(
+    qtbot: QtBot, model_async_communication_error: Model
+) -> None:
 
-    assert (
-        model._get_exception_detail(
-            "ValueError: Command statusApSCS was not received by the rotating part"
-        )
-        == "Command statusApSCS was not received by the rotating part"
-    )
-
-    assert model._get_exception_detail("Not expected message") == ""
+    signals = [
+        model_async_communication_error.reporter.signals["fault_code"].aperture_shutter,
+        model_async_communication_error.reporter.signals["fault_code"].elevation_axis,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
+        await asyncio.sleep(5.0)
 
 
 def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
@@ -101,10 +111,14 @@ def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         model._report_exception_fault_code(
-            LlcName.APSCS, "fault_code by the rotating part"
+            LlcName.APSCS,
+            ResponseCode.ROTATING_PART_NOT_RECEIVED,
+            "exception message by the rotating part",
         )
         model._report_exception_fault_code(
-            LlcName.LWSCS, "fault_code by the rotating part"
+            LlcName.LWSCS,
+            ResponseCode.ROTATING_PART_NOT_REPLIED,
+            "exception message by the rotating part",
         )
 
 
