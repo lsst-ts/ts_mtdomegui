@@ -6,6 +6,15 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.13:
+
+-------------
+0.4.13
+-------------
+
+* Simplify the ``setup.py``.
+* Adapt the **ts_mtdomecom** v0.2.13.
+
 .. _lsst.ts.mtdomegui-0.4.12:
 
 -------------
