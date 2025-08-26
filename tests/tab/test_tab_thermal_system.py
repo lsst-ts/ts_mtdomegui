@@ -23,7 +23,11 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomecom import THCS_NUM_SENSORS
+from lsst.ts.mtdomecom import (
+    THCS_NUM_CABINET_TEMPERATURES,
+    THCS_NUM_MOTOR_COIL_TEMPERATURES,
+    THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
+)
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabThermalSystem
@@ -41,7 +45,12 @@ def widget(qtbot: QtBot) -> TabThermalSystem:
 
 def test_init(widget: TabThermalSystem) -> None:
 
-    assert len(widget._sensors) == THCS_NUM_SENSORS
+    num_motor_sensors = (
+        THCS_NUM_MOTOR_COIL_TEMPERATURES + THCS_NUM_MOTOR_DRIVE_TEMPERATURES
+    )
+    assert len(widget._sensors["motor"]) == num_motor_sensors
+    assert len(widget._sensors["cabinet"]) == THCS_NUM_CABINET_TEMPERATURES
+    assert len(widget._tab_selector._buttons["selection"]) == num_motor_sensors
 
     for button in widget._tab_selector._buttons["selection"]:
         assert button.isChecked() is True
@@ -61,14 +70,29 @@ async def test_show_selector(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
 
 @pytest.mark.asyncio
+async def test_show_figure(qtbot: QtBot, widget: TabThermalSystem) -> None:
+
+    assert widget._figures["cabinet"].isVisible() is False
+
+    qtbot.mouseClick(widget._buttons["cabinet"], Qt.LeftButton)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._figures["cabinet"].isVisible() is True
+
+
+@pytest.mark.asyncio
 async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
-    assert len(widget._figure.chart().series()) == THCS_NUM_SENSORS
+    assert len(widget._figures["motor"].chart().series()) == (
+        THCS_NUM_MOTOR_COIL_TEMPERATURES + THCS_NUM_MOTOR_DRIVE_TEMPERATURES
+    )
 
     # New selections
     selections = [0, 3]
-    widget._temperatures[0] = 0.1
-    widget._temperatures[3] = 2.4
+    widget._temperatures["motor"][0] = 0.1
+    widget._temperatures["motor"][3] = 2.4
     widget._tab_selector.select(selections)
 
     qtbot.mouseClick(widget._buttons["update"], Qt.LeftButton)
@@ -79,23 +103,32 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
     await widget._callback_time_out()
 
     assert widget._selections == selections
-    assert len(widget._figure.chart().series()) == len(selections)
+    assert len(widget._figures["motor"].chart().series()) == len(selections)
 
-    assert widget._figure.get_points(0)[-1].y() == 0.1
-    assert widget._figure.get_points(1)[-1].y() == 2.4
+    assert widget._figures["motor"].get_points(0)[-1].y() == 0.1
+    assert widget._figures["motor"].get_points(1)[-1].y() == 2.4
 
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
 
+    # TODO: Once the ts_mtdomecom uses the new schema totally, we can use
+    # the thcs telemetry. At the moment, use the amcs to get the motor
+    # coil temperatures (OSW-953).
     widget.model.reporter.report_telemetry(
-        "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
+        "amcs", generate_dict_from_registry(registry, "AMCS", default_number=1.0)
     )
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._temperatures[0] == 1.00
+    assert widget._temperatures["motor"][-1] == 1.00
 
-    for senser in widget._sensors:
-        assert senser.text() == "1.00 deg C"
+    for index, senser in enumerate(widget._sensors["motor"]):
+        if index < THCS_NUM_MOTOR_DRIVE_TEMPERATURES:
+            assert senser.text() == "0.00 deg C"
+        else:
+            assert senser.text() == "1.00 deg C"
+
+    for senser in widget._sensors["cabinet"]:
+        assert senser.text() == "0.00 deg C"
