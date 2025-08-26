@@ -117,7 +117,6 @@ class TabAzimuth(TabTemplate):
         drive_torque_actual = [create_label() for _ in range(AMCS_NUM_MOTORS)]
         drive_torque_commanded = [create_label() for _ in range(AMCS_NUM_MOTORS)]
         drive_current_actual = [create_label() for _ in range(AMCS_NUM_MOTORS)]
-        drive_temperature = [create_label() for _ in range(AMCS_NUM_MOTORS)]
 
         return {
             "position_actual": create_label(),
@@ -127,7 +126,6 @@ class TabAzimuth(TabTemplate):
             "drive_torque_actual": drive_torque_actual,
             "drive_torque_commanded": drive_torque_commanded,
             "drive_current_actual": drive_current_actual,
-            "drive_temperature": drive_temperature,
         }
 
     def _create_figures(self) -> dict[str, TabFigure]:
@@ -158,12 +156,6 @@ class TabAzimuth(TabTemplate):
                 "A",
                 [str(idx) for idx in range(AMCS_NUM_MOTORS)],
             ),
-            "drive_temperature": TabFigure(
-                "Drive Temperature",
-                self.model,
-                "deg C",
-                [str(idx) for idx in range(AMCS_NUM_MOTORS)],
-            ),
             "encoder_head": TabFigure(
                 "Calibrated Encoder Head",
                 self.model,
@@ -192,7 +184,6 @@ class TabAzimuth(TabTemplate):
             "Velocity",
             "Drive Torque",
             "Drive Current",
-            "Drive Temperature",
             "Encoder Head",
             "Position Encoder",
         ]
@@ -211,17 +202,12 @@ class TabAzimuth(TabTemplate):
         layout_status.addWidget(self._create_group_drive_torque())
 
         # Third column
-        layout_temperature = QVBoxLayout()
-        layout_temperature.addWidget(self._create_group_drive_temperature())
-
-        # Fourth column
         layout_realtime = QVBoxLayout()
         layout_realtime.addWidget(self._create_group_realtime_chart())
 
         layout = QHBoxLayout()
         layout.addLayout(layout_state)
         layout.addLayout(layout_status)
-        layout.addLayout(layout_temperature)
         layout.addLayout(layout_realtime)
 
         return layout
@@ -309,22 +295,6 @@ class TabAzimuth(TabTemplate):
 
         return create_group_box("Drive Torque", layout)
 
-    def _create_group_drive_temperature(self) -> QGroupBox:
-        """Create the group of drive temperature.
-
-        Returns
-        -------
-        group : `PySide6.QtWidgets.QGroupBox`
-            Group.
-        """
-
-        layout = QFormLayout()
-
-        for idx in range(AMCS_NUM_MOTORS):
-            layout.addRow(f"Temperature {idx}:", self._status["drive_temperature"][idx])
-
-        return create_group_box("Drive Temperature", layout)
-
     def _create_group_realtime_chart(self) -> QGroupBox:
         """Create the group of real-time chart.
 
@@ -386,9 +356,6 @@ class TabAzimuth(TabTemplate):
             self._status["drive_current_actual"][idx].setText(
                 f"{telemetry['driveCurrentActual'][idx]:.2f} A"
             )
-            self._status["drive_temperature"][idx].setText(
-                f"{telemetry['driveTemperature'][idx]:.2f} deg C"
-            )
 
         # Real-time chart
 
@@ -401,12 +368,6 @@ class TabAzimuth(TabTemplate):
 
         self._figures["drive_torque"].append_data(telemetry["driveTorqueActual"])
         self._figures["drive_current"].append_data(telemetry["driveCurrentActual"])
-
-        # At the moment, this is an array of 13 elements. Only the first 5
-        # are used.
-        self._figures["drive_temperature"].append_data(
-            telemetry["driveTemperature"][:AMCS_NUM_MOTORS]
-        )
 
         self._figures["encoder_head"].append_data(telemetry["encoderHeadCalibrated"])
         self._figures["position_encoder"].append_data(

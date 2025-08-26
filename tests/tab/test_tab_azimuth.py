@@ -43,7 +43,6 @@ def widget(qtbot: QtBot) -> TabAzimuth:
 def test_init(widget: TabAzimuth) -> None:
 
     assert len(widget._status["drive_torque_actual"]) == AMCS_NUM_MOTORS
-    assert len(widget._status["drive_temperature"]) == AMCS_NUM_MOTORS
 
 
 @pytest.mark.asyncio
@@ -78,8 +77,6 @@ async def test_set_signal_telemetry(widget: TabAzimuth) -> None:
     assert widget._status["drive_torque_commanded"][0].text() == "1.00 N*m"
     assert widget._status["drive_torque_actual"][0].text() == "1.00 N*m"
     assert widget._status["drive_current_actual"][0].text() == "1.00 A"
-
-    assert widget._status["drive_temperature"][0].text() == "1.00 deg C"
 
     for figure in widget._figures.values():
         assert figure._data[0][-1] == 1.0
