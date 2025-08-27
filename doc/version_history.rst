@@ -6,6 +6,12 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.4.14:
+
+* Remove the temperatures in **TabAzimuth**.
+* Update the temperature sensors in **TabThermalSystem** to have the motor drive, motor coil, and cabinet.
+* Adapt the latest **ts_mtdomecom** for the constants.
+
 .. _lsst.ts.mtdomegui-0.4.13:
 
 -------------
