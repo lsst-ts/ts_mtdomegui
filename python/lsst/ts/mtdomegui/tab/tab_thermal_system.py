@@ -30,7 +30,11 @@ from lsst.ts.guitool import (
     create_label,
     set_button,
 )
-from lsst.ts.mtdomecom import THCS_NUM_SENSORS
+from lsst.ts.mtdomecom import (
+    THCS_NUM_CABINET_TEMPERATURES,
+    THCS_NUM_MOTOR_COIL_TEMPERATURES,
+    THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
+)
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -43,6 +47,7 @@ from qasync import asyncSlot
 
 from ..model import Model
 from ..signals import SignalTelemetry
+from .tab_figure import TabFigure
 from .tab_selector import TabSelector
 
 
@@ -69,13 +74,31 @@ class TabThermalSystem(TabTemplate):
 
         self.model = model
 
-        self._sensors = self._create_sensors()
-        self._temperatures = [0.0] * THCS_NUM_SENSORS
+        num_motor_sensors = (
+            THCS_NUM_MOTOR_DRIVE_TEMPERATURES + THCS_NUM_MOTOR_COIL_TEMPERATURES
+        )
+        self._sensors = {
+            "motor": self._create_sensors(num_motor_sensors),
+            "cabinet": self._create_sensors(THCS_NUM_CABINET_TEMPERATURES),
+        }
+        self._temperatures = {
+            "motor": [0.0] * num_motor_sensors,
+            "cabinet": [0.0] * THCS_NUM_CABINET_TEMPERATURES,
+        }
 
-        # By default, show all the temperature data on the real-time chart
-        self._selections = list(range(THCS_NUM_SENSORS))
+        # By default, show all the motor temperature data on the real-time
+        # chart.
+        self._selections = list(range(num_motor_sensors))
 
-        self._figure = self._create_figure()
+        self._figures = {
+            "motor": self._create_figure(),
+            "cabinet": TabFigure(
+                "Cabinet",
+                self.model,
+                "deg C",
+                [str(idx) for idx in range(THCS_NUM_CABINET_TEMPERATURES)],
+            ),
+        }
 
         self._tab_selector = self._create_tab_selector()
 
@@ -90,8 +113,13 @@ class TabThermalSystem(TabTemplate):
 
         self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
 
-    def _create_sensors(self) -> list[QLabel]:
+    def _create_sensors(self, num: int) -> list[QLabel]:
         """Create the sensors.
+
+        Parameters
+        ----------
+        num : `int`
+            Number of the sensors.
 
         Returns
         -------
@@ -99,7 +127,7 @@ class TabThermalSystem(TabTemplate):
             Sensors.
         """
 
-        return [create_label() for _ in range(THCS_NUM_SENSORS)]
+        return [create_label() for _ in range(num)]
 
     def _create_figure(self, num_realtime: int = 200) -> FigureConstant:
         """Create the figure to show the temperature.
@@ -123,7 +151,7 @@ class TabThermalSystem(TabTemplate):
             num_realtime,
             "Data Point",
             "deg C",
-            "Temperature",
+            "Motor Temperature",
             names,
             num_lines=len(names),
             is_realtime=True,
@@ -155,7 +183,7 @@ class TabThermalSystem(TabTemplate):
         """
 
         tab = TabSelector(
-            "Sensor",
+            "Motor Sensor",
             self.model,
             self._get_selection_names(),
         )
@@ -173,20 +201,27 @@ class TabThermalSystem(TabTemplate):
         """
 
         button_selector = set_button(
-            "Select Sensor",
+            "Select Motor Sensor",
             self._tab_selector.show,
-            tool_tip="Select the sensors to show on the real-time chart.",
+            tool_tip="Select the motor sensors to show on the real-time chart.",
         )
 
         button_update = set_button(
-            "Update",
+            "Update Motor Temperature",
             self._callback_update,
             tool_tip="Update th real-time chart based on the selection.",
+        )
+
+        button_cabinet = set_button(
+            "Show Cabinet Temperature",
+            self._figures["cabinet"].show,
+            tool_tip="Click to open the real-time chart.",
         )
 
         return {
             "selector": button_selector,
             "update": button_update,
+            "cabinet": button_cabinet,
         }
 
     @asyncSlot()
@@ -206,12 +241,12 @@ class TabThermalSystem(TabTemplate):
         layout = self.widget().layout()
 
         new_figure = self._create_figure()
-        layout.replaceWidget(self._figure, new_figure)
+        layout.replaceWidget(self._figures["motor"], new_figure)
 
         self.setLayout(layout)
 
         # Update the figure
-        self._figure = new_figure
+        self._figures["motor"] = new_figure
 
         # Resume the timeout signal
         self._timer.blockSignals(False)
@@ -220,13 +255,40 @@ class TabThermalSystem(TabTemplate):
 
         # First column
         layout_sensor = QVBoxLayout()
-        layout_sensor.addWidget(self._create_group_sensor())
+        layout_sensor.addWidget(
+            self._create_group_sensor(
+                self._sensors["cabinet"],
+                "Cabinet",
+                "Cabinet",
+                0,
+                THCS_NUM_CABINET_TEMPERATURES,
+            )
+        )
+        layout_sensor.addWidget(
+            self._create_group_sensor(
+                self._sensors["motor"],
+                "Motor Drive",
+                "Drive",
+                0,
+                THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
+            )
+        )
+        layout_sensor.addWidget(
+            self._create_group_sensor(
+                self._sensors["motor"],
+                "Motor Coil",
+                "Coil",
+                THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
+                THCS_NUM_MOTOR_DRIVE_TEMPERATURES + THCS_NUM_MOTOR_COIL_TEMPERATURES,
+            )
+        )
+
+        for button in self._buttons.values():
+            layout_sensor.addWidget(button)
 
         # Second column
         layout_realtime = QVBoxLayout()
-        layout_realtime.addWidget(self._figure)
-        layout_realtime.addWidget(self._buttons["selector"])
-        layout_realtime.addWidget(self._buttons["update"])
+        layout_realtime.addWidget(self._figures["motor"])
 
         layout = QHBoxLayout()
         layout.addLayout(layout_sensor)
@@ -234,8 +296,28 @@ class TabThermalSystem(TabTemplate):
 
         return layout
 
-    def _create_group_sensor(self) -> QGroupBox:
+    def _create_group_sensor(
+        self,
+        sensors: list[QLabel],
+        name_group: str,
+        name_sensor: str,
+        idx_start: int,
+        idx_end: int,
+    ) -> QGroupBox:
         """Create the group of sensor.
+
+        Parameters
+        ----------
+        sensors : `list`
+            Sensors.
+        name_group : `str`
+            Group name.
+        name_sensor : `str`
+            Sensor name.
+        idx_start : `int`
+            Starting index of the sensor.
+        idx_end : `int`
+            Ending index of the sensor.
 
         Returns
         -------
@@ -244,17 +326,20 @@ class TabThermalSystem(TabTemplate):
         """
 
         layout = QFormLayout()
-        for idx, sensor in enumerate(self._sensors):
-            layout.addRow(f"Sensor {idx}:", sensor)
+        selected_sensors = sensors[idx_start:idx_end]
+        for idx, sensor in enumerate(selected_sensors):
+            layout.addRow(f"{name_sensor} {idx_start + idx}:", sensor)
 
-        return create_group_box("Sensor", layout)
+        return create_group_box(name_group, layout)
 
     @asyncSlot()
     async def _callback_time_out(self) -> None:
         """Callback timeout function to update the realtime figure."""
 
         for idx, selection in enumerate(self._selections):
-            self._figure.append_data(self._temperatures[selection], idx=idx)
+            self._figures["motor"].append_data(
+                self._temperatures["motor"][selection], idx=idx
+            )
 
         self.check_duration_and_restart_timer(self._timer, self.model.duration_refresh)
 
@@ -267,7 +352,12 @@ class TabThermalSystem(TabTemplate):
             Signal.
         """
 
-        signal.thcs.connect(self._callback_telemetry)
+        # TODO: Once the ts_mtdomecom uses the new schema totally, we can use
+        # the thcs telemetry. At the moment, use the amcs to get the motor
+        # coil temperatures (OSW-953).
+
+        signal.amcs.connect(self._callback_telemetry)
+        # signal.thcs.connect(self._callback_telemetry)
 
     @asyncSlot()
     async def _callback_telemetry(self, telemetry: dict) -> None:
@@ -279,7 +369,25 @@ class TabThermalSystem(TabTemplate):
             Telemetry.
         """
 
-        self._temperatures = telemetry["temperature"]
+        # TODO: Once the ts_mtdomecom uses the new schema totally, we can use
+        # the received telemetry directly. If the received telemetry data has
+        # the different order compared with the self._temperatures, change it
+        # (OSW-953).
+        self._temperatures["motor"][THCS_NUM_MOTOR_DRIVE_TEMPERATURES:] = telemetry[
+            "driveTemperature"
+        ][:THCS_NUM_MOTOR_COIL_TEMPERATURES]
 
-        for sensor, temperature in zip(self._sensors, self._temperatures):
-            sensor.setText(f"{temperature:.2f} deg C")
+        # TODO: We need to update the cabinet temeprature as well once it is
+        # ready (OSW-953).
+
+        for atype in self._sensors.keys():
+            for sensor, temperature in zip(
+                self._sensors[atype], self._temperatures[atype]
+            ):
+                sensor.setText(f"{temperature:.2f} deg C")
+
+        # Real-time chart. Note the self._figures["motor"] is put in the
+        # sefl._callback_time_out() instead. This is because the
+        # self._figures["cabinet"] will only show the chart when the user
+        # clicks the self._buttons["cabinet"] button.
+        self._figures["cabinet"].append_data(self._temperatures["cabinet"])
