@@ -28,13 +28,20 @@ from lsst.ts.guitool import (
     create_label,
     set_button,
 )
-from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
+from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER, LOUVERS_ENABLED
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtWidgets import QFormLayout, QGroupBox, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QPushButton,
+    QVBoxLayout,
+)
 from qasync import asyncSlot
 
 from ..model import Model
-from ..signals import SignalTelemetry
+from ..signals import SignalFaultCode, SignalMotion, SignalState, SignalTelemetry
+from ..utils import create_window_fault_code
 from .tab_figure import TabFigure
 from .tab_louver_single import TabLouverSingle
 
@@ -60,6 +67,9 @@ class TabLouver(TabTemplate):
 
         self.model = model
 
+        self._state = create_label()
+        self._window_fault_code = create_window_fault_code()
+
         self._power = create_label(tool_tip="Total power drawn by all louver drives.")
         self._figure = TabFigure(
             "Total Power",
@@ -73,7 +83,11 @@ class TabLouver(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
+        signals = self.model.reporter.signals
+        self._set_signal_telemetry(signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_state(signals["state"])  # type: ignore[arg-type]
+        self._set_signal_motion(signals["motion"])  # type: ignore[arg-type]
+        self._set_signal_fault_code(signals["fault_code"])  # type: ignore[arg-type]
 
     def _create_tabs(self) -> list[TabLouverSingle]:
         """Create the tabs.
@@ -121,13 +135,14 @@ class TabLouver(TabTemplate):
         names = self._get_louver_names()
 
         buttons_louver = list()
-        for name, tab in zip(names, self._tabs):
+        for name, tab, louver in zip(names, self._tabs, MTDome.Louver):
             button = set_button(
                 name,
                 tab.show,
                 is_adjust_size=True,
                 tool_tip=tool_tip_louver,
             )
+            button.setEnabled(louver in LOUVERS_ENABLED)
 
             buttons_louver.append(button)
 
@@ -142,11 +157,38 @@ class TabLouver(TabTemplate):
 
     def create_layout(self) -> QVBoxLayout:
 
-        layout = QVBoxLayout()
-        layout.addWidget(self._create_group_power())
-        layout.addWidget(self._create_group_louver())
+        # First column
+        layout_state = QVBoxLayout()
+        layout_state.addWidget(self._create_group_state())
+        layout_state.addWidget(self._create_group_power())
+
+        # Second column
+        layout_louver = QVBoxLayout()
+        layout_louver.addWidget(self._create_group_louver())
+
+        layout = QHBoxLayout()
+        layout.addLayout(layout_state)
+        layout.addLayout(layout_louver)
 
         return layout
+
+    def _create_group_state(self) -> QGroupBox:
+        """Create the group of state.
+
+        Returns
+        -------
+        group : `PySide6.QtWidgets.QGroupBox`
+            Group.
+        """
+
+        layout_form = QFormLayout()
+        layout_form.addRow("State:", self._state)
+
+        layout = QVBoxLayout()
+        layout.addLayout(layout_form)
+        layout.addWidget(self._window_fault_code)
+
+        return create_group_box("State", layout)
 
     def _create_group_power(self) -> QGroupBox:
         """Create the group of power.
@@ -234,3 +276,80 @@ class TabLouver(TabTemplate):
 
         # Real-time chart
         self._figure.append_data([power])
+
+    def _set_signal_state(self, signal: SignalState) -> None:
+        """Set the state signal.
+
+        Parameters
+        ----------
+        signal : `SignalState`
+            Signal.
+        """
+
+        signal.louvers.connect(self._callback_update_state)
+
+    @asyncSlot()
+    async def _callback_update_state(self, state: int) -> None:
+        """Callback to update the state.
+
+        Parameters
+        ----------
+        state : `int`
+            State.
+        """
+
+        self._state.setText(MTDome.EnabledState(state).name)
+
+    def _set_signal_motion(self, signal: SignalMotion) -> None:
+        """Set the motion signal.
+
+        Parameters
+        ----------
+        signal : `SignalMotion`
+            Signal.
+        """
+
+        signal.louvers.connect(self._callback_update_motion)
+
+    @asyncSlot()
+    async def _callback_update_motion(
+        self, motion: tuple[list[MTDome.MotionState], list[bool]]
+    ) -> None:
+        """Callback to update the motion state.
+
+        Parameters
+        ----------
+        motion : `tuple`
+            A tuple of (motion_states, in_positions).
+        """
+
+        # Update each single louver
+        num = len(self._get_louver_names())
+        for idx in range(num):
+            self._tabs[idx].update_motion_state(motion[0][idx], motion[1][idx])
+
+    def _set_signal_fault_code(self, signal: SignalFaultCode) -> None:
+        """Set the fault code signal.
+
+        Parameters
+        ----------
+        signal : `SignalFaultCode`
+            Signal.
+        """
+
+        signal.louvers.connect(self._callback_update_fault_code)
+
+    @asyncSlot()
+    async def _callback_update_fault_code(self, fault_code: str) -> None:
+        """Callback to update the fault code.
+
+        Parameters
+        ----------
+        fault_code : `tuple`
+            Fault code.
+        """
+
+        self._window_fault_code.clear()
+
+        if fault_code != "":
+            self._window_fault_code.setPlainText(fault_code)

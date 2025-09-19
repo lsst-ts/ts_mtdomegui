@@ -23,6 +23,7 @@ import asyncio
 import logging
 
 import pytest
+from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, LOUVERS_ENABLED
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabLouver
@@ -61,14 +62,16 @@ async def test_show_figure(qtbot: QtBot, widget: TabLouver) -> None:
 @pytest.mark.asyncio
 async def test_show_louver(qtbot: QtBot, widget: TabLouver) -> None:
 
-    assert widget._tabs[0].isVisible() is False
+    idx = LOUVERS_ENABLED[0].value - 1
 
-    qtbot.mouseClick(widget._buttons["louver"][0], Qt.LeftButton)
+    assert widget._tabs[idx].isVisible() is False
+
+    qtbot.mouseClick(widget._buttons["louver"][idx], Qt.LeftButton)
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._tabs[0].isVisible() is True
+    assert widget._tabs[idx].isVisible() is True
 
 
 @pytest.mark.asyncio
@@ -96,3 +99,41 @@ async def test_set_signal_telemetry(widget: TabLouver) -> None:
 
         for figure in louver._figures.values():
             assert figure._data[0][-1] == 1.0
+
+
+@pytest.mark.asyncio
+async def test_set_signal_state(widget: TabLouver) -> None:
+
+    widget.model.reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._state.text() == MTDome.EnabledState.ENABLED.name
+
+
+@pytest.mark.asyncio
+async def test_set_signal_motion(widget: TabLouver) -> None:
+
+    widget.model.reporter.report_motion_louvers(
+        [MTDome.MotionState.MOVING] * LCS_NUM_LOUVERS,
+        [True] * LCS_NUM_LOUVERS,
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    for tab_louver in widget._tabs:
+        assert tab_louver._states["motion"].text() == MTDome.MotionState.MOVING.name
+        assert tab_louver._states["in_position"].text() == str(True)
+
+
+@pytest.mark.asyncio
+async def test_set_signal_fault_code(widget: TabLouver) -> None:
+
+    widget.model.reporter.report_fault_code_louvers("Error")
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._window_fault_code.toPlainText() == "Error"
