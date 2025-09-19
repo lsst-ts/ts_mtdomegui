@@ -31,7 +31,15 @@ from lsst.ts.guitool import (
     run_command,
     set_button,
 )
-from lsst.ts.mtdomecom import AMCS_NUM_MOTORS, DOME_AZIMUTH_OFFSET, LWSCS_VMAX
+from lsst.ts.mtdomecom import (
+    AMCS_NUM_MOTORS,
+    APSCS_NUM_SHUTTERS,
+    DOME_AZIMUTH_OFFSET,
+    LCS_NUM_LOUVERS,
+    LCS_NUM_MOTORS_PER_LOUVER,
+    LOUVERS_ENABLED,
+    LWSCS_VMAX,
+)
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QComboBox,
@@ -99,8 +107,12 @@ class TabCommand(TabTemplate):
         names_drive_azimuth = [str(idx) for idx in range(AMCS_NUM_MOTORS)]
         names_drive_shuttor = [str(idx) for idx in range(NUM_DRIVE_SHUTTER)]
 
+        tab_louver = TabSelector("Louver", model, names_louver)
+        for idx, louver in enumerate(MTDome.Louver):
+            tab_louver.set_selection_enabled(idx, louver in LOUVERS_ENABLED)
+
         return {
-            "louver": TabSelector("Louver", model, names_louver),
+            "louver": tab_louver,
             "drive_az": TabSelector("Azimuth Drive", model, names_drive_azimuth),
             "drive_shuttor": TabSelector("Shutter Drive", model, names_drive_shuttor),
         }
@@ -181,6 +193,11 @@ class TabCommand(TabTemplate):
             engage_brakes.addItem(specific_action.name)
         engage_brakes.setToolTip("Engage the brakes (on) or not (off).")
 
+        direction = QComboBox()
+        for specific_action in MTDome.OpenClose:
+            direction.addItem(specific_action.name)
+        direction.setToolTip("Direction to home to.")
+
         # Button
         button_louver = set_button(
             "select louver",
@@ -211,6 +228,7 @@ class TabCommand(TabTemplate):
             "power_mode": power_mode,
             "action": action,
             "engage_brakes": engage_brakes,
+            "direction": direction,
             "louver": button_louver,
             "reset_drives_az": button_reset_az,
             "reset_drives_shutter": button_reset_shutter,
@@ -253,6 +271,7 @@ class TabCommand(TabTemplate):
         command_set_zero_az = QRadioButton("Set zero azimuth", parent=self)
 
         command_reset_drives_shutter = QRadioButton("Reset shutter drives", parent=self)
+        command_reset_drives_louvers = QRadioButton("Reset louver drives", parent=self)
 
         command_fans = QRadioButton("Fans", parent=self)
         command_inflate = QRadioButton("Inflate", parent=self)
@@ -267,7 +286,8 @@ class TabCommand(TabTemplate):
             "been resolved for the indicated subsystem(s)."
         )
         command_home.setToolTip(
-            "Make the indicated subsystems go to the home position."
+            "Make the indicated subsystems go to the home position.\n"
+            "Currently only works with the aperture shutter."
         )
 
         command_crawl_az.setToolTip("Move the azimuth axis at constant velocity.")
@@ -323,9 +343,15 @@ class TabCommand(TabTemplate):
         )
 
         command_reset_drives_shutter.setToolTip(
-            "Reset one or more Aperture Shutter drives. This is necessary when \n"
+            "Reset one or more Aperture Shutter drives. This is necessary when\n"
             "exiting from FAULT state without going to Degraded Mode since the\n"
             "drives don't reset themselves."
+        )
+
+        command_reset_drives_louvers.setToolTip(
+            "Reset one or more Louver drives. This is necessary when exiting\n"
+            "from FAULT state without going to Degraded Mode since the drives\n"
+            "don't reset themselves."
         )
 
         command_fans.setToolTip("Set the fans speed to the indicated value.")
@@ -386,6 +412,7 @@ class TabCommand(TabTemplate):
             "reset_drives_az": command_reset_drives_az,
             "set_zero_az": command_set_zero_az,
             "reset_drives_shutter": command_reset_drives_shutter,
+            "reset_drives_louvers": command_reset_drives_louvers,
             "fans": command_fans,
             "inflate": command_inflate,
             "set_power_management_mode": command_set_power_management_mode,
@@ -399,7 +426,7 @@ class TabCommand(TabTemplate):
             self._enable_command_parameters(["subsystem"])
 
         elif self._commands["home"].isChecked():
-            self._enable_command_parameters(["subsystem"])
+            self._enable_command_parameters(["subsystem", "direction"])
 
         elif self._commands["crawl_az"].isChecked():
             self._enable_command_parameters(["velocity"])
@@ -445,6 +472,9 @@ class TabCommand(TabTemplate):
 
         elif self._commands["reset_drives_shutter"].isChecked():
             self._enable_command_parameters(["reset_drives_shutter"])
+
+        elif self._commands["reset_drives_louvers"].isChecked():
+            self._enable_command_parameters(["louver"])
 
         elif self._commands["fans"].isChecked():
             self._enable_command_parameters(["speed"])
@@ -492,9 +522,12 @@ class TabCommand(TabTemplate):
                 )
 
             case "home":
+                # Move the shutters to the same direction
+                direction = self._get_direction(self._command_parameters["direction"])
                 await run_command(
                     self.model.mtdome_com.home,  # type: ignore[union-attr]
                     self._get_subsystem_bitmask(),
+                    [direction] * APSCS_NUM_SHUTTERS,
                 )
 
             case "crawl_az":
@@ -611,6 +644,12 @@ class TabCommand(TabTemplate):
                     self._get_reset_drives_aperture_shutter(),
                 )
 
+            case "reset_drives_louvers":
+                await run_command(
+                    self.model.mtdome_com.reset_drives_louvers,  # type: ignore[union-attr]
+                    self._get_reset_drives_louver(),
+                )
+
             case "fans":
                 await run_command(
                     self.model.mtdome_com.fans,  # type: ignore[union-attr]
@@ -694,6 +733,22 @@ class TabCommand(TabTemplate):
             self._command_parameters["subsystem"].currentIndex()
         ].value
 
+    def _get_direction(self, combo_box: QComboBox) -> MTDome.OpenClose:
+        """Get the direction.
+
+        Parameters
+        ----------
+        combo_box : `PySide6.QtWidgets.QComboBox`
+            Combo box with the direction.
+
+        Returns
+        -------
+        enum `MTDome.OpenClose`
+            Direction.
+        """
+
+        return MTDome.OpenClose[combo_box.currentText()]
+
     def _get_on_off(self, combo_box: QComboBox) -> MTDome.OnOff | None:
         """Get the on/off status.
 
@@ -763,6 +818,23 @@ class TabCommand(TabTemplate):
 
         return reset_drives
 
+    def _get_reset_drives_louver(self) -> list[int]:
+        """Get the reset louver drives.
+
+        Returns
+        -------
+        reset_drives : `list` [`int`]
+            Reset louver drives. 0 means no reset, 1 means reset.
+        """
+
+        reset_drives = [0] * LCS_NUM_MOTORS_PER_LOUVER * LCS_NUM_LOUVERS
+        for idx in self._tabs["louver"].get_selection():
+            reset_drives[
+                LCS_NUM_MOTORS_PER_LOUVER * idx : LCS_NUM_MOTORS_PER_LOUVER * (idx + 1)
+            ] = [1] * LCS_NUM_MOTORS_PER_LOUVER
+
+        return reset_drives
+
     def _get_power_mode(self) -> MTDome.PowerManagementMode:
         """Get the power management mode.
 
@@ -829,6 +901,7 @@ class TabCommand(TabTemplate):
         layout.addRow("Power mode:", self._command_parameters["power_mode"])
         layout.addRow("Action:", self._command_parameters["action"])
         layout.addRow("Engage brakes:", self._command_parameters["engage_brakes"])
+        layout.addRow("Direction:", self._command_parameters["direction"])
         layout.addRow("Louver:", self._command_parameters["louver"])
         layout.addRow("Percentage:", self._command_parameters["percentage"])
         layout.addRow("Azimuth drives:", self._command_parameters["reset_drives_az"])
