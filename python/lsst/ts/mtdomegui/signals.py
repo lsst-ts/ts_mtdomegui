@@ -69,6 +69,10 @@ class SignalState(QtCore.QObject):
     # `lsst.ts.xml.enums.MTDome.EnabledState`.
     aperture_shutter = QtCore.Signal(int)
 
+    # State of the louvers as the enum of
+    # `lsst.ts.xml.enums.MTDome.EnabledState`.
+    louvers = QtCore.Signal(int)
+
     # Power mode as the enum of `lsst.ts.xml.enums.MTDome.PowerManagementMode`.
     power_mode = QtCore.Signal(int)
 
@@ -132,13 +136,14 @@ class SignalMotion(QtCore.QObject):
     A tuple of (motion_state, in_position). "motion_state" is an enum
     `lsst.ts.xml.enums.MTDome.MotionState`. "in_position" is a boolean value.
 
-    Note for the "aperture_shutter", it would be (motion_states, in_positions),
-    which means both of the elements are list.
+    Note for the "aperture_shutter" and "louvers", it would be
+    (motion_states, in_positions), which means both of the elements are list.
     """
 
     azimuth_axis = QtCore.Signal(object)
     elevation_axis = QtCore.Signal(object)
     aperture_shutter = QtCore.Signal(object)
+    louvers = QtCore.Signal(object)
 
 
 class SignalFaultCode(QtCore.QObject):
@@ -147,6 +152,7 @@ class SignalFaultCode(QtCore.QObject):
     azimuth_axis = QtCore.Signal(str)
     elevation_axis = QtCore.Signal(str)
     aperture_shutter = QtCore.Signal(str)
+    louvers = QtCore.Signal(str)
 
 
 class SignalConfig(QtCore.QObject):
