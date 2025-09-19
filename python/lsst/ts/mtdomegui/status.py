@@ -44,6 +44,7 @@ class Status:
             "azimuthAxis": 0,
             "elevationAxis": 0,
             "apertureShutter": 0,
+            "louvers": 0,
             "powerMode": 0,
         }
     )
