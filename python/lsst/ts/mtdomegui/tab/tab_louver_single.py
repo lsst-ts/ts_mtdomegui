@@ -23,6 +23,7 @@ __all__ = ["TabLouverSingle"]
 
 from lsst.ts.guitool import TabTemplate, create_group_box, create_label
 from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
+from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -58,12 +59,27 @@ class TabLouverSingle(TabTemplate):
 
         self.model = model
 
+        self._states = self._create_states()
         self._status = self._create_status()
 
         self._figures = self._create_figures()
         self._buttons = self._create_buttons()
 
         self.set_widget_and_layout()
+
+    def _create_states(self) -> dict[str, QLabel]:
+        """Create the states.
+
+        Returns
+        -------
+        `dict`
+            System states.
+        """
+
+        return {
+            "motion": create_label(),
+            "in_position": create_label(),
+        }
 
     def _create_status(self) -> dict[str, QLabel | list[QLabel]]:
         """Create the status.
@@ -159,6 +175,7 @@ class TabLouverSingle(TabTemplate):
 
         # First column
         layout_status = QVBoxLayout()
+        layout_status.addWidget(self._create_group_state())
         layout_status.addWidget(self._create_group_position())
         layout_status.addWidget(self._create_group_drive_torque())
         layout_status.addWidget(self._create_group_drive_temperature())
@@ -172,6 +189,24 @@ class TabLouverSingle(TabTemplate):
         layout.addLayout(layout_realtime)
 
         return layout
+
+    def _create_group_state(self) -> QGroupBox:
+        """Create the group of state.
+
+        Returns
+        -------
+        group : `PySide6.QtWidgets.QGroupBox`
+            Group.
+        """
+
+        layout_form = QFormLayout()
+        layout_form.addRow("Motion:", self._states["motion"])
+        layout_form.addRow("In position:", self._states["in_position"])
+
+        layout = QVBoxLayout()
+        layout.addLayout(layout_form)
+
+        return create_group_box("State", layout)
 
     def _create_group_position(self) -> QGroupBox:
         """Create the group of position.
@@ -260,6 +295,22 @@ class TabLouverSingle(TabTemplate):
             layout.addWidget(button)
 
         return create_group_box("Real-time Chart", layout)
+
+    def update_motion_state(
+        self, motion_state: MTDome.MotionState, in_position: bool
+    ) -> None:
+        """Update the motion state.
+
+        Parameters
+        ----------
+        motion_state : enum `MTDome.MotionState`
+            Motion state
+        in_position : `bool`
+            True if the louver is in position. Otherwise, False.
+        """
+
+        self._states["motion"].setText(motion_state.name)
+        self._states["in_position"].setText(str(in_position))
 
     def update_position(
         self, position_commanded: float, position_actual: float
