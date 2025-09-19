@@ -23,7 +23,7 @@ import logging
 from copy import deepcopy
 
 import pytest
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS
 from lsst.ts.mtdomegui import Reporter
 from lsst.ts.xml.enums import MTDome
 from pytestqt.qtbot import QtBot
@@ -49,6 +49,7 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
         reporter.signals["state"].azimuth_axis,
         reporter.signals["state"].elevation_axis,
         reporter.signals["state"].aperture_shutter,
+        reporter.signals["state"].louvers,
         reporter.signals["state"].power_mode,
         reporter.signals["operational_mode"].subsystem_mode,
         reporter.signals["telemetry"].amcs,
@@ -65,6 +66,7 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
         reporter.signals["motion"].azimuth_axis,
         reporter.signals["motion"].elevation_axis,
         reporter.signals["motion"].aperture_shutter,
+        reporter.signals["motion"].louvers,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         reporter.report_default()
@@ -121,6 +123,14 @@ def test_report_state_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> None
         reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
 
     assert reporter.status.state["apertureShutter"] == MTDome.EnabledState.ENABLED.value
+
+
+def test_report_state_louvers(qtbot: QtBot, reporter: Reporter) -> None:
+
+    with qtbot.waitSignal(reporter.signals["state"].louvers, timeout=TIMEOUT):
+        reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
+
+    assert reporter.status.state["louvers"] == MTDome.EnabledState.ENABLED.value
 
 
 def test_report_state_power_mode(qtbot: QtBot, reporter: Reporter) -> None:
@@ -233,6 +243,15 @@ def test_report_motion_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> Non
         )
 
 
+def test_report_motion_louvers(qtbot: QtBot, reporter: Reporter) -> None:
+
+    with qtbot.waitSignal(reporter.signals["motion"].louvers, timeout=TIMEOUT):
+        reporter.report_motion_louvers(
+            [MTDome.MotionState.MOVING] * LCS_NUM_LOUVERS,
+            [True] * LCS_NUM_LOUVERS,
+        )
+
+
 def test_report_fault_code_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
 
     with qtbot.waitSignal(reporter.signals["fault_code"].azimuth_axis, timeout=TIMEOUT):
@@ -253,3 +272,9 @@ def test_report_fault_code_aperture_shutter(qtbot: QtBot, reporter: Reporter) ->
         reporter.signals["fault_code"].aperture_shutter, timeout=TIMEOUT
     ):
         reporter.report_fault_code_aperture_shutter("No error")
+
+
+def test_report_fault_code_louvers(qtbot: QtBot, reporter: Reporter) -> None:
+
+    with qtbot.waitSignal(reporter.signals["fault_code"].louvers, timeout=TIMEOUT):
+        reporter.report_fault_code_louvers("No error")
