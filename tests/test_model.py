@@ -25,7 +25,7 @@ import math
 
 import pytest
 import pytest_asyncio
-from lsst.ts.mtdomecom import LlcName, ResponseCode
+from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, LlcName, ResponseCode
 from lsst.ts.mtdomegui import Model
 from lsst.ts.xml.enums import MTDome
 from pytestqt.qtbot import QtBot
@@ -96,6 +96,7 @@ async def test_report_exception_communication_error(
     signals = [
         model_async_communication_error.reporter.signals["fault_code"].aperture_shutter,
         model_async_communication_error.reporter.signals["fault_code"].elevation_axis,
+        model_async_communication_error.reporter.signals["fault_code"].louvers,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         await asyncio.sleep(5.0)
@@ -106,8 +107,10 @@ def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
     signals = [
         model.reporter.signals["state"].aperture_shutter,
         model.reporter.signals["state"].elevation_axis,
+        model.reporter.signals["state"].louvers,
         model.reporter.signals["fault_code"].aperture_shutter,
         model.reporter.signals["fault_code"].elevation_axis,
+        model.reporter.signals["fault_code"].louvers,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         model._report_exception_fault_code(
@@ -117,6 +120,11 @@ def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
         )
         model._report_exception_fault_code(
             LlcName.LWSCS,
+            ResponseCode.ROTATING_PART_NOT_REPLIED,
+            "exception message by the rotating part",
+        )
+        model._report_exception_fault_code(
+            LlcName.LCS,
             ResponseCode.ROTATING_PART_NOT_REPLIED,
             "exception message by the rotating part",
         )
@@ -257,3 +265,19 @@ def test_check_errors_and_report_aperture_shutter(qtbot: QtBot, model: Model) ->
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         model._check_errors_and_report_aperture_shutter(status)
+
+
+def test_check_errors_and_report_louvers(qtbot: QtBot, model: Model) -> None:
+
+    status = {
+        "messages": [{"code": 0, "description": "No Errors"}],
+        "status": ["STOPPED"] * LCS_NUM_LOUVERS,
+    }
+
+    signals = [
+        model.reporter.signals["state"].louvers,
+        model.reporter.signals["fault_code"].louvers,
+        model.reporter.signals["motion"].louvers,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
+        model._check_errors_and_report_louvers(status)
