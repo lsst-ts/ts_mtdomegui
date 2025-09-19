@@ -116,19 +116,19 @@ async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
     # the thcs telemetry. At the moment, use the amcs to get the motor
     # coil temperatures (OSW-953).
     widget.model.reporter.report_telemetry(
-        "amcs", generate_dict_from_registry(registry, "AMCS", default_number=1.0)
+        "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
     )
 
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    assert widget._temperatures["motor"][-1] == 1.00
+    assert widget._temperatures["motor"] == [1.0] * (
+        THCS_NUM_MOTOR_DRIVE_TEMPERATURES + THCS_NUM_MOTOR_COIL_TEMPERATURES
+    )
+    assert widget._temperatures["cabinet"] == [1.0] * THCS_NUM_CABINET_TEMPERATURES
 
     for index, senser in enumerate(widget._sensors["motor"]):
-        if index < THCS_NUM_MOTOR_DRIVE_TEMPERATURES:
-            assert senser.text() == "0.00 deg C"
-        else:
-            assert senser.text() == "1.00 deg C"
+        assert senser.text() == "1.00 deg C"
 
     for senser in widget._sensors["cabinet"]:
-        assert senser.text() == "0.00 deg C"
+        assert senser.text() == "1.00 deg C"
