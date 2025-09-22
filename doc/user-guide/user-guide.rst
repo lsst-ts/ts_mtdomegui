@@ -180,7 +180,7 @@ Azimuth
 You can see the status of azimuth motion control system in this table.
 It shows the current state and motion state.
 If there is the fault, you will see the error message in the table.
-When the dome rotates, you will see the current target, position, velocity, torque, motor current, and drive temperature here.
+When the dome rotates, you will see the current target, position, velocity, torque, and motor current here.
 You can click the buttons to see the realtime charts as well.
 For example, the following chart shows the azimuth's position in realtime:
 
@@ -232,15 +232,15 @@ Louver
   Louver control system.
 
 You can see the status of louver control system in this table.
-It shows the current power and related realtime chart.
-For each single louver status, you can click the related button to get the detailed information as the following:
+It shows the current state, error code, current power, and related realtime chart.
+For each single available louver status, you can click the related button to get the detailed information as the following:
 
 .. figure:: ../screenshot/louver_single.png
   :width: 400
 
   Single louver status.
 
-It provides the information of position, torque, motor current, and drive temperature.
+It provides the information of motion state, position, torque, motor current, and drive temperature.
 
 .. _lsst.ts.mtdomegui-user_thermal:
 
@@ -253,9 +253,9 @@ Thermal
   Thermal control system.
 
 You can see the status of thermal control system in this table.
-The left lists the temperatures of 13 sensors.
+The left lists the temperatures of cabinet, motor drive, and motor coil.
 The right shows the realtime chart.
-You can select and update the individual sensor as the following:
+You can select and update the individual motor sensor as the following:
 
 .. figure:: ../screenshot/thermal_select_sensor.png
   :width: 400
