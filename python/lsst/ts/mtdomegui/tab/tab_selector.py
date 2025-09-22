@@ -135,7 +135,8 @@ class TabSelector(TabTemplate):
         """
 
         for idx, button in enumerate(self._buttons["selection"]):
-            button.setChecked(idx in selections)
+            if button.isEnabled():
+                button.setChecked(idx in selections)
 
     @asyncSlot()
     async def _callback_reset_all(self) -> None:
@@ -184,3 +185,16 @@ class TabSelector(TabTemplate):
                 selection.append(idx)
 
         return selection
+
+    def set_selection_enabled(self, index: int, is_enabled: bool) -> None:
+        """Set the selection to be enabled or disabled.
+
+        Parameters
+        ----------
+        index : `int`
+            Index of the selection.
+        is_enabled : `bool`
+            Is enabled or disabled.
+        """
+
+        self._buttons["selection"][index].setEnabled(is_enabled)
