@@ -23,7 +23,7 @@ __all__ = ["Reporter"]
 
 import logging
 
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.xml.enums import MTDome
 
@@ -85,6 +85,7 @@ class Reporter:
         self.report_state_azimuth_axis(MTDome.EnabledState.DISABLED)
         self.report_state_elevation_axis(MTDome.EnabledState.DISABLED)
         self.report_state_aperture_shutter(MTDome.EnabledState.DISABLED)
+        self.report_state_louvers(MTDome.EnabledState.DISABLED)
         self.report_state_power_mode(MTDome.PowerManagementMode.NO_POWER_MANAGEMENT)
 
         for subsystem in MTDome.SubSystemId:
@@ -106,6 +107,10 @@ class Reporter:
         self.report_motion_aperture_shutter(
             [MTDome.MotionState.STOPPED] * APSCS_NUM_SHUTTERS,
             [False] * APSCS_NUM_SHUTTERS,
+        )
+        self.report_motion_louvers(
+            [MTDome.MotionState.STOPPED] * LCS_NUM_LOUVERS,
+            [False] * LCS_NUM_LOUVERS,
         )
 
     def report_interlocks(self, interlocks: list[bool]) -> None:
@@ -206,6 +211,17 @@ class Reporter:
         self._check_system_state_and_report(
             "apertureShutter", "state", "aperture_shutter", state.value
         )
+
+    def report_state_louvers(self, state: MTDome.EnabledState) -> None:
+        """Report the state of the louvers.
+
+        Parameters
+        ----------
+        state : enum `MTDome.EnabledState`
+            State of the louvers.
+        """
+
+        self._check_system_state_and_report("louvers", "state", "louvers", state.value)
 
     def report_state_power_mode(self, mode: MTDome.PowerManagementMode) -> None:
         """Report the state of the power mode.
@@ -384,6 +400,24 @@ class Reporter:
             (motion_states, in_positions)
         )
 
+    def report_motion_louvers(
+        self, motion_states: list[MTDome.MotionState], in_positions: list[bool]
+    ) -> None:
+        """Report the motion of the louvers.
+
+        Parameters
+        ----------
+        motion_states : `list` [enum `MTDome.MotionState`]
+            List of the Motion states.
+        in_positions : `list` [`bool`]
+            List of the in-position. True if the louver is in
+            position. Otherwise, False.
+        """
+
+        self.signals["motion"].louvers.emit(  # type: ignore[attr-defined]
+            (motion_states, in_positions)
+        )
+
     def report_fault_code_azimuth_axis(self, fault_code: str) -> None:
         """Report the fault code of the azimuth axis.
 
@@ -416,3 +450,14 @@ class Reporter:
         """
 
         self.signals["fault_code"].aperture_shutter.emit(fault_code)  # type: ignore[attr-defined]
+
+    def report_fault_code_louvers(self, fault_code: str) -> None:
+        """Report the fault code of the louvers.
+
+        Parameters
+        ----------
+        fault_code : `str`
+            Fault code.
+        """
+
+        self.signals["fault_code"].louvers.emit(fault_code)  # type: ignore[attr-defined]

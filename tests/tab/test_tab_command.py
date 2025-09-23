@@ -24,7 +24,13 @@ import logging
 import math
 
 import pytest
-from lsst.ts.mtdomecom import AMCS_NUM_MOTORS, LWSCS_VMAX
+from lsst.ts.mtdomecom import (
+    AMCS_NUM_MOTORS,
+    LCS_NUM_LOUVERS,
+    LCS_NUM_MOTORS_PER_LOUVER,
+    LOUVERS_ENABLED,
+    LWSCS_VMAX,
+)
 from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, Model
 from lsst.ts.mtdomegui.tab import TabCommand
 from lsst.ts.xml.enums import MTDome
@@ -42,8 +48,8 @@ def widget(qtbot: QtBot) -> TabCommand:
 
 def test_init(widget: TabCommand) -> None:
 
-    assert len(widget._command_parameters) == 13
-    assert len(widget._commands) == 20
+    assert len(widget._command_parameters) == 14
+    assert len(widget._commands) == 21
 
     assert widget._command_parameters["position"].maximum() == MAX_POSITION
     assert widget._command_parameters["position"].minimum() == -MAX_POSITION
@@ -115,7 +121,7 @@ def test_get_louver_percentages(widget: TabCommand) -> None:
     # There are selected louvers
     widget._command_parameters["percentage"].setValue(50.0)
 
-    selections = [1, 2, 3]
+    selections = [louver.value - 1 for louver in LOUVERS_ENABLED]
     widget._tabs["louver"].select(selections)
 
     for idx, value in enumerate(widget._get_louver_percentages()):
@@ -132,6 +138,16 @@ def test_get_subsystem_bitmask(widget: TabCommand) -> None:
     widget._command_parameters["subsystem"].setCurrentIndex(3)
 
     assert widget._get_subsystem_bitmask() == MTDome.SubSystemId.LCS.value
+
+
+def test_get_direction(widget: TabCommand) -> None:
+
+    combo_box = widget._command_parameters["direction"]
+
+    assert widget._get_direction(combo_box) == MTDome.OpenClose.OPEN
+
+    combo_box.setCurrentIndex(1)
+    assert widget._get_direction(combo_box) == MTDome.OpenClose.CLOSE
 
 
 def test_get_on_off(widget: TabCommand) -> None:
@@ -159,6 +175,7 @@ def test_get_reset_drives_azimuth(widget: TabCommand) -> None:
     # No selected drives
     assert widget._get_reset_drives_azimuth() == [0] * AMCS_NUM_MOTORS
 
+    # Has selected drives
     selections = [1, 2]
     widget._tabs["drive_az"].select(selections)
 
@@ -170,10 +187,31 @@ def test_get_reset_drives_aperture_shutter(widget: TabCommand) -> None:
     # No selected drives
     assert widget._get_reset_drives_aperture_shutter() == [0] * NUM_DRIVE_SHUTTER
 
+    # Has selected drives
     selections = [1, 2]
     widget._tabs["drive_shuttor"].select(selections)
 
     assert widget._get_reset_drives_aperture_shutter() == [0, 1, 1, 0]
+
+
+def test_get_reset_drives_louver(widget: TabCommand) -> None:
+
+    # Set all the louvers to be enabled first
+    for idx in range(LCS_NUM_LOUVERS):
+        widget._tabs["louver"].set_selection_enabled(idx, True)
+
+    # No selected drives
+    assert (
+        widget._get_reset_drives_louver()
+        == [0] * LCS_NUM_MOTORS_PER_LOUVER * LCS_NUM_LOUVERS
+    )
+
+    # Has selected drives
+    selections = [0, 1, 33]
+    widget._tabs["louver"].select(selections)
+
+    assert widget._get_reset_drives_louver()[0:6] == [1, 1, 1, 1, 0, 0]
+    assert widget._get_reset_drives_louver()[-4:] == [0, 0, 1, 1]
 
 
 def test_get_power_mode(widget: TabCommand) -> None:

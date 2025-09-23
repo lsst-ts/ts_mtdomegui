@@ -80,3 +80,15 @@ def test_get_selection(widget: TabSelector) -> None:
     widget.select(selections)
 
     assert widget.get_selection() == selections
+
+
+def test_set_selection_enabled(widget: TabSelector) -> None:
+
+    widget.set_selection_enabled(1, False)
+
+    assert widget._buttons["selection"][1].isEnabled() is False
+
+    selections = [1, 2]
+    widget.select(selections)
+
+    assert widget.get_selection() == [2]

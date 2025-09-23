@@ -35,6 +35,7 @@ from lsst.ts.mtdomecom import (
     THCS_NUM_MOTOR_COIL_TEMPERATURES,
     THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
 )
+from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -259,7 +260,7 @@ class TabThermalSystem(TabTemplate):
             self._create_group_sensor(
                 self._sensors["cabinet"],
                 "Cabinet",
-                "Cabinet",
+                [sensor.name for sensor in MTDome.CabinetSensor],
                 0,
                 THCS_NUM_CABINET_TEMPERATURES,
             )
@@ -268,7 +269,7 @@ class TabThermalSystem(TabTemplate):
             self._create_group_sensor(
                 self._sensors["motor"],
                 "Motor Drive",
-                "Drive",
+                [sensor.name for sensor in MTDome.AzimuthMotorSensor],
                 0,
                 THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
             )
@@ -277,7 +278,7 @@ class TabThermalSystem(TabTemplate):
             self._create_group_sensor(
                 self._sensors["motor"],
                 "Motor Coil",
-                "Coil",
+                [sensor.name for sensor in MTDome.AzimuthMotor],
                 THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
                 THCS_NUM_MOTOR_DRIVE_TEMPERATURES + THCS_NUM_MOTOR_COIL_TEMPERATURES,
             )
@@ -300,7 +301,7 @@ class TabThermalSystem(TabTemplate):
         self,
         sensors: list[QLabel],
         name_group: str,
-        name_sensor: str,
+        name_sensor: list[str],
         idx_start: int,
         idx_end: int,
     ) -> QGroupBox:
@@ -312,7 +313,7 @@ class TabThermalSystem(TabTemplate):
             Sensors.
         name_group : `str`
             Group name.
-        name_sensor : `str`
+        name_sensor : `list` [`str`]
             Sensor name.
         idx_start : `int`
             Starting index of the sensor.
@@ -328,7 +329,7 @@ class TabThermalSystem(TabTemplate):
         layout = QFormLayout()
         selected_sensors = sensors[idx_start:idx_end]
         for idx, sensor in enumerate(selected_sensors):
-            layout.addRow(f"{name_sensor} {idx_start + idx}:", sensor)
+            layout.addRow(f"{name_sensor[idx]} ({idx_start + idx}):", sensor)
 
         return create_group_box(name_group, layout)
 
@@ -352,12 +353,7 @@ class TabThermalSystem(TabTemplate):
             Signal.
         """
 
-        # TODO: Once the ts_mtdomecom uses the new schema totally, we can use
-        # the thcs telemetry. At the moment, use the amcs to get the motor
-        # coil temperatures (OSW-953).
-
-        signal.amcs.connect(self._callback_telemetry)
-        # signal.thcs.connect(self._callback_telemetry)
+        signal.thcs.connect(self._callback_telemetry)
 
     @asyncSlot()
     async def _callback_telemetry(self, telemetry: dict) -> None:
@@ -373,9 +369,15 @@ class TabThermalSystem(TabTemplate):
         # the received telemetry directly. If the received telemetry data has
         # the different order compared with the self._temperatures, change it
         # (OSW-953).
-        self._temperatures["motor"][THCS_NUM_MOTOR_DRIVE_TEMPERATURES:] = telemetry[
-            "driveTemperature"
-        ][:THCS_NUM_MOTOR_COIL_TEMPERATURES]
+        if "temperature" in telemetry:
+            self._temperatures["motor"][THCS_NUM_MOTOR_DRIVE_TEMPERATURES:] = telemetry[
+                "temperature"
+            ][:THCS_NUM_MOTOR_COIL_TEMPERATURES]
+        else:
+            self._temperatures["motor"] = (
+                telemetry["driveTemperature"] + telemetry["motorCoilTemperature"]
+            )
+            self._temperatures["cabinet"] = telemetry["cabinetTemperature"]
 
         # TODO: We need to update the cabinet temeprature as well once it is
         # ready (OSW-953).

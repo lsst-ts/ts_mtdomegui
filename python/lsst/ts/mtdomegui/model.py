@@ -121,6 +121,7 @@ class Model:
                 LlcName.LWSCS: self.callback_status_lwscs,
                 LlcName.MONCS: self.callback_status_moncs,
                 LlcName.RAD: self.callback_status_rad,
+                LlcName.THCS: self.callback_status_thcs,
             }
             if self._is_simulation_mode
             else {
@@ -128,6 +129,7 @@ class Model:
                 LlcName.APSCS: self.callback_status_apscs,
                 LlcName.CBCS: self.callback_status_cbcs,
                 LlcName.THCS: self.callback_status_thcs,
+                LlcName.LCS: self.callback_status_lcs,
             }
         )
 
@@ -299,6 +301,10 @@ class Model:
                     self.reporter.report_state_elevation_axis(MTDome.EnabledState.FAULT)
                     self.reporter.report_fault_code_elevation_axis(exception_message)
 
+                case LlcName.LCS:
+                    self.reporter.report_state_louvers(MTDome.EnabledState.FAULT)
+                    self.reporter.report_fault_code_louvers(exception_message)
+
                 case _:
                     pass
 
@@ -387,6 +393,9 @@ class Model:
 
             case LlcName.APSCS:
                 self._check_errors_and_report_aperture_shutter(status)
+
+            case LlcName.LCS:
+                self._check_errors_and_report_louvers(status)
 
             case _:
                 # The details for other subsystems are not defined yet.
@@ -545,6 +554,47 @@ class Model:
                 )
 
             self.reporter.report_motion_aperture_shutter(motion_states, in_positions)
+
+    def _check_errors_and_report_louvers(self, status: dict[str, typing.Any]) -> None:
+        """Check the errors and report for the louvers.
+
+        Parameters
+        ----------
+        status : `dict`
+            Status.
+        """
+
+        has_error, fault_code = self._get_fault_code(status)
+        state = MTDome.EnabledState.FAULT if has_error else MTDome.EnabledState.ENABLED
+
+        self.reporter.report_state_louvers(state)
+        self.reporter.report_fault_code_louvers(fault_code)
+
+        if not has_error:
+            # The number of statuses has been validated by the JSON schema. So
+            # here it is safe to loop over all statuses.
+            motion_states = list()
+            in_positions = list()
+            for specific_status in status["status"]:
+                motion_state = self._translate_motion_state_if_necessary(
+                    specific_status
+                )
+
+                if motion_state is None:
+                    return
+
+                motion_states.append(motion_state)
+                in_positions.append(
+                    motion_state
+                    in [
+                        MTDome.MotionState.STOPPED,
+                        MTDome.MotionState.STOPPED_BRAKED,
+                        MTDome.MotionState.CLOSED,
+                        MTDome.MotionState.OPEN,
+                    ]
+                )
+
+            self.reporter.report_motion_louvers(motion_states, in_positions)
 
     async def callback_status_amcs(self, status: dict) -> None:
         """Callback to report the status of azimuth motion control system

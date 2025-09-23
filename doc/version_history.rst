@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.0:
+
+* Adapt the **ts_mtdomecom** v0.3.0.
+* Support the louver control system.
+* Show the temperatures of the cabinet, motor drive, and motor coils in the thermal control system.
+* Update the screenshots of the azimuth, thermal, louver, and command tables.
+* Update the ``user-guide.rst`` and ``class_tab_louver.md``.
+
 .. _lsst.ts.mtdomegui-0.4.14:
 
 * Remove the temperatures in **TabAzimuth**.
