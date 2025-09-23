@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.5:
+
+-------------
+0.5.5
+-------------
+
+* Adapt the qasync v0.28.0.
+
 .. _lsst.ts.mtdomegui-0.5.4:
 
 -------------
