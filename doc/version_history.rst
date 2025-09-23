@@ -6,6 +6,10 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.2:
+
+* Adapt the qasync v0.28.0.
+
 .. _lsst.ts.mtdomegui-0.5.1:
 
 * Improve the ``test_application.py``.
