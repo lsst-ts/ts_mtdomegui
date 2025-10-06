@@ -41,7 +41,7 @@ def widget(qtbot: QtBot) -> ControlPanel:
 
 def test_init(widget: ControlPanel) -> None:
 
-    assert len(widget._labels) == 6
+    assert len(widget._labels) == 7
 
 
 @pytest.mark.asyncio
@@ -102,6 +102,7 @@ async def test_set_signal_state(widget: ControlPanel) -> None:
     widget.model.reporter.report_state_azimuth_axis(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_elevation_axis(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
+    widget.model.reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_power_mode(MTDome.PowerManagementMode.EMERGENCY)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -110,6 +111,7 @@ async def test_set_signal_state(widget: ControlPanel) -> None:
     assert widget._labels["azimuth_axis"].text() == MTDome.EnabledState.ENABLED.name
     assert widget._labels["elevation_axis"].text() == MTDome.EnabledState.ENABLED.name
     assert widget._labels["aperture_shutter"].text() == MTDome.EnabledState.ENABLED.name
+    assert widget._labels["louvers"].text() == MTDome.EnabledState.ENABLED.name
     assert (
         widget._labels["power_mode"].text() == MTDome.PowerManagementMode.EMERGENCY.name
     )
