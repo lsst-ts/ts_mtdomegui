@@ -8,7 +8,7 @@ Version History
 
 .. _lsst.ts.mtdomegui-0.5.2:
 
-* Report the louver control system to be Enabled once there is the connection.
+* Report the louvers control system to be Enabled once there is the connection.
 
 .. _lsst.ts.mtdomegui-0.5.1:
 
