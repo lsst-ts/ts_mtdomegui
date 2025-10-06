@@ -74,6 +74,7 @@ class ControlPanel(QWidget):
             "azimuth_axis": create_label(),
             "elevation_axis": create_label(),
             "aperture_shutter": create_label(),
+            "louvers": create_label(),
             "power_mode": create_label(),
         }
 
@@ -117,6 +118,7 @@ class ControlPanel(QWidget):
         layout.addRow("Azimuth axis:", self._labels["azimuth_axis"])
         layout.addRow("Elevation axis:", self._labels["elevation_axis"])
         layout.addRow("Aperture shutter:", self._labels["aperture_shutter"])
+        layout.addRow("Louvers:", self._labels["louvers"])
 
         add_empty_row_to_form_layout(layout)
 
@@ -217,6 +219,13 @@ class ControlPanel(QWidget):
             partial(
                 self._callback_update_label,
                 "aperture_shutter",
+                enum=MTDome.EnabledState,
+            )
+        )
+        signal.louvers.connect(
+            partial(
+                self._callback_update_label,
+                "louvers",
                 enum=MTDome.EnabledState,
             )
         )

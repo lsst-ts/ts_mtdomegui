@@ -154,6 +154,9 @@ class Model:
         self.reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
         self.reporter.report_fault_code_aperture_shutter("")
 
+        self.reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
+        self.reporter.report_fault_code_louvers("")
+
         self.reporter.report_state_brake_engaged(0)
         self.reporter.report_state_locking_pins_engaged(0)
 
