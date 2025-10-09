@@ -6,16 +6,36 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.3:
+
+-------------
+0.5.3
+-------------
+
+* Add the ``string`` in the build section of ``meta.yaml``.
+
 .. _lsst.ts.mtdomegui-0.5.2:
+
+-------------
+0.5.2
+-------------
 
 * Report the louvers control system to be Enabled once there is the connection.
 
 .. _lsst.ts.mtdomegui-0.5.1:
 
+-------------
+0.5.1
+-------------
+
 * Improve the ``test_application.py``.
 * Assign the qasync version in ``meta.yaml``.
 
 .. _lsst.ts.mtdomegui-0.5.0:
+
+-------------
+0.5.0
+-------------
 
 * Adapt the **ts_mtdomecom** v0.3.0.
 * Support the louver control system.
@@ -24,6 +44,10 @@ Version History
 * Update the ``user-guide.rst`` and ``class_tab_louver.md``.
 
 .. _lsst.ts.mtdomegui-0.4.14:
+
+-------------
+0.4.14
+-------------
 
 * Remove the temperatures in **TabAzimuth**.
 * Update the temperature sensors in **TabThermalSystem** to have the motor drive, motor coil, and cabinet.

@@ -14,6 +14,7 @@ build:
     - PYTEST_QT_API=PySide6
   noarch: python
   script: {{ PYTHON }} -m pip install --no-deps --ignore-installed .
+  string: "py{{ PY_VER | replace('.', '') }}{{ PKG_HASH }}_{{ PKG_BUILDNUM }}"
   entry_points:
     - run_mtdomegui = lsst.ts.mtdomegui.application:run_mtdomegui
 
