@@ -365,22 +365,10 @@ class TabThermalSystem(TabTemplate):
             Telemetry.
         """
 
-        # TODO: Once the ts_mtdomecom uses the new schema totally, we can use
-        # the received telemetry directly. If the received telemetry data has
-        # the different order compared with the self._temperatures, change it
-        # (OSW-953).
-        if "temperature" in telemetry:
-            self._temperatures["motor"][THCS_NUM_MOTOR_DRIVE_TEMPERATURES:] = telemetry[
-                "temperature"
-            ][:THCS_NUM_MOTOR_COIL_TEMPERATURES]
-        else:
-            self._temperatures["motor"] = (
-                telemetry["driveTemperature"] + telemetry["motorCoilTemperature"]
-            )
-            self._temperatures["cabinet"] = telemetry["cabinetTemperature"]
-
-        # TODO: We need to update the cabinet temeprature as well once it is
-        # ready (OSW-953).
+        self._temperatures["motor"] = (
+            telemetry["driveTemperature"] + telemetry["motorCoilTemperature"]
+        )
+        self._temperatures["cabinet"] = telemetry["cabinetTemperature"]
 
         for atype in self._sensors.keys():
             for sensor, temperature in zip(

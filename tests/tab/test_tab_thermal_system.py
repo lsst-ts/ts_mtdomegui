@@ -112,9 +112,6 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
 
-    # TODO: Once the ts_mtdomecom uses the new schema totally, we can use
-    # the thcs telemetry. At the moment, use the amcs to get the motor
-    # coil temperatures (OSW-953).
     widget.model.reporter.report_telemetry(
         "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
     )
