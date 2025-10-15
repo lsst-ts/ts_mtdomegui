@@ -270,12 +270,10 @@ class Reporter:
             Status of the capacitor bank.
         """
 
-        # TODO: Remove this check once the summit supports it.
-        if "dcBusVoltage" in capacitor_bank:
-            self.signals["telemetry"].cbcs_voltage.emit(  # type: ignore[attr-defined]
-                capacitor_bank["dcBusVoltage"]
-            )
-            capacitor_bank.pop("dcBusVoltage")
+        self.signals["telemetry"].cbcs_voltage.emit(  # type: ignore[attr-defined]
+            capacitor_bank["dcBusVoltage"]
+        )
+        capacitor_bank.pop("dcBusVoltage")
 
         if self.status.capacitor_bank != capacitor_bank:
             self.status.capacitor_bank = capacitor_bank  # type: ignore[assignment]

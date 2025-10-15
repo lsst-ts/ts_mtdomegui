@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.4:
+
+-------------
+0.5.4
+-------------
+
+* Adapt the schema on summit. Remove the workaround.
+
 .. _lsst.ts.mtdomegui-0.5.3:
 
 -------------
