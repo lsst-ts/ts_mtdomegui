@@ -51,9 +51,7 @@ class Status:
 
     # List of the enum `MTDome.OperationalMode` for each subsystem.
     # The order is the same as the enum of `MTDome.SubSystemId`.
-    operational_modes: list[int] = field(
-        default_factory=lambda: [0] * len(MTDome.SubSystemId)
-    )
+    operational_modes: list[int] = field(default_factory=lambda: [0] * len(MTDome.SubSystemId))
 
     # Capacitor bank status.
     capacitor_bank: dict[str, list[bool]] = field(

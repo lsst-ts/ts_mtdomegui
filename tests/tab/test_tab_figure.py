@@ -36,14 +36,12 @@ def widget(qtbot: QtBot) -> TabFigure:
 
 
 def test_init(widget: TabFigure) -> None:
-
     assert len(widget._data) == 2
     assert len(widget._data[0]) == 200
     assert len(widget._data[1]) == 200
 
 
 def test_append_data(widget: TabFigure) -> None:
-
     # Not visible
     widget.append_data([1.0, 2.0])
 

@@ -109,7 +109,6 @@ class TabFigure(TabTemplate):
         return figure
 
     def create_layout(self) -> QVBoxLayout:
-
         layout = QVBoxLayout()
 
         self._figure.setMinimumWidth(self.MIN_WIDTH)
@@ -118,7 +117,6 @@ class TabFigure(TabTemplate):
         return layout
 
     def showEvent(self, event: QShowEvent) -> None:
-
         super().showEvent(event)
 
         # Draw the cached data

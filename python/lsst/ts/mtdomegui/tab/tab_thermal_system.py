@@ -75,9 +75,7 @@ class TabThermalSystem(TabTemplate):
 
         self.model = model
 
-        num_motor_sensors = (
-            THCS_NUM_MOTOR_DRIVE_TEMPERATURES + THCS_NUM_MOTOR_COIL_TEMPERATURES
-        )
+        num_motor_sensors = THCS_NUM_MOTOR_DRIVE_TEMPERATURES + THCS_NUM_MOTOR_COIL_TEMPERATURES
         self._sensors = {
             "motor": self._create_sensors(num_motor_sensors),
             "cabinet": self._create_sensors(THCS_NUM_CABINET_TEMPERATURES),
@@ -106,9 +104,7 @@ class TabThermalSystem(TabTemplate):
         self._buttons = self._create_buttons()
 
         # Timer to update the realtime figure
-        self._timer = self.create_and_start_timer(
-            self._callback_time_out, self.model.duration_refresh
-        )
+        self._timer = self.create_and_start_timer(self._callback_time_out, self.model.duration_refresh)
 
         self.set_widget_and_layout()
 
@@ -253,7 +249,6 @@ class TabThermalSystem(TabTemplate):
         self._timer.blockSignals(False)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_sensor = QVBoxLayout()
         layout_sensor.addWidget(
@@ -338,9 +333,7 @@ class TabThermalSystem(TabTemplate):
         """Callback timeout function to update the realtime figure."""
 
         for idx, selection in enumerate(self._selections):
-            self._figures["motor"].append_data(
-                self._temperatures["motor"][selection], idx=idx
-            )
+            self._figures["motor"].append_data(self._temperatures["motor"][selection], idx=idx)
 
         self.check_duration_and_restart_timer(self._timer, self.model.duration_refresh)
 
@@ -365,15 +358,11 @@ class TabThermalSystem(TabTemplate):
             Telemetry.
         """
 
-        self._temperatures["motor"] = (
-            telemetry["driveTemperature"] + telemetry["motorCoilTemperature"]
-        )
+        self._temperatures["motor"] = telemetry["driveTemperature"] + telemetry["motorCoilTemperature"]
         self._temperatures["cabinet"] = telemetry["cabinetTemperature"]
 
         for atype in self._sensors.keys():
-            for sensor, temperature in zip(
-                self._sensors[atype], self._temperatures[atype]
-            ):
+            for sensor, temperature in zip(self._sensors[atype], self._temperatures[atype]):
                 sensor.setText(f"{temperature:.2f} deg C")
 
         # Real-time chart. Note the self._figures["motor"] is put in the

@@ -84,9 +84,7 @@ class TabCalibration(TabTemplate):
             "drive_torque_commanded": create_label(),
             "drive_current_actual": create_label(),
             "drive_temperature": create_label(),
-            "power_draw": create_label(
-                tool_tip="Total power drawn by the calibration screen."
-            ),
+            "power_draw": create_label(tool_tip="Total power drawn by the calibration screen."),
         }
 
     def _create_figures(self) -> dict[str, TabFigure]:
@@ -99,9 +97,7 @@ class TabCalibration(TabTemplate):
         """
 
         return {
-            "position": TabFigure(
-                "Position", self.model, "value", ["commanded", "actual"]
-            ),
+            "position": TabFigure("Position", self.model, "value", ["commanded", "actual"]),
             "drive_torque": TabFigure(
                 "Actual Drive Torque",
                 self.model,
@@ -154,7 +150,6 @@ class TabCalibration(TabTemplate):
         return create_buttons_with_tabs(names, self._figures)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_status = QVBoxLayout()
         layout_status.addWidget(self._create_group_position())
@@ -279,19 +274,11 @@ class TabCalibration(TabTemplate):
         self._status["position_commanded"].setText(f"{position_commanded:.2f}")
         self._status["position_actual"].setText(f"{position_actual:.2f}")
 
-        self._status["drive_torque_commanded"].setText(
-            f"{telemetry['driveTorqueCommanded']:.2f} N*m"
-        )
-        self._status["drive_torque_actual"].setText(
-            f"{telemetry['driveTorqueActual']:.2f} N*m"
-        )
-        self._status["drive_current_actual"].setText(
-            f"{telemetry['driveCurrentActual']:.2f} A"
-        )
+        self._status["drive_torque_commanded"].setText(f"{telemetry['driveTorqueCommanded']:.2f} N*m")
+        self._status["drive_torque_actual"].setText(f"{telemetry['driveTorqueActual']:.2f} N*m")
+        self._status["drive_current_actual"].setText(f"{telemetry['driveCurrentActual']:.2f} A")
 
-        self._status["drive_temperature"].setText(
-            f"{telemetry['driveTemperature']:.2f} deg C"
-        )
+        self._status["drive_temperature"].setText(f"{telemetry['driveTemperature']:.2f} deg C")
 
         power = telemetry["powerDraw"]
         self._status["power_draw"].setText(f"{power:.2f} W")  # type: ignore[union-attr]

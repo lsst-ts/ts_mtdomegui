@@ -60,7 +60,6 @@ class Reporter:
     """
 
     def __init__(self, log: logging.Logger) -> None:
-
         self.log = log
 
         self.status = Status()
@@ -95,9 +94,7 @@ class Reporter:
         self.signals["telemetry"].cbcs_voltage.emit(0.0)  # type: ignore[attr-defined]
 
         for component in ["AMCS", "LWSCS", "ApSCS", "LCS", "ThCS", "RAD", "CSCS"]:
-            self.report_telemetry(
-                component.lower(), generate_dict_from_registry(registry, component)
-            )
+            self.report_telemetry(component.lower(), generate_dict_from_registry(registry, component))
 
         self.report_target_azimuth(0.0, 0.0)
         self.report_target_elevation(0.0, 0.0)
@@ -169,9 +166,7 @@ class Reporter:
             Bitmask of the brakes that are engaged.
         """
 
-        self._check_system_state_and_report(
-            "brakeEngaged", "state", "brake_engaged", brakes
-        )
+        self._check_system_state_and_report("brakeEngaged", "state", "brake_engaged", brakes)
 
     def report_state_azimuth_axis(self, state: MTDome.EnabledState) -> None:
         """Report the state of the azimuth axis.
@@ -182,9 +177,7 @@ class Reporter:
             State of the azimuth axis.
         """
 
-        self._check_system_state_and_report(
-            "azimuthAxis", "state", "azimuth_axis", state.value
-        )
+        self._check_system_state_and_report("azimuthAxis", "state", "azimuth_axis", state.value)
 
     def report_state_elevation_axis(self, state: MTDome.EnabledState) -> None:
         """Report the state of the elevation axis.
@@ -195,9 +188,7 @@ class Reporter:
             State of the elevation axis.
         """
 
-        self._check_system_state_and_report(
-            "elevationAxis", "state", "elevation_axis", state.value
-        )
+        self._check_system_state_and_report("elevationAxis", "state", "elevation_axis", state.value)
 
     def report_state_aperture_shutter(self, state: MTDome.EnabledState) -> None:
         """Report the state of the aperture shutter.
@@ -208,9 +199,7 @@ class Reporter:
             State of the aperture shutter.
         """
 
-        self._check_system_state_and_report(
-            "apertureShutter", "state", "aperture_shutter", state.value
-        )
+        self._check_system_state_and_report("apertureShutter", "state", "aperture_shutter", state.value)
 
     def report_state_louvers(self, state: MTDome.EnabledState) -> None:
         """Report the state of the louvers.
@@ -232,13 +221,9 @@ class Reporter:
             Power mode.
         """
 
-        self._check_system_state_and_report(
-            "powerMode", "state", "power_mode", mode.value
-        )
+        self._check_system_state_and_report("powerMode", "state", "power_mode", mode.value)
 
-    def report_operational_mode(
-        self, subsystem: MTDome.SubSystemId, mode: MTDome.OperationalMode
-    ) -> None:
+    def report_operational_mode(self, subsystem: MTDome.SubSystemId, mode: MTDome.OperationalMode) -> None:
         """Report the operational mode of a subsystem.
 
         Parameters
@@ -259,9 +244,7 @@ class Reporter:
                 (subsystem, mode)
             )
 
-    def report_capacitor_bank(
-        self, capacitor_bank: dict[str, list[bool] | float]
-    ) -> None:
+    def report_capacitor_bank(self, capacitor_bank: dict[str, list[bool] | float]) -> None:
         """Report the status of the capacitor bank.
 
         Parameters
@@ -350,9 +333,7 @@ class Reporter:
             (position, velocity)
         )
 
-    def report_motion_azimuth_axis(
-        self, motion_state: MTDome.MotionState, in_position: bool
-    ) -> None:
+    def report_motion_azimuth_axis(self, motion_state: MTDome.MotionState, in_position: bool) -> None:
         """Report the motion of the azimuth axis.
 
         Parameters
@@ -365,9 +346,7 @@ class Reporter:
 
         self.signals["motion"].azimuth_axis.emit((motion_state, in_position))  # type: ignore[attr-defined]
 
-    def report_motion_elevation_axis(
-        self, motion_state: MTDome.MotionState, in_position: bool
-    ) -> None:
+    def report_motion_elevation_axis(self, motion_state: MTDome.MotionState, in_position: bool) -> None:
         """Report the motion of the elevation axis.
 
         Parameters

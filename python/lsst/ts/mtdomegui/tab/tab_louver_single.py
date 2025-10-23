@@ -91,21 +91,13 @@ class TabLouverSingle(TabTemplate):
         """
 
         drive_torque_actual = [create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)]
-        drive_torque_commanded = [
-            create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)
-        ]
-        drive_current_actual = [
-            create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)
-        ]
+        drive_torque_commanded = [create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)]
+        drive_current_actual = [create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)]
         drive_temperature = [create_label() for _ in range(LCS_NUM_MOTORS_PER_LOUVER)]
 
         return {
-            "position_actual": create_label(
-                tool_tip="Measured position of louver (percent open)."
-            ),
-            "position_commanded": create_label(
-                tool_tip="Commanded position of louver (percent open)."
-            ),
+            "position_actual": create_label(tool_tip="Measured position of louver (percent open)."),
+            "position_commanded": create_label(tool_tip="Commanded position of louver (percent open)."),
             "drive_torque_actual": drive_torque_actual,
             "drive_torque_commanded": drive_torque_commanded,
             "drive_current_actual": drive_current_actual,
@@ -124,9 +116,7 @@ class TabLouverSingle(TabTemplate):
         louver_name = self.windowTitle()
 
         return {
-            "position": TabFigure(
-                f"{louver_name} Position", self.model, "%", ["commanded", "actual"]
-            ),
+            "position": TabFigure(f"{louver_name} Position", self.model, "%", ["commanded", "actual"]),
             "drive_torque": TabFigure(
                 f"{louver_name} Actual Drive Torque",
                 self.model,
@@ -172,7 +162,6 @@ class TabLouverSingle(TabTemplate):
         return create_buttons_with_tabs(names, self._figures)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_status = QVBoxLayout()
         layout_status.addWidget(self._create_group_state())
@@ -239,15 +228,11 @@ class TabLouverSingle(TabTemplate):
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
             )
-            layout.addRow(
-                f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx]
-            )
+            layout.addRow(f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx])
             add_empty_row_to_form_layout(layout)
 
         for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
-            layout.addRow(
-                f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
-            )
+            layout.addRow(f"Current {idx} (actual):", self._status["drive_current_actual"][idx])
 
         return create_group_box("Drive Torque", layout)
 
@@ -296,9 +281,7 @@ class TabLouverSingle(TabTemplate):
 
         return create_group_box("Real-time Chart", layout)
 
-    def update_motion_state(
-        self, motion_state: MTDome.MotionState, in_position: bool
-    ) -> None:
+    def update_motion_state(self, motion_state: MTDome.MotionState, in_position: bool) -> None:
         """Update the motion state.
 
         Parameters
@@ -312,9 +295,7 @@ class TabLouverSingle(TabTemplate):
         self._states["motion"].setText(motion_state.name)
         self._states["in_position"].setText(str(in_position))
 
-    def update_position(
-        self, position_commanded: float, position_actual: float
-    ) -> None:
+    def update_position(self, position_commanded: float, position_actual: float) -> None:
         """Update the position.
 
         Parameters
@@ -352,15 +333,9 @@ class TabLouverSingle(TabTemplate):
         """
 
         for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
-            self._status["drive_torque_commanded"][idx].setText(
-                f"{torque_commanded[idx]:.2f} N*m"
-            )
-            self._status["drive_torque_actual"][idx].setText(
-                f"{torque_actual[idx]:.2f} N*m"
-            )
-            self._status["drive_current_actual"][idx].setText(
-                f"{current_actual[idx]:.2f} A"
-            )
+            self._status["drive_torque_commanded"][idx].setText(f"{torque_commanded[idx]:.2f} N*m")
+            self._status["drive_torque_actual"][idx].setText(f"{torque_actual[idx]:.2f} N*m")
+            self._status["drive_current_actual"][idx].setText(f"{current_actual[idx]:.2f} A")
 
         self._figures["drive_torque"].append_data(torque_actual)
         self._figures["drive_current"].append_data(current_actual)
@@ -377,8 +352,6 @@ class TabLouverSingle(TabTemplate):
         """
 
         for idx in range(LCS_NUM_MOTORS_PER_LOUVER):
-            self._status["drive_temperature"][idx].setText(
-                f"{temperature[idx]:.2f} deg C"
-            )
+            self._status["drive_temperature"][idx].setText(f"{temperature[idx]:.2f} deg C")
 
         self._figures["drive_temperature"].append_data(temperature)

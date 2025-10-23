@@ -146,9 +146,7 @@ def create_buttons_with_tabs(
     return buttons
 
 
-def generate_dict_from_registry(
-    registry: dict, component: str, default_number: float = 0.0
-) -> dict:
+def generate_dict_from_registry(registry: dict, component: str, default_number: float = 0.0) -> dict:
     """Generate a dictionary data from the registry schema in ts_mtdomecom.
 
     Parameters
@@ -167,7 +165,6 @@ def generate_dict_from_registry(
     """
 
     def _generate_array(schema: dict) -> list:
-
         specific_type = schema["items"][0]["type"]
         num = schema["maxItems"]
 

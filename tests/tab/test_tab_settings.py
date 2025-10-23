@@ -63,9 +63,7 @@ def test_init(widget: TabSettings) -> None:
     assert widget._settings_app["port"].value() == connection_information["port"]
 
     assert widget._settings_app["log_level"].value() == widget.model.log.level
-    assert widget._settings_app["refresh_frequency"].value() == int(
-        1000 / widget.model.duration_refresh
-    )
+    assert widget._settings_app["refresh_frequency"].value() == int(1000 / widget.model.duration_refresh)
 
     app = QApplication.instance()
     assert widget._settings_app["point_size"].value() == app.font().pointSize()
@@ -78,44 +76,25 @@ def test_init(widget: TabSettings) -> None:
 
     line_edit = widget._settings_app["host"]
     font_metrics = line_edit.fontMetrics()
-    assert (
-        line_edit.minimumWidth()
-        == font_metrics.boundingRect(line_edit.text()).width() + 20
-    )
+    assert line_edit.minimumWidth() == font_metrics.boundingRect(line_edit.text()).width() + 20
 
-    assert (
-        widget._settings_app["refresh_frequency"].minimum() == REFRESH_FREQUENCY_MINIMUM
-    )
-    assert (
-        widget._settings_app["refresh_frequency"].maximum() == REFRESH_FREQUENCY_MAXIMUM
-    )
+    assert widget._settings_app["refresh_frequency"].minimum() == REFRESH_FREQUENCY_MINIMUM
+    assert widget._settings_app["refresh_frequency"].maximum() == REFRESH_FREQUENCY_MAXIMUM
 
     assert widget._settings_app["point_size"].minimum() == POINT_SIZE_MINIMUM
     assert widget._settings_app["point_size"].maximum() == POINT_SIZE_MAXIMUM
 
-    assert widget._settings_amcs["jerk"].maximum() == pytest.approx(
-        math.degrees(AMCS_JMAX)
-    )
+    assert widget._settings_amcs["jerk"].maximum() == pytest.approx(math.degrees(AMCS_JMAX))
 
-    assert widget._settings_amcs["acceleration"].maximum() == pytest.approx(
-        math.degrees(AMCS_AMAX)
-    )
+    assert widget._settings_amcs["acceleration"].maximum() == pytest.approx(math.degrees(AMCS_AMAX))
 
-    assert widget._settings_amcs["velocity"].maximum() == pytest.approx(
-        math.degrees(AMCS_VMAX)
-    )
+    assert widget._settings_amcs["velocity"].maximum() == pytest.approx(math.degrees(AMCS_VMAX))
 
-    assert widget._settings_lwscs["jerk"].maximum() == pytest.approx(
-        math.degrees(LWSCS_JMAX)
-    )
+    assert widget._settings_lwscs["jerk"].maximum() == pytest.approx(math.degrees(LWSCS_JMAX))
 
-    assert widget._settings_lwscs["acceleration"].maximum() == pytest.approx(
-        math.degrees(LWSCS_AMAX)
-    )
+    assert widget._settings_lwscs["acceleration"].maximum() == pytest.approx(math.degrees(LWSCS_AMAX))
 
-    assert widget._settings_lwscs["velocity"].maximum() == pytest.approx(
-        math.degrees(LWSCS_VMAX)
-    )
+    assert widget._settings_lwscs["velocity"].maximum() == pytest.approx(math.degrees(LWSCS_VMAX))
 
 
 @pytest.mark.asyncio
@@ -153,7 +132,6 @@ async def test_callback_apply_general(qtbot: QtBot, widget: TabSettings) -> None
 
 @pytest.mark.asyncio
 async def test_set_signal_config(widget: TabSettings) -> None:
-
     config = {
         "jmax": 0.1,
         "amax": 0.2,

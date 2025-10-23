@@ -109,7 +109,6 @@ class TabUtility(TabTemplate):
         return indicators
 
     def create_layout(self) -> QVBoxLayout:
-
         layout = QVBoxLayout()
         layout.addWidget(self._create_group_mode())
         layout.addWidget(self._create_group_capacitor())

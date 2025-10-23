@@ -78,7 +78,6 @@ class Model:
         is_simulation_mode: bool = False,
         duration_refresh: int = 200,
     ) -> None:
-
         self.log = log
         self._is_simulation_mode = is_simulation_mode
 
@@ -173,7 +172,6 @@ class Model:
 
         # Disconnect from the controller
         if self.is_connected():
-
             # Workaround the mypy check
             assert self.mtdome_com is not None
 
@@ -222,9 +220,7 @@ class Model:
         # reporting has failed. Return without reporting the status.
         if "exception" in status.keys():
             exception_message = str(status["exception"])
-            self.log.error(
-                f"Failed to report the status of {llc_name!r}: {exception_message}"
-            )
+            self.log.error(f"Failed to report the status of {llc_name!r}: {exception_message}")
 
             self._report_exception_fault_code(
                 llc_name,
@@ -241,9 +237,7 @@ class Model:
         self._check_errors_and_report(llc_name, status["status"])
 
         # Remove some keys because they are not reported in the telemetry
-        processed_telemetry = self.mtdome_com.remove_keys_from_dict(
-            status, {"timestamp"}
-        )
+        processed_telemetry = self.mtdome_com.remove_keys_from_dict(status, {"timestamp"})
 
         # Report the telemetry
         match llc_name:
@@ -265,9 +259,7 @@ class Model:
                 self.reporter.report_capacitor_bank(processed_telemetry_update)
 
             case _:
-                self.reporter.report_telemetry(
-                    llc_name.name.lower(), processed_telemetry
-                )
+                self.reporter.report_telemetry(llc_name.name.lower(), processed_telemetry)
 
     def _report_exception_fault_code(
         self, llc_name: LlcName, response_code: ResponseCode, exception_message: str
@@ -293,11 +285,8 @@ class Model:
             ResponseCode.ROTATING_PART_NOT_REPLIED,
         ]:
             match llc_name:
-
                 case LlcName.APSCS:
-                    self.reporter.report_state_aperture_shutter(
-                        MTDome.EnabledState.FAULT
-                    )
+                    self.reporter.report_state_aperture_shutter(MTDome.EnabledState.FAULT)
                     self.reporter.report_fault_code_aperture_shutter(exception_message)
 
                 case LlcName.LWSCS:
@@ -311,9 +300,7 @@ class Model:
                 case _:
                     pass
 
-    def _report_operational_mode(
-        self, llc_name: LlcName, status: dict[str, typing.Any]
-    ) -> None:
+    def _report_operational_mode(self, llc_name: LlcName, status: dict[str, typing.Any]) -> None:
         """Report the operational mode.
 
         Parameters
@@ -344,13 +331,9 @@ class Model:
             Subsystem ID.
         """
 
-        return MTDome.SubSystemId(
-            [sid for sid, name in LlcNameDict.items() if name == llc_name][0]
-        )
+        return MTDome.SubSystemId([sid for sid, name in LlcNameDict.items() if name == llc_name][0])
 
-    def _report_configuration(
-        self, llc_name: LlcName, status: dict[str, typing.Any]
-    ) -> None:
+    def _report_configuration(self, llc_name: LlcName, status: dict[str, typing.Any]) -> None:
         """Report the configuration.
 
         Parameters
@@ -374,9 +357,7 @@ class Model:
             elif llc_name == LlcName.LWSCS:
                 self.reporter.report_config_elevation(configuration)
 
-    def _check_errors_and_report(
-        self, llc_name: LlcName, status: dict[str, typing.Any]
-    ) -> None:
+    def _check_errors_and_report(self, llc_name: LlcName, status: dict[str, typing.Any]) -> None:
         """Check the errors and report.
 
         Parameters
@@ -453,18 +434,14 @@ class Model:
         has_error = (len(messages) != 1) or (codes[0] != 0)
 
         fault_code = (
-            ", ".join(
-                [f"{message['code']}={message['description']}" for message in messages]
-            )
+            ", ".join([f"{message['code']}={message['description']}" for message in messages])
             if has_error
             else ""
         )
 
         return has_error, fault_code
 
-    def _translate_motion_state_if_necessary(
-        self, state: str
-    ) -> MTDome.MotionState | None:
+    def _translate_motion_state_if_necessary(self, state: str) -> MTDome.MotionState | None:
         """Translate the motion state if necessary.
 
         Parameters
@@ -482,7 +459,6 @@ class Model:
             return MTDome.MotionState[state]
 
         except KeyError:
-
             try:
                 return motion_state_translations[state]
 
@@ -515,9 +491,7 @@ class Model:
                 ]
                 self.reporter.report_motion_elevation_axis(motion_state, in_position)
 
-    def _check_errors_and_report_aperture_shutter(
-        self, status: dict[str, typing.Any]
-    ) -> None:
+    def _check_errors_and_report_aperture_shutter(self, status: dict[str, typing.Any]) -> None:
         """Check the errors and report for the aperture shutter.
 
         Parameters
@@ -538,9 +512,7 @@ class Model:
             motion_states = list()
             in_positions = list()
             for specific_status in status["status"]:
-                motion_state = self._translate_motion_state_if_necessary(
-                    specific_status
-                )
+                motion_state = self._translate_motion_state_if_necessary(specific_status)
 
                 if motion_state is None:
                     return
@@ -579,9 +551,7 @@ class Model:
             motion_states = list()
             in_positions = list()
             for specific_status in status["status"]:
-                motion_state = self._translate_motion_state_if_necessary(
-                    specific_status
-                )
+                motion_state = self._translate_motion_state_if_necessary(specific_status)
 
                 if motion_state is None:
                     return

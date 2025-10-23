@@ -40,14 +40,12 @@ def widget(qtbot: QtBot) -> TabUtility:
 
 
 def test_init(widget: TabUtility) -> None:
-
     assert len(widget._modes) == len(MTDome.SubSystemId)
     assert len(widget._indicators_capacitor) == 6
 
 
 @pytest.mark.asyncio
 async def test_set_signal_operational_mode(widget: TabUtility) -> None:
-
     subsystem = MTDome.SubSystemId.MONCS
     mode = MTDome.OperationalMode.DEGRADED
     widget.model.reporter.report_operational_mode(subsystem, mode)
@@ -60,7 +58,6 @@ async def test_set_signal_operational_mode(widget: TabUtility) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabUtility) -> None:
-
     capacitor_bank = deepcopy(widget.model.reporter.status.capacitor_bank)
     capacitor_bank["doorOpen"][0] = True
     capacitor_bank["dcBusVoltage"] = 1.2345

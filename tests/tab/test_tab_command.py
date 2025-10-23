@@ -47,7 +47,6 @@ def widget(qtbot: QtBot) -> TabCommand:
 
 
 def test_init(widget: TabCommand) -> None:
-
     assert len(widget._command_parameters) == 14
     assert len(widget._commands) == 21
 
@@ -65,7 +64,6 @@ def test_init(widget: TabCommand) -> None:
 
 @pytest.mark.asyncio
 async def test_callback_command(qtbot: QtBot, widget: TabCommand) -> None:
-
     # Single command parameter
     qtbot.mouseClick(widget._commands["home"], Qt.LeftButton)
 
@@ -89,12 +87,10 @@ async def test_callback_command(qtbot: QtBot, widget: TabCommand) -> None:
 
 @pytest.mark.asyncio
 async def test_show_selector(qtbot: QtBot, widget: TabCommand) -> None:
-
     tab_names = ["louver", "drive_az", "drive_shuttor"]
     parameter_names = ["louver", "reset_drives_az", "reset_drives_shutter"]
 
     for tab_name, parameter_name in zip(tab_names, parameter_names):
-
         assert widget._tabs[tab_name].isVisible() is False
 
         qtbot.mouseClick(widget._command_parameters[parameter_name], Qt.LeftButton)
@@ -106,7 +102,6 @@ async def test_show_selector(qtbot: QtBot, widget: TabCommand) -> None:
 
 
 def test_get_selected_command(widget: TabCommand) -> None:
-
     for name, command in widget._commands.items():
         command.setChecked(True)
 
@@ -114,7 +109,6 @@ def test_get_selected_command(widget: TabCommand) -> None:
 
 
 def test_get_louver_percentages(widget: TabCommand) -> None:
-
     # No selected louver
     assert widget._get_louver_percentages() == [-1.0] * len(MTDome.Louver)
 
@@ -132,7 +126,6 @@ def test_get_louver_percentages(widget: TabCommand) -> None:
 
 
 def test_get_subsystem_bitmask(widget: TabCommand) -> None:
-
     assert widget._get_subsystem_bitmask() == MTDome.SubSystemId.AMCS.value
 
     widget._command_parameters["subsystem"].setCurrentIndex(3)
@@ -141,7 +134,6 @@ def test_get_subsystem_bitmask(widget: TabCommand) -> None:
 
 
 def test_get_direction(widget: TabCommand) -> None:
-
     combo_box = widget._command_parameters["direction"]
 
     assert widget._get_direction(combo_box) == MTDome.OpenClose.OPEN
@@ -151,7 +143,6 @@ def test_get_direction(widget: TabCommand) -> None:
 
 
 def test_get_on_off(widget: TabCommand) -> None:
-
     combo_box = widget._command_parameters["engage_brakes"]
 
     assert widget._get_on_off(combo_box) is None
@@ -162,7 +153,6 @@ def test_get_on_off(widget: TabCommand) -> None:
 
 
 def test_get_operational_mode(widget: TabCommand) -> None:
-
     combo_box = widget._command_parameters["operation_mode"]
 
     for idx, mode in enumerate(MTDome.OperationalMode):
@@ -171,7 +161,6 @@ def test_get_operational_mode(widget: TabCommand) -> None:
 
 
 def test_get_reset_drives_azimuth(widget: TabCommand) -> None:
-
     # No selected drives
     assert widget._get_reset_drives_azimuth() == [0] * AMCS_NUM_MOTORS
 
@@ -183,7 +172,6 @@ def test_get_reset_drives_azimuth(widget: TabCommand) -> None:
 
 
 def test_get_reset_drives_aperture_shutter(widget: TabCommand) -> None:
-
     # No selected drives
     assert widget._get_reset_drives_aperture_shutter() == [0] * NUM_DRIVE_SHUTTER
 
@@ -195,16 +183,12 @@ def test_get_reset_drives_aperture_shutter(widget: TabCommand) -> None:
 
 
 def test_get_reset_drives_louver(widget: TabCommand) -> None:
-
     # Set all the louvers to be enabled first
     for idx in range(LCS_NUM_LOUVERS):
         widget._tabs["louver"].set_selection_enabled(idx, True)
 
     # No selected drives
-    assert (
-        widget._get_reset_drives_louver()
-        == [0] * LCS_NUM_MOTORS_PER_LOUVER * LCS_NUM_LOUVERS
-    )
+    assert widget._get_reset_drives_louver() == [0] * LCS_NUM_MOTORS_PER_LOUVER * LCS_NUM_LOUVERS
 
     # Has selected drives
     selections = [0, 1, 33]
@@ -215,7 +199,6 @@ def test_get_reset_drives_louver(widget: TabCommand) -> None:
 
 
 def test_get_power_mode(widget: TabCommand) -> None:
-
     combo_box = widget._command_parameters["power_mode"]
 
     for idx, mode in enumerate(MTDome.PowerManagementMode):

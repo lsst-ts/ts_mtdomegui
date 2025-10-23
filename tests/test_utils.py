@@ -24,7 +24,6 @@ from lsst.ts.mtdomegui import generate_dict_from_registry
 
 
 def test_generate_dict_from_registry() -> None:
-
     data = generate_dict_from_registry(registry, "RAD", default_number=1.0)
 
     assert data["powerDraw"] == 1.0

@@ -138,12 +138,8 @@ class TabAzimuth(TabTemplate):
         """
 
         return {
-            "position": TabFigure(
-                "Position", self.model, "deg", ["commanded", "actual"]
-            ),
-            "velocity": TabFigure(
-                "Velocity", self.model, "deg/sec", ["commanded", "actual"]
-            ),
+            "position": TabFigure("Position", self.model, "deg", ["commanded", "actual"]),
+            "velocity": TabFigure("Velocity", self.model, "deg/sec", ["commanded", "actual"]),
             "drive_torque": TabFigure(
                 "Actual Drive Torque",
                 self.model,
@@ -190,7 +186,6 @@ class TabAzimuth(TabTemplate):
         return create_buttons_with_tabs(names, self._figures)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_state = QVBoxLayout()
         layout_state.addWidget(self._create_group_state())
@@ -283,15 +278,11 @@ class TabAzimuth(TabTemplate):
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
             )
-            layout.addRow(
-                f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx]
-            )
+            layout.addRow(f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx])
             add_empty_row_to_form_layout(layout)
 
         for idx in range(AMCS_NUM_MOTORS):
-            layout.addRow(
-                f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
-            )
+            layout.addRow(f"Current {idx} (actual):", self._status["drive_current_actual"][idx])
 
         return create_group_box("Drive Torque", layout)
 
@@ -350,12 +341,8 @@ class TabAzimuth(TabTemplate):
             self._status["drive_torque_commanded"][idx].setText(
                 f"{telemetry['driveTorqueCommanded'][idx]:.2f} N*m"
             )
-            self._status["drive_torque_actual"][idx].setText(
-                f"{telemetry['driveTorqueActual'][idx]:.2f} N*m"
-            )
-            self._status["drive_current_actual"][idx].setText(
-                f"{telemetry['driveCurrentActual'][idx]:.2f} A"
-            )
+            self._status["drive_torque_actual"][idx].setText(f"{telemetry['driveTorqueActual'][idx]:.2f} N*m")
+            self._status["drive_current_actual"][idx].setText(f"{telemetry['driveCurrentActual'][idx]:.2f} A")
 
         # Real-time chart
 
@@ -370,9 +357,7 @@ class TabAzimuth(TabTemplate):
         self._figures["drive_current"].append_data(telemetry["driveCurrentActual"])
 
         self._figures["encoder_head"].append_data(telemetry["encoderHeadCalibrated"])
-        self._figures["position_encoder"].append_data(
-            telemetry["barcodeHeadCalibrated"]
-        )
+        self._figures["position_encoder"].append_data(telemetry["barcodeHeadCalibrated"])
 
     def _set_signal_target(self, signal: SignalTarget) -> None:
         """Set the target signal.
@@ -434,9 +419,7 @@ class TabAzimuth(TabTemplate):
         signal.azimuth_axis.connect(self._callback_update_motion)
 
     @asyncSlot()
-    async def _callback_update_motion(
-        self, motion: tuple[MTDome.MotionState, bool]
-    ) -> None:
+    async def _callback_update_motion(self, motion: tuple[MTDome.MotionState, bool]) -> None:
         """Callback to update the motion state.
 
         Parameters

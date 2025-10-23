@@ -38,7 +38,6 @@ def widget(qtbot: QtBot) -> TabLouverSingle:
 
 
 def test_init(widget: TabLouverSingle) -> None:
-
     assert len(widget._states) == 2
     assert len(widget._status) == 6
     assert len(widget._figures) == len(widget._buttons)
@@ -46,7 +45,6 @@ def test_init(widget: TabLouverSingle) -> None:
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabLouverSingle) -> None:
-
     name = "position"
 
     assert widget._figures[name].windowTitle() == "LouverSingle Position"

@@ -41,14 +41,12 @@ def widget(qtbot: QtBot) -> TabElevation:
 
 
 def test_init(widget: TabElevation) -> None:
-
     assert len(widget._status["drive_torque_actual"]) == LWSCS_NUM_MOTORS
     assert len(widget._status["drive_temperature"]) == LWSCS_NUM_MOTORS
 
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabElevation) -> None:
-
     assert widget._figures["position"].isVisible() is False
 
     qtbot.mouseClick(widget._buttons["position"], Qt.LeftButton)
@@ -61,7 +59,6 @@ async def test_show_figure(qtbot: QtBot, widget: TabElevation) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabElevation) -> None:
-
     widget.model.reporter.report_telemetry(
         "lwscs", generate_dict_from_registry(registry, "LWSCS", default_number=1.0)
     )
@@ -89,7 +86,6 @@ async def test_set_signal_telemetry(widget: TabElevation) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_target(widget: TabElevation) -> None:
-
     widget.model.reporter.report_target_elevation(1.0, 2.0)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -101,7 +97,6 @@ async def test_set_signal_target(widget: TabElevation) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: TabElevation) -> None:
-
     widget.model.reporter.report_state_elevation_axis(MTDome.EnabledState.ENABLED)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -112,7 +107,6 @@ async def test_set_signal_state(widget: TabElevation) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_motion(widget: TabElevation) -> None:
-
     widget.model.reporter.report_motion_elevation_axis(MTDome.MotionState.MOVING, True)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -124,7 +118,6 @@ async def test_set_signal_motion(widget: TabElevation) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_fault_code(widget: TabElevation) -> None:
-
     widget.model.reporter.report_fault_code_elevation_axis("Error")
 
     # Sleep so the event loop can access CPU to handle the signal

@@ -41,14 +41,12 @@ def widget(qtbot: QtBot) -> TabLouver:
 
 
 def test_init(widget: TabLouver) -> None:
-
     assert len(widget._buttons["louver"]) == len(MTDome.Louver)
     assert len(widget._tabs) == len(MTDome.Louver)
 
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabLouver) -> None:
-
     assert widget._figure.isVisible() is False
 
     qtbot.mouseClick(widget._buttons["power"], Qt.LeftButton)
@@ -61,7 +59,6 @@ async def test_show_figure(qtbot: QtBot, widget: TabLouver) -> None:
 
 @pytest.mark.asyncio
 async def test_show_louver(qtbot: QtBot, widget: TabLouver) -> None:
-
     idx = LOUVERS_ENABLED[0].value - 1
 
     assert widget._tabs[idx].isVisible() is False
@@ -76,7 +73,6 @@ async def test_show_louver(qtbot: QtBot, widget: TabLouver) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabLouver) -> None:
-
     widget.model.reporter.report_telemetry(
         "lcs", generate_dict_from_registry(registry, "LCS", default_number=1.0)
     )
@@ -103,7 +99,6 @@ async def test_set_signal_telemetry(widget: TabLouver) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: TabLouver) -> None:
-
     widget.model.reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -114,7 +109,6 @@ async def test_set_signal_state(widget: TabLouver) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_motion(widget: TabLouver) -> None:
-
     widget.model.reporter.report_motion_louvers(
         [MTDome.MotionState.MOVING] * LCS_NUM_LOUVERS,
         [True] * LCS_NUM_LOUVERS,
@@ -130,7 +124,6 @@ async def test_set_signal_motion(widget: TabLouver) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_fault_code(widget: TabLouver) -> None:
-
     widget.model.reporter.report_fault_code_louvers("Error")
 
     # Sleep so the event loop can access CPU to handle the signal
