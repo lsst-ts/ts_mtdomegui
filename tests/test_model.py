@@ -61,19 +61,16 @@ def test_init(model: Model) -> None:
 
 @pytest.mark.asyncio
 async def test_connect(model_async: Model) -> None:
-
     assert model_async.is_connected() is True
 
 
 def test_assert_is_connected(model: Model) -> None:
-
     with pytest.raises(RuntimeError):
         model.assert_is_connected()
 
 
 @pytest.mark.asyncio
 async def test_disconnect(model_async: Model) -> None:
-
     await model_async.disconnect()
 
     assert model_async.is_connected() is False
@@ -81,10 +78,7 @@ async def test_disconnect(model_async: Model) -> None:
 
 @pytest.mark.asyncio
 async def test_low_level_component_status(qtbot: QtBot, model_async: Model) -> None:
-
-    with qtbot.waitSignal(
-        model_async.reporter.signals["telemetry"].amcs, timeout=TIMEOUT
-    ):
+    with qtbot.waitSignal(model_async.reporter.signals["telemetry"].amcs, timeout=TIMEOUT):
         await asyncio.sleep(1.0)
 
 
@@ -92,7 +86,6 @@ async def test_low_level_component_status(qtbot: QtBot, model_async: Model) -> N
 async def test_report_exception_communication_error(
     qtbot: QtBot, model_async_communication_error: Model
 ) -> None:
-
     signals = [
         model_async_communication_error.reporter.signals["fault_code"].aperture_shutter,
         model_async_communication_error.reporter.signals["fault_code"].elevation_axis,
@@ -103,7 +96,6 @@ async def test_report_exception_communication_error(
 
 
 def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
-
     signals = [
         model.reporter.signals["state"].aperture_shutter,
         model.reporter.signals["state"].elevation_axis,
@@ -131,7 +123,6 @@ def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
 
 
 def test_report_operational_mode(model: Model) -> None:
-
     mode = MTDome.OperationalMode.DEGRADED
 
     model._report_operational_mode(LlcName.LWSCS, {"operationalMode": mode.name})
@@ -140,14 +131,12 @@ def test_report_operational_mode(model: Model) -> None:
 
 
 def test_get_subsystem_id(model: Model) -> None:
-
     subsystem_id = model._get_subsystem_id(LlcName.LWSCS)
 
     assert subsystem_id == MTDome.SubSystemId.LWSCS
 
 
 def test_report_configuration(model: Model) -> None:
-
     # AMCS
     data_amcs = {
         "appliedConfiguration": {
@@ -181,7 +170,6 @@ def test_report_configuration(model: Model) -> None:
 
 
 def test_check_errors_and_report_azimuth(qtbot: QtBot, model: Model) -> None:
-
     status = {
         "messages": [{"code": 0, "description": "No Errors"}],
         "status": "STOPPED",
@@ -197,7 +185,6 @@ def test_check_errors_and_report_azimuth(qtbot: QtBot, model: Model) -> None:
 
 
 def test_get_fault_code(model: Model) -> None:
-
     # Normal data
     status_normal = {"messages": [{"code": 0, "description": "No Errors"}]}
 
@@ -221,22 +208,14 @@ def test_get_fault_code(model: Model) -> None:
 
 
 def test_translate_motion_state_if_necessary(model: Model) -> None:
+    assert model._translate_motion_state_if_necessary("STOPPED") == MTDome.MotionState.STOPPED
 
-    assert (
-        model._translate_motion_state_if_necessary("STOPPED")
-        == MTDome.MotionState.STOPPED
-    )
-
-    assert (
-        model._translate_motion_state_if_necessary("STATIONARY")
-        == MTDome.MotionState.STOPPED_BRAKED
-    )
+    assert model._translate_motion_state_if_necessary("STATIONARY") == MTDome.MotionState.STOPPED_BRAKED
 
     assert model._translate_motion_state_if_necessary("ABC") is None
 
 
 def test_check_errors_and_report_elevation(qtbot: QtBot, model: Model) -> None:
-
     status = {
         "messages": [{"code": 0, "description": "No Errors"}],
         "status": "STOPPED",
@@ -252,7 +231,6 @@ def test_check_errors_and_report_elevation(qtbot: QtBot, model: Model) -> None:
 
 
 def test_check_errors_and_report_aperture_shutter(qtbot: QtBot, model: Model) -> None:
-
     status = {
         "messages": [{"code": 0, "description": "No Errors"}],
         "status": ["STOPPED", "STOPPED"],
@@ -268,7 +246,6 @@ def test_check_errors_and_report_aperture_shutter(qtbot: QtBot, model: Model) ->
 
 
 def test_check_errors_and_report_louvers(qtbot: QtBot, model: Model) -> None:
-
     status = {
         "messages": [{"code": 0, "description": "No Errors"}],
         "status": ["STOPPED"] * LCS_NUM_LOUVERS,

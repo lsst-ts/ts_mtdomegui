@@ -156,7 +156,6 @@ class TabLouver(TabTemplate):
         }
 
     def create_layout(self) -> QVBoxLayout:
-
         # First column
         layout_state = QVBoxLayout()
         layout_state.addWidget(self._create_group_state())
@@ -312,9 +311,7 @@ class TabLouver(TabTemplate):
         signal.louvers.connect(self._callback_update_motion)
 
     @asyncSlot()
-    async def _callback_update_motion(
-        self, motion: tuple[list[MTDome.MotionState], list[bool]]
-    ) -> None:
+    async def _callback_update_motion(self, motion: tuple[list[MTDome.MotionState], list[bool]]) -> None:
         """Callback to update the motion state.
 
         Parameters

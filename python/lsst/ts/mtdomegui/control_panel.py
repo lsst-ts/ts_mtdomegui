@@ -135,9 +135,7 @@ class ControlPanel(QWidget):
         """
 
         signal.interlock.connect(self._callback_interlock)
-        signal.locking_pins_engaged.connect(
-            partial(self._callback_update_label, "locking_pin")
-        )
+        signal.locking_pins_engaged.connect(partial(self._callback_update_label, "locking_pin"))
 
     @asyncSlot()
     async def _callback_interlock(self, interlocks: list[bool]) -> None:
@@ -202,18 +200,12 @@ class ControlPanel(QWidget):
             Signal.
         """
 
-        signal.brake_engaged.connect(
-            partial(self._callback_update_label, "brake_engaged")
-        )
+        signal.brake_engaged.connect(partial(self._callback_update_label, "brake_engaged"))
         signal.azimuth_axis.connect(
-            partial(
-                self._callback_update_label, "azimuth_axis", enum=MTDome.EnabledState
-            )
+            partial(self._callback_update_label, "azimuth_axis", enum=MTDome.EnabledState)
         )
         signal.elevation_axis.connect(
-            partial(
-                self._callback_update_label, "elevation_axis", enum=MTDome.EnabledState
-            )
+            partial(self._callback_update_label, "elevation_axis", enum=MTDome.EnabledState)
         )
         signal.aperture_shutter.connect(
             partial(

@@ -95,15 +95,11 @@ class TabRearAccessDoor(TabTemplate):
         """
 
         position_actual = [
-            create_label(
-                tool_tip="Measured position of the rear access door (percent open)."
-            )
+            create_label(tool_tip="Measured position of the rear access door (percent open).")
             for _ in range(RAD_NUM_DOORS)
         ]
         position_commanded = [
-            create_label(
-                tool_tip="Commanded position of the rear access door (percent open)."
-            )
+            create_label(tool_tip="Commanded position of the rear access door (percent open).")
             for _ in range(RAD_NUM_DOORS)
         ]
 
@@ -119,9 +115,7 @@ class TabRearAccessDoor(TabTemplate):
             "drive_torque_commanded": drive_torque_commanded,
             "drive_current_actual": drive_current_actual,
             "drive_temperature": drive_temperature,
-            "power_draw": create_label(
-                tool_tip="Total power drawn by all rear access door drives."
-            ),
+            "power_draw": create_label(tool_tip="Total power drawn by all rear access door drives."),
         }
 
     def _create_indicators(self) -> dict[str, QRadioButton | list[QRadioButton]]:
@@ -210,7 +204,6 @@ class TabRearAccessDoor(TabTemplate):
         return create_buttons_with_tabs(names, self._figures)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_status = QVBoxLayout()
         layout_status.addWidget(self._create_group_position())
@@ -271,15 +264,11 @@ class TabRearAccessDoor(TabTemplate):
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
             )
-            layout.addRow(
-                f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx]
-            )
+            layout.addRow(f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx])
             add_empty_row_to_form_layout(layout)
 
         for idx in range(RAD_NUM_DOORS):
-            layout.addRow(
-                f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
-            )
+            layout.addRow(f"Current {idx} (actual):", self._status["drive_current_actual"][idx])
 
         return create_group_box("Drive Torque", layout)
 
@@ -340,9 +329,7 @@ class TabRearAccessDoor(TabTemplate):
 
         add_empty_row_to_form_layout(layout)
 
-        layout.addRow(
-            "Photoelectric sensor clear:", self._indicators["photoelectric_sensor"]
-        )
+        layout.addRow("Photoelectric sensor clear:", self._indicators["photoelectric_sensor"])
         layout.addRow("Light curtain clear:", self._indicators["curtain"])
 
         return create_group_box("Safety", layout)
@@ -387,27 +374,17 @@ class TabRearAccessDoor(TabTemplate):
         position_commanded = telemetry["positionCommanded"]
         position_actual = telemetry["positionActual"]
         for idx in range(RAD_NUM_DOORS):
-            self._status["position_commanded"][idx].setText(
-                f"{position_commanded[idx]:.2f} %"
-            )
-            self._status["position_actual"][idx].setText(
-                f"{position_actual[idx]:.2f} %"
-            )
+            self._status["position_commanded"][idx].setText(f"{position_commanded[idx]:.2f} %")
+            self._status["position_actual"][idx].setText(f"{position_actual[idx]:.2f} %")
 
             self._status["drive_torque_commanded"][idx].setText(
                 f"{telemetry['driveTorqueCommanded'][idx]:.2f} N*m"
             )
-            self._status["drive_torque_actual"][idx].setText(
-                f"{telemetry['driveTorqueActual'][idx]:.2f} N*m"
-            )
-            self._status["drive_current_actual"][idx].setText(
-                f"{telemetry['driveCurrentActual'][idx]:.2f} A"
-            )
+            self._status["drive_torque_actual"][idx].setText(f"{telemetry['driveTorqueActual'][idx]:.2f} N*m")
+            self._status["drive_current_actual"][idx].setText(f"{telemetry['driveCurrentActual'][idx]:.2f} A")
 
         for idx in range(RAD_NUM_DOORS):
-            self._status["drive_temperature"][idx].setText(
-                f"{telemetry['driveTemperature'][idx]:.2f} deg C"
-            )
+            self._status["drive_temperature"][idx].setText(f"{telemetry['driveTemperature'][idx]:.2f} deg C")
 
         power = telemetry["powerDraw"]
         self._status["power_draw"].setText(f"{power:.2f} W")  # type: ignore[union-attr]

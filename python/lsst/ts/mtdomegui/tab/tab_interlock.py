@@ -78,9 +78,7 @@ class TabInterlock(TabTemplate):
         indicators = list()
 
         for specific_id in range(number):
-            indicator = set_button(
-                str(specific_id), None, is_indicator=True, is_adjust_size=True
-            )
+            indicator = set_button(str(specific_id), None, is_indicator=True, is_adjust_size=True)
 
             self._update_indicator_color(indicator, False)
 
@@ -88,9 +86,7 @@ class TabInterlock(TabTemplate):
 
         return indicators
 
-    def _update_indicator_color(
-        self, indicator: QPushButton, is_triggered: bool
-    ) -> None:
+    def _update_indicator_color(self, indicator: QPushButton, is_triggered: bool) -> None:
         """Update the indicator color.
 
         Parameters
@@ -105,7 +101,6 @@ class TabInterlock(TabTemplate):
         update_button_color(indicator, QPalette.Button, button_status)
 
     def create_layout(self) -> QVBoxLayout:
-
         layout = QVBoxLayout()
         layout.addWidget(self._create_group_interlock())
 

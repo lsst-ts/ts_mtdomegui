@@ -117,17 +117,11 @@ class TabSettings(TabTemplate):
         settings["port"].setRange(PORT_MINIMUM, PORT_MAXIMUM)
 
         settings["log_level"].setRange(LOG_LEVEL_MINIMUM, LOG_LEVEL_MAXIMUM)
-        settings["log_level"].setToolTip(
-            "CRITICAL (50), ERROR (40), WARNING (30), INFO (20), DEBUG (10)"
-        )
+        settings["log_level"].setToolTip("CRITICAL (50), ERROR (40), WARNING (30), INFO (20), DEBUG (10)")
 
-        settings["refresh_frequency"].setRange(
-            REFRESH_FREQUENCY_MINIMUM, REFRESH_FREQUENCY_MAXIMUM
-        )
+        settings["refresh_frequency"].setRange(REFRESH_FREQUENCY_MINIMUM, REFRESH_FREQUENCY_MAXIMUM)
         settings["refresh_frequency"].setSuffix(" Hz")
-        settings["refresh_frequency"].setToolTip(
-            "Frequency to refresh the data on tables"
-        )
+        settings["refresh_frequency"].setToolTip("Frequency to refresh the data on tables")
 
         settings["point_size"].setRange(POINT_SIZE_MINIMUM, POINT_SIZE_MAXIMUM)
         settings["point_size"].setToolTip("Point size of the application.")
@@ -150,9 +144,7 @@ class TabSettings(TabTemplate):
 
         return settings
 
-    def _set_minimum_width_line_edit(
-        self, line_edit: QLineEdit, offset: int = 20
-    ) -> None:
+    def _set_minimum_width_line_edit(self, line_edit: QLineEdit, offset: int = 20) -> None:
         """Set the minimum width of line edit.
 
         Parameters
@@ -224,9 +216,7 @@ class TabSettings(TabTemplate):
         """
 
         apply_host = set_button("Apply Host Settings", self._callback_apply_host)
-        apply_general = set_button(
-            "Apply General Settings", self._callback_apply_general
-        )
+        apply_general = set_button("Apply General Settings", self._callback_apply_general)
         apply_amcs = set_button(
             "Apply Azimuth Settings",
             self._callback_apply_amcs,
@@ -262,9 +252,7 @@ class TabSettings(TabTemplate):
         self.model.log.setLevel(self._settings_app["log_level"].value())
 
         # The unit of self.model.duration_refresh is milliseconds
-        self.model.duration_refresh = int(
-            1000.0 / self._settings_app["refresh_frequency"].value()
-        )
+        self.model.duration_refresh = int(1000.0 / self._settings_app["refresh_frequency"].value())
 
         # Update the point size
         app = QApplication.instance()
@@ -335,7 +323,6 @@ class TabSettings(TabTemplate):
         self._buttons["apply_lwscs"].setEnabled(True)
 
     def create_layout(self) -> QVBoxLayout:
-
         # First column
         layout_app = QVBoxLayout()
         layout_app.addWidget(self._create_group_tcpip())
@@ -423,9 +410,7 @@ class TabSettings(TabTemplate):
 
         layout_lwscs = QFormLayout()
         layout_lwscs.addRow("Maximum jerk:", self._settings_lwscs["jerk"])
-        layout_lwscs.addRow(
-            "Maximum acceleration:", self._settings_lwscs["acceleration"]
-        )
+        layout_lwscs.addRow("Maximum acceleration:", self._settings_lwscs["acceleration"])
         layout_lwscs.addRow("Maximum velocity:", self._settings_lwscs["velocity"])
 
         layout = QVBoxLayout()

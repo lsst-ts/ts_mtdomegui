@@ -39,13 +39,11 @@ def widget(qtbot: QtBot) -> TabCalibration:
 
 
 def test_init(widget: TabCalibration) -> None:
-
     assert len(widget._status) == 7
 
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabCalibration) -> None:
-
     assert widget._figures["position"].isVisible() is False
 
     qtbot.mouseClick(widget._buttons["position"], Qt.LeftButton)
@@ -58,7 +56,6 @@ async def test_show_figure(qtbot: QtBot, widget: TabCalibration) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabCalibration) -> None:
-
     widget.model.reporter.report_telemetry(
         "cscs", generate_dict_from_registry(registry, "CSCS", default_number=1.0)
     )

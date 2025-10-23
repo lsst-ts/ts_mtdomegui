@@ -145,7 +145,6 @@ class TabSelector(TabTemplate):
         self.select([])
 
     def create_layout(self) -> QVBoxLayout:
-
         layout = QVBoxLayout()
         layout.addWidget(self._create_group_selection())
         layout.addWidget(self._buttons["select_all"])

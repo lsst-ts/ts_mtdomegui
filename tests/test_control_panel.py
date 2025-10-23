@@ -40,13 +40,11 @@ def widget(qtbot: QtBot) -> ControlPanel:
 
 
 def test_init(widget: ControlPanel) -> None:
-
     assert len(widget._labels) == 7
 
 
 @pytest.mark.asyncio
 async def test_show_interlock(qtbot: QtBot, widget: ControlPanel) -> None:
-
     assert widget._tab_interlock.isVisible() is False
 
     qtbot.mouseClick(widget._button_interlock, Qt.LeftButton)
@@ -58,7 +56,6 @@ async def test_show_interlock(qtbot: QtBot, widget: ControlPanel) -> None:
 
 
 def test_update_button_interlock(widget: ControlPanel) -> None:
-
     widget._update_button_interlock(False)
 
     assert widget._button_interlock.text() == MTDome.OnOff.OFF.name
@@ -72,7 +69,6 @@ def test_update_button_interlock(widget: ControlPanel) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_interlock(widget: ControlPanel) -> None:
-
     # Interlocks
     interlocks = deepcopy(widget.model.reporter.status.interlocks)
     interlocks[0] = True
@@ -82,9 +78,7 @@ async def test_set_signal_interlock(widget: ControlPanel) -> None:
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    widget._tab_interlock._indicators_interlock[0].palette().color(
-        QPalette.Button
-    ) == Qt.red
+    widget._tab_interlock._indicators_interlock[0].palette().color(QPalette.Button) == Qt.red
     widget._button_interlock.palette().color(QPalette.Button) == Qt.red
 
     # Locking pins
@@ -98,7 +92,6 @@ async def test_set_signal_interlock(widget: ControlPanel) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: ControlPanel) -> None:
-
     widget.model.reporter.report_state_azimuth_axis(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_elevation_axis(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
@@ -112,6 +105,4 @@ async def test_set_signal_state(widget: ControlPanel) -> None:
     assert widget._labels["elevation_axis"].text() == MTDome.EnabledState.ENABLED.name
     assert widget._labels["aperture_shutter"].text() == MTDome.EnabledState.ENABLED.name
     assert widget._labels["louvers"].text() == MTDome.EnabledState.ENABLED.name
-    assert (
-        widget._labels["power_mode"].text() == MTDome.PowerManagementMode.EMERGENCY.name
-    )
+    assert widget._labels["power_mode"].text() == MTDome.PowerManagementMode.EMERGENCY.name

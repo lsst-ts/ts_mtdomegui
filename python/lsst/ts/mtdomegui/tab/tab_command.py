@@ -101,9 +101,7 @@ class TabCommand(TabTemplate):
             Model class.
         """
 
-        names_louver = [
-            f"{louver.name} ({idx})" for (idx, louver) in enumerate(MTDome.Louver)
-        ]
+        names_louver = [f"{louver.name} ({idx})" for (idx, louver) in enumerate(MTDome.Louver)]
         names_drive_azimuth = [str(idx) for idx in range(AMCS_NUM_MOTORS)]
         names_drive_shuttor = [str(idx) for idx in range(NUM_DRIVE_SHUTTER)]
 
@@ -163,10 +161,7 @@ class TabCommand(TabTemplate):
             "%",
             decimal,
             maximum=100.0,
-            tool_tip=(
-                "Desired percent open of each louver: 0 is fully closed,\n"
-                "100 is fully opened."
-            ),
+            tool_tip=("Desired percent open of each louver: 0 is fully closed,\n100 is fully opened."),
         )
 
         # Combo box
@@ -276,9 +271,7 @@ class TabCommand(TabTemplate):
         command_fans = QRadioButton("Fans", parent=self)
         command_inflate = QRadioButton("Inflate", parent=self)
 
-        command_set_power_management_mode = QRadioButton(
-            "Set power management mode", parent=self
-        )
+        command_set_power_management_mode = QRadioButton("Set power management mode", parent=self)
 
         # Set the tool top
         command_exit_fault.setToolTip(
@@ -291,17 +284,13 @@ class TabCommand(TabTemplate):
         )
 
         command_crawl_az.setToolTip("Move the azimuth axis at constant velocity.")
-        command_crawl_el.setToolTip(
-            "Move the elevation axis (light/wind screen) at constant velocity."
-        )
+        command_crawl_el.setToolTip("Move the elevation axis (light/wind screen) at constant velocity.")
 
         command_move_az.setToolTip(
             "Move the dome to the specified azimuth position and start moving\n"
             "at the specified, constant velocity from there."
         )
-        command_move_el.setToolTip(
-            "Move the elevation axis (light/wind screen) to a specified position."
-        )
+        command_move_el.setToolTip("Move the elevation axis (light/wind screen) to a specified position.")
 
         command_park.setToolTip(
             "Move all components to park position and engage the brakes and locking pins."
@@ -323,12 +312,9 @@ class TabCommand(TabTemplate):
         )
 
         command_set_temperature.setToolTip(
-            "Set the desired temperature of the MTDome heat sources (motors "
-            "and cabinets)."
+            "Set the desired temperature of the MTDome heat sources (motors and cabinets)."
         )
-        command_set_operational_mode.setToolTip(
-            "Set the OperationalMode for the indicated subsystems."
-        )
+        command_set_operational_mode.setToolTip("Set the OperationalMode for the indicated subsystems.")
 
         command_reset_drives_az.setToolTip(
             "Reset one or more AZ drives. This is necessary when exiting from\n"
@@ -355,9 +341,7 @@ class TabCommand(TabTemplate):
         )
 
         command_fans.setToolTip("Set the fans speed to the indicated value.")
-        command_inflate.setToolTip(
-            "Inflate (True) or deflate (False) the inflatable seal."
-        )
+        command_inflate.setToolTip("Inflate (True) or deflate (False) the inflatable seal.")
 
         command_set_power_management_mode.setToolTip("Set the power management mode.")
 
@@ -569,9 +553,7 @@ class TabCommand(TabTemplate):
                     self.model.mtdome_com.park,  # type: ignore[union-attr]
                 ):
                     # See the ts_mtdome for the "360.0 - DOME_AZIMUTH_OFFSET"
-                    self.model.reporter.report_target_azimuth(
-                        360.0 - DOME_AZIMUTH_OFFSET, 0.0
-                    )
+                    self.model.reporter.report_target_azimuth(360.0 - DOME_AZIMUTH_OFFSET, 0.0)
 
             case "set_louvers":
                 await run_command(
@@ -596,9 +578,7 @@ class TabCommand(TabTemplate):
 
             case "stop":
                 subsystem_bitmask = self._get_subsystem_bitmask()
-                engage_brakes = self._get_on_off(
-                    self._command_parameters["engage_brakes"]
-                )
+                engage_brakes = self._get_on_off(self._command_parameters["engage_brakes"])
                 if engage_brakes is None:
                     await prompt_dialog_warning(
                         "_callback_send_command()",
@@ -729,9 +709,7 @@ class TabCommand(TabTemplate):
             Subsystem's bitmask.
         """
 
-        return list(MTDome.SubSystemId)[
-            self._command_parameters["subsystem"].currentIndex()
-        ].value
+        return list(MTDome.SubSystemId)[self._command_parameters["subsystem"].currentIndex()].value
 
     def _get_direction(self, combo_box: QComboBox) -> MTDome.OpenClose:
         """Get the direction.
@@ -784,9 +762,7 @@ class TabCommand(TabTemplate):
 
         # The index of the combo box is 0-based, but the OperationalMode is
         # 1-based.
-        return MTDome.OperationalMode(
-            self._command_parameters["operation_mode"].currentIndex() + 1
-        )
+        return MTDome.OperationalMode(self._command_parameters["operation_mode"].currentIndex() + 1)
 
     def _get_reset_drives_azimuth(self) -> list[int]:
         """Get the reset azimuth drives.
@@ -829,9 +805,9 @@ class TabCommand(TabTemplate):
 
         reset_drives = [0] * LCS_NUM_MOTORS_PER_LOUVER * LCS_NUM_LOUVERS
         for idx in self._tabs["louver"].get_selection():
-            reset_drives[
-                LCS_NUM_MOTORS_PER_LOUVER * idx : LCS_NUM_MOTORS_PER_LOUVER * (idx + 1)
-            ] = [1] * LCS_NUM_MOTORS_PER_LOUVER
+            reset_drives[LCS_NUM_MOTORS_PER_LOUVER * idx : LCS_NUM_MOTORS_PER_LOUVER * (idx + 1)] = [
+                1
+            ] * LCS_NUM_MOTORS_PER_LOUVER
 
         return reset_drives
 
@@ -846,12 +822,9 @@ class TabCommand(TabTemplate):
 
         # The index of the combo box is 0-based, but the PowerManagementMode is
         # 1-based.
-        return MTDome.PowerManagementMode(
-            self._command_parameters["power_mode"].currentIndex() + 1
-        )
+        return MTDome.PowerManagementMode(self._command_parameters["power_mode"].currentIndex() + 1)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_command = QVBoxLayout()
         layout_command.addWidget(self._create_group_commands())
@@ -905,9 +878,7 @@ class TabCommand(TabTemplate):
         layout.addRow("Louver:", self._command_parameters["louver"])
         layout.addRow("Percentage:", self._command_parameters["percentage"])
         layout.addRow("Azimuth drives:", self._command_parameters["reset_drives_az"])
-        layout.addRow(
-            "Shutter drives:", self._command_parameters["reset_drives_shutter"]
-        )
+        layout.addRow("Shutter drives:", self._command_parameters["reset_drives_shutter"])
 
         return create_group_box("Command Parameters", layout)
 

@@ -41,14 +41,12 @@ def widget(qtbot: QtBot) -> TabApertureShutter:
 
 
 def test_init(widget: TabApertureShutter) -> None:
-
     assert len(widget._status["drive_torque_actual"]) == NUM_DRIVE_SHUTTER
     assert len(widget._status["drive_temperature"]) == NUM_DRIVE_SHUTTER
 
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabApertureShutter) -> None:
-
     assert widget._figures["position"].isVisible() is False
 
     qtbot.mouseClick(widget._buttons["position"], Qt.LeftButton)
@@ -61,7 +59,6 @@ async def test_show_figure(qtbot: QtBot, widget: TabApertureShutter) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabApertureShutter) -> None:
-
     widget.model.reporter.report_telemetry(
         "apscs", generate_dict_from_registry(registry, "ApSCS", default_number=1.0)
     )
@@ -86,7 +83,6 @@ async def test_set_signal_telemetry(widget: TabApertureShutter) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: TabApertureShutter) -> None:
-
     widget.model.reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -97,7 +93,6 @@ async def test_set_signal_state(widget: TabApertureShutter) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_motion(widget: TabApertureShutter) -> None:
-
     widget.model.reporter.report_motion_aperture_shutter(
         [MTDome.MotionState.MOVING] * APSCS_NUM_SHUTTERS, [True] * APSCS_NUM_SHUTTERS
     )
@@ -111,7 +106,6 @@ async def test_set_signal_motion(widget: TabApertureShutter) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_fault_code(widget: TabApertureShutter) -> None:
-
     widget.model.reporter.report_fault_code_aperture_shutter("Error")
 
     # Sleep so the event loop can access CPU to handle the signal

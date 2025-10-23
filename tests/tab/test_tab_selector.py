@@ -36,13 +36,11 @@ def widget(qtbot: QtBot) -> TabSelector:
 
 
 def test_init(widget: TabSelector) -> None:
-
     assert len(widget._buttons["selection"]) == 3
 
 
 @pytest.mark.asyncio
 async def test_callback_select_all(widget: TabSelector) -> None:
-
     await widget._callback_select_all()
 
     for button in widget._buttons["selection"]:
@@ -51,7 +49,6 @@ async def test_callback_select_all(widget: TabSelector) -> None:
 
 @pytest.mark.asyncio
 async def test_callback_reset_all(widget: TabSelector) -> None:
-
     await widget._callback_select_all()
 
     await widget._callback_reset_all()
@@ -61,7 +58,6 @@ async def test_callback_reset_all(widget: TabSelector) -> None:
 
 
 def test_select(widget: TabSelector) -> None:
-
     selections = [0, 2]
     widget.select(selections)
 
@@ -73,7 +69,6 @@ def test_select(widget: TabSelector) -> None:
 
 
 def test_get_selection(widget: TabSelector) -> None:
-
     assert widget.get_selection() == []
 
     selections = [0, 2]
@@ -83,7 +78,6 @@ def test_get_selection(widget: TabSelector) -> None:
 
 
 def test_set_selection_enabled(widget: TabSelector) -> None:
-
     widget.set_selection_enabled(1, False)
 
     assert widget._buttons["selection"][1].isEnabled() is False

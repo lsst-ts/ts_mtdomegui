@@ -120,9 +120,7 @@ class TabApertureShutter(TabTemplate):
             "drive_torque_commanded": drive_torque_commanded,
             "drive_current_actual": drive_current_actual,
             "drive_temperature": drive_temperature,
-            "power_draw": create_label(
-                tool_tip="Total power drawn by all shutter drives."
-            ),
+            "power_draw": create_label(tool_tip="Total power drawn by all shutter drives."),
         }
 
     def _create_figures(self) -> dict[str, TabFigure]:
@@ -193,7 +191,6 @@ class TabApertureShutter(TabTemplate):
         return create_buttons_with_tabs(names, self._figures)
 
     def create_layout(self) -> QHBoxLayout:
-
         # First column
         layout_state = QVBoxLayout()
         layout_state.addWidget(self._create_group_state())
@@ -252,12 +249,8 @@ class TabApertureShutter(TabTemplate):
         layout = QFormLayout()
 
         for idx in range(APSCS_NUM_SHUTTERS):
-            layout.addRow(
-                f"Position {idx} (commanded):", self._status["position_commanded"][idx]
-            )
-            layout.addRow(
-                f"Position {idx} (actual):", self._status["position_actual"][idx]
-            )
+            layout.addRow(f"Position {idx} (commanded):", self._status["position_commanded"][idx])
+            layout.addRow(f"Position {idx} (actual):", self._status["position_actual"][idx])
             add_empty_row_to_form_layout(layout)
 
         return create_group_box("Position", layout)
@@ -292,15 +285,11 @@ class TabApertureShutter(TabTemplate):
                 f"Torque {idx} (commanded):",
                 self._status["drive_torque_commanded"][idx],
             )
-            layout.addRow(
-                f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx]
-            )
+            layout.addRow(f"Torque {idx} (actual):", self._status["drive_torque_actual"][idx])
             add_empty_row_to_form_layout(layout)
 
         for idx in range(NUM_DRIVE_SHUTTER):
-            layout.addRow(
-                f"Current {idx} (actual):", self._status["drive_current_actual"][idx]
-            )
+            layout.addRow(f"Current {idx} (actual):", self._status["drive_current_actual"][idx])
 
         return create_group_box("Drive Torque", layout)
 
@@ -360,28 +349,18 @@ class TabApertureShutter(TabTemplate):
         position_commanded = telemetry["positionCommanded"]
         position_actual = telemetry["positionActual"]
         for idx in range(APSCS_NUM_SHUTTERS):
-            self._status["position_commanded"][idx].setText(
-                f"{position_commanded[idx]:.2f} %"
-            )
-            self._status["position_actual"][idx].setText(
-                f"{position_actual[idx]:.2f} %"
-            )
+            self._status["position_commanded"][idx].setText(f"{position_commanded[idx]:.2f} %")
+            self._status["position_actual"][idx].setText(f"{position_actual[idx]:.2f} %")
 
         for idx in range(NUM_DRIVE_SHUTTER):
             self._status["drive_torque_commanded"][idx].setText(
                 f"{telemetry['driveTorqueCommanded'][idx]:.2f} N*m"
             )
-            self._status["drive_torque_actual"][idx].setText(
-                f"{telemetry['driveTorqueActual'][idx]:.2f} N*m"
-            )
-            self._status["drive_current_actual"][idx].setText(
-                f"{telemetry['driveCurrentActual'][idx]:.2f} A"
-            )
+            self._status["drive_torque_actual"][idx].setText(f"{telemetry['driveTorqueActual'][idx]:.2f} N*m")
+            self._status["drive_current_actual"][idx].setText(f"{telemetry['driveCurrentActual'][idx]:.2f} A")
 
         for idx in range(NUM_DRIVE_SHUTTER):
-            self._status["drive_temperature"][idx].setText(
-                f"{telemetry['driveTemperature'][idx]:.2f} deg C"
-            )
+            self._status["drive_temperature"][idx].setText(f"{telemetry['driveTemperature'][idx]:.2f} deg C")
 
         power = telemetry["powerDraw"]
         self._status["power_draw"].setText(f"{power:.2f} W")  # type: ignore[union-attr]
@@ -432,9 +411,7 @@ class TabApertureShutter(TabTemplate):
         signal.aperture_shutter.connect(self._callback_update_motion)
 
     @asyncSlot()
-    async def _callback_update_motion(
-        self, motion: tuple[list[MTDome.MotionState], list[bool]]
-    ) -> None:
+    async def _callback_update_motion(self, motion: tuple[list[MTDome.MotionState], list[bool]]) -> None:
         """Callback to update the motion state.
 
         Parameters
@@ -444,9 +421,7 @@ class TabApertureShutter(TabTemplate):
         """
 
         self._states["motion"].setText(", ".join([value.name for value in motion[0]]))
-        self._states["in_position"].setText(
-            ", ".join([str(value) for value in motion[1]])
-        )
+        self._states["in_position"].setText(", ".join([str(value) for value in motion[1]]))
 
     def _set_signal_fault_code(self, signal: SignalFaultCode) -> None:
         """Set the fault code signal.

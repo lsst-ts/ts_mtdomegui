@@ -41,13 +41,11 @@ def widget(qtbot: QtBot) -> TabAzimuth:
 
 
 def test_init(widget: TabAzimuth) -> None:
-
     assert len(widget._status["drive_torque_actual"]) == AMCS_NUM_MOTORS
 
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabAzimuth) -> None:
-
     assert widget._figures["position"].isVisible() is False
 
     qtbot.mouseClick(widget._buttons["position"], Qt.LeftButton)
@@ -60,7 +58,6 @@ async def test_show_figure(qtbot: QtBot, widget: TabAzimuth) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabAzimuth) -> None:
-
     widget.model.reporter.report_telemetry(
         "amcs", generate_dict_from_registry(registry, "AMCS", default_number=1.0)
     )
@@ -84,7 +81,6 @@ async def test_set_signal_telemetry(widget: TabAzimuth) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_target(widget: TabAzimuth) -> None:
-
     widget.model.reporter.report_target_azimuth(1.0, 2.0)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -96,7 +92,6 @@ async def test_set_signal_target(widget: TabAzimuth) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_state(widget: TabAzimuth) -> None:
-
     widget.model.reporter.report_state_azimuth_axis(MTDome.EnabledState.ENABLED)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -107,7 +102,6 @@ async def test_set_signal_state(widget: TabAzimuth) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_motion(widget: TabAzimuth) -> None:
-
     widget.model.reporter.report_motion_azimuth_axis(MTDome.MotionState.MOVING, True)
 
     # Sleep so the event loop can access CPU to handle the signal
@@ -119,7 +113,6 @@ async def test_set_signal_motion(widget: TabAzimuth) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_fault_code(widget: TabAzimuth) -> None:
-
     widget.model.reporter.report_fault_code_azimuth_axis("Error")
 
     # Sleep so the event loop can access CPU to handle the signal

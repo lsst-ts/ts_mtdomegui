@@ -44,10 +44,7 @@ def widget(qtbot: QtBot) -> TabThermalSystem:
 
 
 def test_init(widget: TabThermalSystem) -> None:
-
-    num_motor_sensors = (
-        THCS_NUM_MOTOR_COIL_TEMPERATURES + THCS_NUM_MOTOR_DRIVE_TEMPERATURES
-    )
+    num_motor_sensors = THCS_NUM_MOTOR_COIL_TEMPERATURES + THCS_NUM_MOTOR_DRIVE_TEMPERATURES
     assert len(widget._sensors["motor"]) == num_motor_sensors
     assert len(widget._sensors["cabinet"]) == THCS_NUM_CABINET_TEMPERATURES
     assert len(widget._tab_selector._buttons["selection"]) == num_motor_sensors
@@ -58,7 +55,6 @@ def test_init(widget: TabThermalSystem) -> None:
 
 @pytest.mark.asyncio
 async def test_show_selector(qtbot: QtBot, widget: TabThermalSystem) -> None:
-
     assert widget._tab_selector.isVisible() is False
 
     qtbot.mouseClick(widget._buttons["selector"], Qt.LeftButton)
@@ -71,7 +67,6 @@ async def test_show_selector(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
 @pytest.mark.asyncio
 async def test_show_figure(qtbot: QtBot, widget: TabThermalSystem) -> None:
-
     assert widget._figures["cabinet"].isVisible() is False
 
     qtbot.mouseClick(widget._buttons["cabinet"], Qt.LeftButton)
@@ -84,7 +79,6 @@ async def test_show_figure(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
 @pytest.mark.asyncio
 async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
-
     assert len(widget._figures["motor"].chart().series()) == (
         THCS_NUM_MOTOR_COIL_TEMPERATURES + THCS_NUM_MOTOR_DRIVE_TEMPERATURES
     )
@@ -111,7 +105,6 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
 
 @pytest.mark.asyncio
 async def test_set_signal_telemetry(widget: TabThermalSystem) -> None:
-
     widget.model.reporter.report_telemetry(
         "thcs", generate_dict_from_registry(registry, "ThCS", default_number=1.0)
     )

@@ -41,7 +41,6 @@ def test_init(reporter: Reporter) -> None:
 
 
 def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
-
     signals = [
         reporter.signals["interlock"].interlock,
         reporter.signals["interlock"].locking_pins_engaged,
@@ -73,7 +72,6 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_interlocks(qtbot: QtBot, reporter: Reporter) -> None:
-
     interlocks = deepcopy(reporter.status.interlocks)
     interlocks[0] = True
 
@@ -84,17 +82,13 @@ def test_report_interlocks(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_state_locking_pins_engaged(qtbot: QtBot, reporter: Reporter) -> None:
-
-    with qtbot.waitSignal(
-        reporter.signals["interlock"].locking_pins_engaged, timeout=TIMEOUT
-    ):
+    with qtbot.waitSignal(reporter.signals["interlock"].locking_pins_engaged, timeout=TIMEOUT):
         reporter.report_state_locking_pins_engaged(1)
 
     assert reporter.status.state["lockingPinsEngaged"] == 1
 
 
 def test_report_state_brake_engaged(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["state"].brake_engaged, timeout=TIMEOUT):
         reporter.report_state_brake_engaged(1)
 
@@ -102,7 +96,6 @@ def test_report_state_brake_engaged(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_state_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["state"].azimuth_axis, timeout=TIMEOUT):
         reporter.report_state_azimuth_axis(MTDome.EnabledState.ENABLED)
 
@@ -110,7 +103,6 @@ def test_report_state_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_state_elevation_axis(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["state"].elevation_axis, timeout=TIMEOUT):
         reporter.report_state_elevation_axis(MTDome.EnabledState.ENABLED)
 
@@ -118,7 +110,6 @@ def test_report_state_elevation_axis(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_state_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["state"].aperture_shutter, timeout=TIMEOUT):
         reporter.report_state_aperture_shutter(MTDome.EnabledState.ENABLED)
 
@@ -126,7 +117,6 @@ def test_report_state_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> None
 
 
 def test_report_state_louvers(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["state"].louvers, timeout=TIMEOUT):
         reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
 
@@ -134,29 +124,20 @@ def test_report_state_louvers(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_state_power_mode(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["state"].power_mode, timeout=TIMEOUT):
         reporter.report_state_power_mode(MTDome.PowerManagementMode.EMERGENCY)
 
-    assert (
-        reporter.status.state["powerMode"] == MTDome.PowerManagementMode.EMERGENCY.value
-    )
+    assert reporter.status.state["powerMode"] == MTDome.PowerManagementMode.EMERGENCY.value
 
 
 def test_report_operational_mode(qtbot: QtBot, reporter: Reporter) -> None:
-
-    with qtbot.waitSignal(
-        reporter.signals["operational_mode"].subsystem_mode, timeout=TIMEOUT
-    ):
-        reporter.report_operational_mode(
-            MTDome.SubSystemId.LCS, MTDome.OperationalMode.DEGRADED
-        )
+    with qtbot.waitSignal(reporter.signals["operational_mode"].subsystem_mode, timeout=TIMEOUT):
+        reporter.report_operational_mode(MTDome.SubSystemId.LCS, MTDome.OperationalMode.DEGRADED)
 
     assert reporter.status.operational_modes[3] == MTDome.OperationalMode.DEGRADED.value
 
 
 def test_report_capacitor_bank(qtbot: QtBot, reporter: Reporter) -> None:
-
     capacitor_bank = deepcopy(reporter.status.capacitor_bank)
     capacitor_bank["doorOpen"][0] = True
     capacitor_bank["dcBusVoltage"] = 1.0
@@ -175,7 +156,6 @@ def test_report_capacitor_bank(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_config_azimuth(qtbot: QtBot, reporter: Reporter) -> None:
-
     config = {
         "jmax": 0.1,
         "amax": 0.2,
@@ -188,7 +168,6 @@ def test_report_config_azimuth(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_config_elevation(qtbot: QtBot, reporter: Reporter) -> None:
-
     config = {
         "jmax": 0.1,
         "amax": 0.2,
@@ -201,41 +180,31 @@ def test_report_config_elevation(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_telemetry(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["telemetry"].amcs, timeout=TIMEOUT):
         reporter.report_telemetry("amcs", dict())
 
 
 def test_report_target_azimuth(qtbot: QtBot, reporter: Reporter) -> None:
-
-    with qtbot.waitSignal(
-        reporter.signals["target"].position_velocity_azimuth, timeout=TIMEOUT
-    ):
+    with qtbot.waitSignal(reporter.signals["target"].position_velocity_azimuth, timeout=TIMEOUT):
         reporter.report_target_azimuth(0.0, 0.0)
 
 
 def test_report_target_elevation(qtbot: QtBot, reporter: Reporter) -> None:
-
-    with qtbot.waitSignal(
-        reporter.signals["target"].position_velocity_elevation, timeout=TIMEOUT
-    ):
+    with qtbot.waitSignal(reporter.signals["target"].position_velocity_elevation, timeout=TIMEOUT):
         reporter.report_target_elevation(0.0, 0.0)
 
 
 def test_report_motion_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["motion"].azimuth_axis, timeout=TIMEOUT):
         reporter.report_motion_azimuth_axis(MTDome.MotionState.MOVING, True)
 
 
 def test_report_motion_elevation_axis(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["motion"].elevation_axis, timeout=TIMEOUT):
         reporter.report_motion_elevation_axis(MTDome.MotionState.MOVING, True)
 
 
 def test_report_motion_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["motion"].aperture_shutter, timeout=TIMEOUT):
         reporter.report_motion_aperture_shutter(
             [MTDome.MotionState.MOVING] * APSCS_NUM_SHUTTERS,
@@ -244,7 +213,6 @@ def test_report_motion_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> Non
 
 
 def test_report_motion_louvers(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["motion"].louvers, timeout=TIMEOUT):
         reporter.report_motion_louvers(
             [MTDome.MotionState.MOVING] * LCS_NUM_LOUVERS,
@@ -253,28 +221,20 @@ def test_report_motion_louvers(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_fault_code_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["fault_code"].azimuth_axis, timeout=TIMEOUT):
         reporter.report_fault_code_azimuth_axis("No error")
 
 
 def test_report_fault_code_elevation_axis(qtbot: QtBot, reporter: Reporter) -> None:
-
-    with qtbot.waitSignal(
-        reporter.signals["fault_code"].elevation_axis, timeout=TIMEOUT
-    ):
+    with qtbot.waitSignal(reporter.signals["fault_code"].elevation_axis, timeout=TIMEOUT):
         reporter.report_fault_code_elevation_axis("No error")
 
 
 def test_report_fault_code_aperture_shutter(qtbot: QtBot, reporter: Reporter) -> None:
-
-    with qtbot.waitSignal(
-        reporter.signals["fault_code"].aperture_shutter, timeout=TIMEOUT
-    ):
+    with qtbot.waitSignal(reporter.signals["fault_code"].aperture_shutter, timeout=TIMEOUT):
         reporter.report_fault_code_aperture_shutter("No error")
 
 
 def test_report_fault_code_louvers(qtbot: QtBot, reporter: Reporter) -> None:
-
     with qtbot.waitSignal(reporter.signals["fault_code"].louvers, timeout=TIMEOUT):
         reporter.report_fault_code_louvers("No error")

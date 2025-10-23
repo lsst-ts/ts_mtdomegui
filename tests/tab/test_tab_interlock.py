@@ -39,12 +39,10 @@ def widget(qtbot: QtBot) -> TabInterlock:
 
 
 def test_init(widget: TabInterlock) -> None:
-
     assert len(widget._indicators_interlock) == MON_NUM_SENSORS
 
 
 def test_update_indicator_color(widget: TabInterlock) -> None:
-
     indicator = widget._indicators_interlock[0]
     widget._update_indicator_color(indicator, False)
 
