@@ -234,13 +234,15 @@ class MainWindow(QMainWindow):
         """
 
         # Read the yaml file
-        filepath = get_config_dir(f"MTDome/{version}") / "_summit.yaml"
+        config_dir = get_config_dir(f"MTDome/{version}")
+        filepath = config_dir / "_summit.yaml"
         default_settings = read_yaml_file(filepath)
 
         return Model(
             self.log,
             host=default_settings["host"],
             port=default_settings["eui_port"],
+            config_dir=config_dir,
             is_simulation_mode=is_simulation_mode,
         )
 

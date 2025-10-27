@@ -28,7 +28,6 @@ from lsst.ts.mtdomecom import (
     AMCS_NUM_MOTORS,
     LCS_NUM_LOUVERS,
     LCS_NUM_MOTORS_PER_LOUVER,
-    LOUVERS_ENABLED,
     LWSCS_VMAX,
 )
 from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, Model
@@ -40,7 +39,10 @@ from pytestqt.qtbot import QtBot
 
 @pytest.fixture
 def widget(qtbot: QtBot) -> TabCommand:
-    widget = TabCommand("Command", Model(logging.getLogger()))
+    model = Model(logging.getLogger())
+    model.louvers_enabled = [MTDome.Louver.E1]
+
+    widget = TabCommand("Command", model)
     qtbot.addWidget(widget)
 
     return widget
@@ -115,7 +117,7 @@ def test_get_louver_percentages(widget: TabCommand) -> None:
     # There are selected louvers
     widget._command_parameters["percentage"].setValue(50.0)
 
-    selections = [louver.value - 1 for louver in LOUVERS_ENABLED]
+    selections = [louver.value - 1 for louver in widget.model.louvers_enabled]
     widget._tabs["louver"].select(selections)
 
     for idx, value in enumerate(widget._get_louver_percentages()):

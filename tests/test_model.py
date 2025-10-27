@@ -25,11 +25,13 @@ import math
 
 import pytest
 import pytest_asyncio
+from lsst.ts.guitool import get_config_dir
 from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, LlcName, ResponseCode
 from lsst.ts.mtdomegui import Model
 from lsst.ts.xml.enums import MTDome
 from pytestqt.qtbot import QtBot
 
+CONFIG_DIR = get_config_dir("MTDome/v4")
 TIMEOUT = 1000
 
 
@@ -40,7 +42,7 @@ def model() -> Model:
 
 @pytest_asyncio.fixture
 async def model_async() -> Model:
-    async with Model(logging.getLogger(), is_simulation_mode=True) as model_sim:
+    async with Model(logging.getLogger(), config_dir=CONFIG_DIR, is_simulation_mode=True) as model_sim:
         await model_sim.connect()
 
         yield model_sim
@@ -48,7 +50,7 @@ async def model_async() -> Model:
 
 @pytest_asyncio.fixture
 async def model_async_communication_error() -> Model:
-    async with Model(logging.getLogger(), is_simulation_mode=True) as model_sim:
+    async with Model(logging.getLogger(), config_dir=CONFIG_DIR, is_simulation_mode=True) as model_sim:
         await model_sim.connect()
         model_sim.communication_error = True
 

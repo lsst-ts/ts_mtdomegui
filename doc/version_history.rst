@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.6:
+
+-------------
+0.5.6
+-------------
+
+* Adapt the **ts_mtdomecom** to read the enabled louvers from the **ts_config_mttcs**.
+
 .. _lsst.ts.mtdomegui-0.5.5:
 
 -------------
