@@ -23,7 +23,7 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, LOUVERS_ENABLED
+from lsst.ts.mtdomecom import LCS_NUM_LOUVERS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabLouver
@@ -34,7 +34,10 @@ from pytestqt.qtbot import QtBot
 
 @pytest.fixture
 def widget(qtbot: QtBot) -> TabLouver:
-    widget = TabLouver("Louver", Model(logging.getLogger()))
+    model = Model(logging.getLogger())
+    model.louvers_enabled = [MTDome.Louver.E1]
+
+    widget = TabLouver("Louver", model)
     qtbot.addWidget(widget)
 
     return widget
@@ -59,7 +62,7 @@ async def test_show_figure(qtbot: QtBot, widget: TabLouver) -> None:
 
 @pytest.mark.asyncio
 async def test_show_louver(qtbot: QtBot, widget: TabLouver) -> None:
-    idx = LOUVERS_ENABLED[0].value - 1
+    idx = widget.model.louvers_enabled[0].value - 1
 
     assert widget._tabs[idx].isVisible() is False
 

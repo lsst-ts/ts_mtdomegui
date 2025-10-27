@@ -37,7 +37,6 @@ from lsst.ts.mtdomecom import (
     DOME_AZIMUTH_OFFSET,
     LCS_NUM_LOUVERS,
     LCS_NUM_MOTORS_PER_LOUVER,
-    LOUVERS_ENABLED,
     LWSCS_VMAX,
 )
 from lsst.ts.xml.enums import MTDome
@@ -107,7 +106,7 @@ class TabCommand(TabTemplate):
 
         tab_louver = TabSelector("Louver", model, names_louver)
         for idx, louver in enumerate(MTDome.Louver):
-            tab_louver.set_selection_enabled(idx, louver in LOUVERS_ENABLED)
+            tab_louver.set_selection_enabled(idx, louver in model.louvers_enabled)
 
         return {
             "louver": tab_louver,

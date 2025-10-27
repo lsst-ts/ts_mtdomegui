@@ -24,10 +24,12 @@ __all__ = ["Model"]
 import asyncio
 import logging
 import math
+import pathlib
 import types
 import typing
 
 from lsst.ts.mtdomecom import (
+    get_louvers_enabled,
     LlcName,
     LlcNameDict,
     MTDomeCom,
@@ -51,6 +53,8 @@ class Model:
         Host address. (the default is "localhost")
     port : `int`, optional
         Port to connect. (the default is 4998)
+    config_dir : `pathlib.Path` or None
+        Configuration directory. (the default is None)
     is_simulation_mode: `bool`, optional
         True if running in simulation mode. (the default is False)
     duration_refresh : `int`, optional
@@ -62,6 +66,8 @@ class Model:
         A logger.
     connection_information : `dict`
         TCP/IP connection information.
+    louvers_enabled : `list` [`MTDome.Louver`]
+        List of the enabled louvers.
     duration_refresh : `int`
         Duration to refresh the data in milliseconds.
     reporter : `Reporter`
@@ -75,6 +81,7 @@ class Model:
         log: logging.Logger,
         host: str = "localhost",
         port: int = 4998,
+        config_dir: pathlib.Path | None = None,
         is_simulation_mode: bool = False,
         duration_refresh: int = 200,
     ) -> None:
@@ -85,6 +92,10 @@ class Model:
             "host": host,
             "port": port,
         }
+
+        self.louvers_enabled = list() if (config_dir is None) else list(get_louvers_enabled(config_dir))
+
+        self._config_dir = config_dir
 
         self.duration_refresh = duration_refresh
 
@@ -135,6 +146,7 @@ class Model:
         self.mtdome_com = MTDomeCom(
             self.log,
             config,
+            self._config_dir,
             simulation_mode=simulation_mode,
             telemetry_callbacks=telemetry_callbacks,
         )

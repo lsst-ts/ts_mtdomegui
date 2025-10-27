@@ -28,7 +28,7 @@ from lsst.ts.guitool import (
     create_label,
     set_button,
 )
-from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER, LOUVERS_ENABLED
+from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
 from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -142,7 +142,7 @@ class TabLouver(TabTemplate):
                 is_adjust_size=True,
                 tool_tip=tool_tip_louver,
             )
-            button.setEnabled(louver in LOUVERS_ENABLED)
+            button.setEnabled(louver in self.model.louvers_enabled)
 
             buttons_louver.append(button)
 
