@@ -28,6 +28,7 @@ import pathlib
 import types
 import typing
 
+from lsst.ts.guitool import prompt_dialog_critical
 from lsst.ts.mtdomecom import (
     get_louvers_enabled,
     LlcName,
@@ -234,7 +235,7 @@ class Model:
             exception_message = str(status["exception"])
             self.log.error(f"Failed to report the status of {llc_name!r}: {exception_message}")
 
-            self._report_exception_fault_code(
+            await self._report_exception_fault_code(
                 llc_name,
                 status["response_code"],
                 exception_message,
@@ -273,8 +274,8 @@ class Model:
             case _:
                 self.reporter.report_telemetry(llc_name.name.lower(), processed_telemetry)
 
-    def _report_exception_fault_code(
-        self, llc_name: LlcName, response_code: ResponseCode, exception_message: str
+    async def _report_exception_fault_code(
+        self, llc_name: LlcName, response_code: ResponseCode, exception_message: str, is_prompted: bool = True
     ) -> None:
         """Report the exception fault code.
 
@@ -286,6 +287,10 @@ class Model:
             Response code.
         exception_message : `str`
             Exception message.
+        is_prompted : `bool`, optional
+            When False, dialog will not be executed. That is used for tests,
+            which shall not be the case when used in the real GUI. (the default
+            is True)
         """
 
         # The communication issue with the rotating cRIO will not generate the
@@ -311,6 +316,15 @@ class Model:
 
                 case _:
                     pass
+
+        # Lost the connection with the cRIO
+        if response_code == ResponseCode.NOT_CONNECTED:
+            message = "Lost the connection with cRIO. Disconnecting..."
+            self.log.error(message)
+
+            await self.disconnect()
+
+            await prompt_dialog_critical("Connection Lost", message, is_prompted=is_prompted)
 
     def _report_operational_mode(self, llc_name: LlcName, status: dict[str, typing.Any]) -> None:
         """Report the operational mode.
