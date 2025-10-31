@@ -97,7 +97,8 @@ async def test_report_exception_communication_error(
         await asyncio.sleep(5.0)
 
 
-def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
+@pytest.mark.asyncio
+async def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
     signals = [
         model.reporter.signals["state"].aperture_shutter,
         model.reporter.signals["state"].elevation_axis,
@@ -107,17 +108,17 @@ def test_report_exception_fault_code(qtbot: QtBot, model: Model) -> None:
         model.reporter.signals["fault_code"].louvers,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
-        model._report_exception_fault_code(
+        await model._report_exception_fault_code(
             LlcName.APSCS,
             ResponseCode.ROTATING_PART_NOT_RECEIVED,
             "exception message by the rotating part",
         )
-        model._report_exception_fault_code(
+        await model._report_exception_fault_code(
             LlcName.LWSCS,
             ResponseCode.ROTATING_PART_NOT_REPLIED,
             "exception message by the rotating part",
         )
-        model._report_exception_fault_code(
+        await model._report_exception_fault_code(
             LlcName.LCS,
             ResponseCode.ROTATING_PART_NOT_REPLIED,
             "exception message by the rotating part",

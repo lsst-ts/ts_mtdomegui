@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.5.7:
+
+-------------
+0.5.7
+-------------
+
+* Deal with the **ResponseCode.NOT_CONNECTED**.
+
 .. _lsst.ts.mtdomegui-0.5.6:
 
 -------------

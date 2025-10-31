@@ -234,7 +234,7 @@ class Model:
             exception_message = str(status["exception"])
             self.log.error(f"Failed to report the status of {llc_name!r}: {exception_message}")
 
-            self._report_exception_fault_code(
+            await self._report_exception_fault_code(
                 llc_name,
                 status["response_code"],
                 exception_message,
@@ -273,7 +273,7 @@ class Model:
             case _:
                 self.reporter.report_telemetry(llc_name.name.lower(), processed_telemetry)
 
-    def _report_exception_fault_code(
+    async def _report_exception_fault_code(
         self, llc_name: LlcName, response_code: ResponseCode, exception_message: str
     ) -> None:
         """Report the exception fault code.
@@ -287,6 +287,11 @@ class Model:
         exception_message : `str`
             Exception message.
         """
+
+        # Lost the connection with the cRIO
+        if response_code == ResponseCode.NOT_CONNECTED:
+            self.log.error("Lost the connection with cRIO. Disconnecting...")
+            await self.disconnect()
 
         # The communication issue with the rotating cRIO will not generate the
         # error code for us to use in the self._get_fault_code() to fault the
