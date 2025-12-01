@@ -45,7 +45,10 @@ class Status:
             "elevationAxis": 0,
             "apertureShutter": 0,
             "louvers": 0,
+            "rearAccessDoor": 0,
+            "calibrationScreen": 0,
             "powerMode": 0,
+            "controlMode": 0,
         }
     )
 
