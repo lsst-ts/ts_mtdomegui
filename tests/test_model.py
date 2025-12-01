@@ -25,11 +25,14 @@ import math
 
 import pytest
 import pytest_asyncio
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.guitool import get_config_dir
-from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, LlcName, ResponseCode
+
+# TODO: OSW-1538, remove the Brake after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, RAD_NUM_DOORS, Brake, LlcName, ResponseCode
 from lsst.ts.mtdomegui import Model
 from lsst.ts.xml.enums import MTDome
-from pytestqt.qtbot import QtBot
 
 CONFIG_DIR = get_config_dir("MTDome/v4")
 TIMEOUT = 1000
@@ -92,6 +95,8 @@ async def test_report_exception_communication_error(
         model_async_communication_error.reporter.signals["fault_code"].aperture_shutter,
         model_async_communication_error.reporter.signals["fault_code"].elevation_axis,
         model_async_communication_error.reporter.signals["fault_code"].louvers,
+        model_async_communication_error.reporter.signals["fault_code"].rear_access_door,
+        model_async_communication_error.reporter.signals["fault_code"].calibration_screen,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         await asyncio.sleep(5.0)
@@ -103,9 +108,13 @@ async def test_report_exception_fault_code_rotating_part(qtbot: QtBot, model: Mo
         model.reporter.signals["state"].aperture_shutter,
         model.reporter.signals["state"].elevation_axis,
         model.reporter.signals["state"].louvers,
+        model.reporter.signals["state"].rear_access_door,
+        model.reporter.signals["state"].calibration_screen,
         model.reporter.signals["fault_code"].aperture_shutter,
         model.reporter.signals["fault_code"].elevation_axis,
         model.reporter.signals["fault_code"].louvers,
+        model.reporter.signals["fault_code"].rear_access_door,
+        model.reporter.signals["fault_code"].calibration_screen,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         await model._report_exception_fault_code(
@@ -120,6 +129,16 @@ async def test_report_exception_fault_code_rotating_part(qtbot: QtBot, model: Mo
         )
         await model._report_exception_fault_code(
             LlcName.LCS,
+            ResponseCode.ROTATING_PART_NOT_REPLIED,
+            "exception message by the rotating part",
+        )
+        await model._report_exception_fault_code(
+            LlcName.RAD,
+            ResponseCode.ROTATING_PART_NOT_REPLIED,
+            "exception message by the rotating part",
+        )
+        await model._report_exception_fault_code(
+            LlcName.CSCS,
             ResponseCode.ROTATING_PART_NOT_REPLIED,
             "exception message by the rotating part",
         )
@@ -232,6 +251,22 @@ def test_translate_motion_state_if_necessary(model: Model) -> None:
     assert model._translate_motion_state_if_necessary("ABC") is None
 
 
+def test_set_brakes_engaged_bit(model: Model) -> None:
+    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, Brake.AMCS.value)
+    assert model._brakes_engaged_bitmask == 2
+
+    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, Brake.APSCS_LEFT_DOOR.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, Brake.APSCS_RIGHT_DOOR.value)
+    assert model._brakes_engaged_bitmask == 14
+
+    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, Brake.AMCS.value)
+    assert model._brakes_engaged_bitmask == 12
+
+    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, Brake.APSCS_LEFT_DOOR.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, Brake.APSCS_RIGHT_DOOR.value)
+    assert model._brakes_engaged_bitmask == 0
+
+
 def test_check_errors_and_report_elevation(qtbot: QtBot, model: Model) -> None:
     status = {
         "messages": [{"code": 0, "description": "No Errors"}],
@@ -275,3 +310,33 @@ def test_check_errors_and_report_louvers(qtbot: QtBot, model: Model) -> None:
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         model._check_errors_and_report_louvers(status)
+
+
+def test_check_errors_and_report_rear_access_door(qtbot: QtBot, model: Model) -> None:
+    status = {
+        "messages": [{"code": 0, "description": "No Errors"}],
+        "status": ["STOPPED"] * RAD_NUM_DOORS,
+    }
+
+    signals = [
+        model.reporter.signals["state"].rear_access_door,
+        model.reporter.signals["fault_code"].rear_access_door,
+        model.reporter.signals["motion"].rear_access_door,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
+        model._check_errors_and_report_rear_access_door(status)
+
+
+def test_check_errors_and_report_calibration_screen(qtbot: QtBot, model: Model) -> None:
+    status = {
+        "messages": [{"code": 0, "description": "No Errors"}],
+        "status": "STOPPED",
+    }
+
+    signals = [
+        model.reporter.signals["state"].calibration_screen,
+        model.reporter.signals["fault_code"].calibration_screen,
+        model.reporter.signals["motion"].calibration_screen,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
+        model._check_errors_and_report_calibration_screen(status)
