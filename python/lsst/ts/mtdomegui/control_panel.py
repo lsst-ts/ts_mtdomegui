@@ -23,6 +23,10 @@ __all__ = ["ControlPanel"]
 
 from functools import partial
 
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QFormLayout, QGroupBox, QVBoxLayout, QWidget
+from qasync import asyncSlot
+
 from lsst.ts.guitool import (
     ButtonStatus,
     create_group_box,
@@ -30,14 +34,14 @@ from lsst.ts.guitool import (
     set_button,
     update_button_color,
 )
+
+# TODO: OSW-1538, remove the Brake and ControlMode after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import Brake, ControlMode
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QFormLayout, QGroupBox, QVBoxLayout, QWidget
-from qasync import asyncSlot
 
 from .model import Model
 from .signals import SignalInterlock, SignalState
-from .tab import TabInterlock
+from .tab import TabBrake, TabInterlock
 from .utils import add_empty_row_to_form_layout
 
 
@@ -61,21 +65,29 @@ class ControlPanel(QWidget):
         self.model = model
 
         self._tab_interlock = TabInterlock("Interlock", self.model)
+        self._tab_brake = TabBrake("Brake", self.model)
 
         self._button_interlock = set_button(
             "",
             self._tab_interlock.show,
             tool_tip="Click to show the interlocks.",
         )
+        self._button_brake_engaged = set_button(
+            "",
+            self._tab_brake.show,
+            tool_tip="Click to show the engaged brakes.",
+        )
 
         self._labels = {
             "locking_pin": create_label(),
-            "brake_engaged": create_label(),
             "azimuth_axis": create_label(),
             "elevation_axis": create_label(),
             "aperture_shutter": create_label(),
             "louvers": create_label(),
+            "rear_access_door": create_label(),
+            "calibration_screen": create_label(),
             "power_mode": create_label(),
+            "control_mode": create_label(),
         }
 
         self.setLayout(self._create_layout())
@@ -114,15 +126,18 @@ class ControlPanel(QWidget):
 
         add_empty_row_to_form_layout(layout)
 
-        layout.addRow("Brake engaged:", self._labels["brake_engaged"])
+        layout.addRow("Brake engaged:", self._button_brake_engaged)
         layout.addRow("Azimuth axis:", self._labels["azimuth_axis"])
         layout.addRow("Elevation axis:", self._labels["elevation_axis"])
         layout.addRow("Aperture shutter:", self._labels["aperture_shutter"])
         layout.addRow("Louvers:", self._labels["louvers"])
+        layout.addRow("Rear access door:", self._labels["rear_access_door"])
+        layout.addRow("Calibration screen:", self._labels["calibration_screen"])
 
         add_empty_row_to_form_layout(layout)
 
         layout.addRow("Power mode:", self._labels["power_mode"])
+        layout.addRow("Control mode:", self._labels["control_mode"])
 
         return create_group_box("Summary", layout)
 
@@ -172,7 +187,7 @@ class ControlPanel(QWidget):
         self,
         field: str,
         value: int,
-        enum: MTDome.EnabledState | MTDome.PowerManagementMode | None = None,
+        enum: MTDome.EnabledState | MTDome.PowerManagementMode | ControlMode | None = None,
     ) -> None:
         """Callback to update the label.
 
@@ -182,9 +197,13 @@ class ControlPanel(QWidget):
             Field.
         value : `int`
             Value.
-        enum: `MTDome.EnabledState` or `MTDome.PowerManagementMode` or None
+        enum: `MTDome.EnabledState` or `MTDome.PowerManagementMode` or
+        `lsst.ts.mtdome.ControlMode` or None
             Enum to convert the value. If None, the hex value will be shown.
         """
+
+        # TODO: OSW-1538, update the annotation of enum and related doc string
+        # to use the MTDome.ControlMode after ts_xml 24.4.
 
         if enum is None:
             self._labels[field].setText(hex(value))
@@ -200,7 +219,7 @@ class ControlPanel(QWidget):
             Signal.
         """
 
-        signal.brake_engaged.connect(partial(self._callback_update_label, "brake_engaged"))
+        signal.brake_engaged.connect(self._callback_update_brake_engaged)
         signal.azimuth_axis.connect(
             partial(self._callback_update_label, "azimuth_axis", enum=MTDome.EnabledState)
         )
@@ -221,6 +240,21 @@ class ControlPanel(QWidget):
                 enum=MTDome.EnabledState,
             )
         )
+        signal.rear_access_door.connect(
+            partial(
+                self._callback_update_label,
+                "rear_access_door",
+                enum=MTDome.EnabledState,
+            )
+        )
+        signal.calibration_screen.connect(
+            partial(
+                self._callback_update_label,
+                "calibration_screen",
+                enum=MTDome.EnabledState,
+            )
+        )
+
         signal.power_mode.connect(
             partial(
                 self._callback_update_label,
@@ -228,3 +262,28 @@ class ControlPanel(QWidget):
                 enum=MTDome.PowerManagementMode,
             )
         )
+
+        # TODO: OSW-1538, use the MTDome.ControlMode after the ts_xml: 24.4.
+        signal.control_mode.connect(
+            partial(
+                self._callback_update_label,
+                "control_mode",
+                enum=ControlMode,
+            )
+        )
+
+    @asyncSlot()
+    async def _callback_update_brake_engaged(self, brake_engaged: int) -> None:
+        """Callback to update the brake engaged button.
+
+        Parameters
+        ----------
+        brake_engaged : `int`
+            Brake engaged bitmask.
+        """
+
+        self._button_brake_engaged.setText(hex(brake_engaged))
+
+        for idx, specific_brake in enumerate(Brake):
+            is_engaged = bool(brake_engaged & (1 << specific_brake.value))
+            self._tab_brake.update_brake_status(idx, is_engaged)
