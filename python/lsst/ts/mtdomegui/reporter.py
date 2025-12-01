@@ -23,7 +23,8 @@ __all__ = ["Reporter"]
 
 import logging
 
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS
+# TODO: OSW-1538, remove the ControlMode after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS, ControlMode
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.xml.enums import MTDome
 
@@ -85,7 +86,11 @@ class Reporter:
         self.report_state_elevation_axis(MTDome.EnabledState.DISABLED)
         self.report_state_aperture_shutter(MTDome.EnabledState.DISABLED)
         self.report_state_louvers(MTDome.EnabledState.DISABLED)
+        self.report_state_rear_access_door(MTDome.EnabledState.DISABLED)
+        self.report_state_calibration_screen(MTDome.EnabledState.DISABLED)
+
         self.report_state_power_mode(MTDome.PowerManagementMode.NO_POWER_MANAGEMENT)
+        self.report_state_control_mode(ControlMode.Remote)
 
         for subsystem in MTDome.SubSystemId:
             self.report_operational_mode(subsystem, MTDome.OperationalMode.NORMAL)
@@ -109,6 +114,11 @@ class Reporter:
             [MTDome.MotionState.STOPPED] * LCS_NUM_LOUVERS,
             [False] * LCS_NUM_LOUVERS,
         )
+        self.report_motion_rear_access_door(
+            [MTDome.MotionState.STOPPED] * RAD_NUM_DOORS,
+            [False] * RAD_NUM_DOORS,
+        )
+        self.report_motion_calibration_screen(MTDome.MotionState.STOPPED, False)
 
     def report_interlocks(self, interlocks: list[bool]) -> None:
         """Report the interlocks.
@@ -212,6 +222,28 @@ class Reporter:
 
         self._check_system_state_and_report("louvers", "state", "louvers", state.value)
 
+    def report_state_rear_access_door(self, state: MTDome.EnabledState) -> None:
+        """Report the state of the rear access door.
+
+        Parameters
+        ----------
+        state : enum `MTDome.EnabledState`
+            State of the rear access door.
+        """
+
+        self._check_system_state_and_report("rearAccessDoor", "state", "rear_access_door", state.value)
+
+    def report_state_calibration_screen(self, state: MTDome.EnabledState) -> None:
+        """Report the state of the calibration screen.
+
+        Parameters
+        ----------
+        state : enum `MTDome.EnabledState`
+            State of the calibration screen.
+        """
+
+        self._check_system_state_and_report("calibrationScreen", "state", "calibration_screen", state.value)
+
     def report_state_power_mode(self, mode: MTDome.PowerManagementMode) -> None:
         """Report the state of the power mode.
 
@@ -222,6 +254,20 @@ class Reporter:
         """
 
         self._check_system_state_and_report("powerMode", "state", "power_mode", mode.value)
+
+    def report_state_control_mode(self, mode: ControlMode) -> None:
+        """Report the state of the control mode.
+
+        Parameters
+        ----------
+        mode : enum `lsst.ts.mtdome.ControlMode`
+            Control mode.
+        """
+
+        # TODO: OSW-1538, update the annotation of enum and related doc string
+        # to use the MTDome.ControlMode after ts_xml 24.4.
+
+        self._check_system_state_and_report("controlMode", "state", "control_mode", mode.value)
 
     def report_operational_mode(self, subsystem: MTDome.SubSystemId, mode: MTDome.OperationalMode) -> None:
         """Report the operational mode of a subsystem.
@@ -395,6 +441,37 @@ class Reporter:
             (motion_states, in_positions)
         )
 
+    def report_motion_rear_access_door(
+        self, motion_states: list[MTDome.MotionState], in_positions: list[bool]
+    ) -> None:
+        """Report the motion of the rear access door.
+
+        Parameters
+        ----------
+        motion_states : `list` [enum `MTDome.MotionState`]
+            List of the Motion states.
+        in_positions : `list` [`bool`]
+            List of the in-position. True if the rear access door is in
+            position. Otherwise, False.
+        """
+
+        self.signals["motion"].rear_access_door.emit(  # type: ignore[attr-defined]
+            (motion_states, in_positions)
+        )
+
+    def report_motion_calibration_screen(self, motion_state: MTDome.MotionState, in_position: bool) -> None:
+        """Report the motion of the calibration screen.
+
+        Parameters
+        ----------
+        motion_state : enum `MTDome.MotionState`
+            Motion state.
+        in_position : `bool`
+            True if the calibration screen is in position. Otherwise, False.
+        """
+
+        self.signals["motion"].calibration_screen.emit((motion_state, in_position))  # type: ignore[attr-defined]
+
     def report_fault_code_azimuth_axis(self, fault_code: str) -> None:
         """Report the fault code of the azimuth axis.
 
@@ -438,3 +515,25 @@ class Reporter:
         """
 
         self.signals["fault_code"].louvers.emit(fault_code)  # type: ignore[attr-defined]
+
+    def report_fault_code_rear_access_door(self, fault_code: str) -> None:
+        """Report the fault code of the rear access door.
+
+        Parameters
+        ----------
+        fault_code : `str`
+            Fault code.
+        """
+
+        self.signals["fault_code"].rear_access_door.emit(fault_code)  # type: ignore[attr-defined]
+
+    def report_fault_code_calibration_screen(self, fault_code: str) -> None:
+        """Report the fault code of the calibration screen.
+
+        Parameters
+        ----------
+        fault_code : `str`
+            Fault code.
+        """
+
+        self.signals["fault_code"].calibration_screen.emit(fault_code)  # type: ignore[attr-defined]

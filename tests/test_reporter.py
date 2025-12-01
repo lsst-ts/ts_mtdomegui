@@ -23,10 +23,12 @@ import logging
 from copy import deepcopy
 
 import pytest
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS
+from pytestqt.qtbot import QtBot
+
+# TODO: OSW-1538, remove the ControlMode after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS, ControlMode
 from lsst.ts.mtdomegui import Reporter
 from lsst.ts.xml.enums import MTDome
-from pytestqt.qtbot import QtBot
 
 TIMEOUT = 1000
 
@@ -49,7 +51,10 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
         reporter.signals["state"].elevation_axis,
         reporter.signals["state"].aperture_shutter,
         reporter.signals["state"].louvers,
+        reporter.signals["state"].rear_access_door,
+        reporter.signals["state"].calibration_screen,
         reporter.signals["state"].power_mode,
+        reporter.signals["state"].control_mode,
         reporter.signals["operational_mode"].subsystem_mode,
         reporter.signals["telemetry"].amcs,
         reporter.signals["telemetry"].apscs,
@@ -66,6 +71,8 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
         reporter.signals["motion"].elevation_axis,
         reporter.signals["motion"].aperture_shutter,
         reporter.signals["motion"].louvers,
+        reporter.signals["motion"].rear_access_door,
+        reporter.signals["motion"].calibration_screen,
     ]
     with qtbot.waitSignals(signals, timeout=TIMEOUT):
         reporter.report_default()
@@ -123,11 +130,33 @@ def test_report_state_louvers(qtbot: QtBot, reporter: Reporter) -> None:
     assert reporter.status.state["louvers"] == MTDome.EnabledState.ENABLED.value
 
 
+def test_report_state_rear_access_door(qtbot: QtBot, reporter: Reporter) -> None:
+    with qtbot.waitSignal(reporter.signals["state"].rear_access_door, timeout=TIMEOUT):
+        reporter.report_state_rear_access_door(MTDome.EnabledState.ENABLED)
+
+    assert reporter.status.state["rearAccessDoor"] == MTDome.EnabledState.ENABLED.value
+
+
+def test_report_state_calibration_screen(qtbot: QtBot, reporter: Reporter) -> None:
+    with qtbot.waitSignal(reporter.signals["state"].calibration_screen, timeout=TIMEOUT):
+        reporter.report_state_calibration_screen(MTDome.EnabledState.ENABLED)
+
+    assert reporter.status.state["calibrationScreen"] == MTDome.EnabledState.ENABLED.value
+
+
 def test_report_state_power_mode(qtbot: QtBot, reporter: Reporter) -> None:
     with qtbot.waitSignal(reporter.signals["state"].power_mode, timeout=TIMEOUT):
         reporter.report_state_power_mode(MTDome.PowerManagementMode.EMERGENCY)
 
     assert reporter.status.state["powerMode"] == MTDome.PowerManagementMode.EMERGENCY.value
+
+
+def test_report_state_control_mode(qtbot: QtBot, reporter: Reporter) -> None:
+    # TODO: OSW-1538, Use the MTDome.ControlMode after the ts_xml: 24.4.
+    with qtbot.waitSignal(reporter.signals["state"].control_mode, timeout=TIMEOUT):
+        reporter.report_state_control_mode(ControlMode.LocalKeba)
+
+    assert reporter.status.state["controlMode"] == ControlMode.LocalKeba.value
 
 
 def test_report_operational_mode(qtbot: QtBot, reporter: Reporter) -> None:
@@ -220,6 +249,19 @@ def test_report_motion_louvers(qtbot: QtBot, reporter: Reporter) -> None:
         )
 
 
+def test_report_motion_rear_access_door(qtbot: QtBot, reporter: Reporter) -> None:
+    with qtbot.waitSignal(reporter.signals["motion"].rear_access_door, timeout=TIMEOUT):
+        reporter.report_motion_rear_access_door(
+            [MTDome.MotionState.MOVING] * RAD_NUM_DOORS,
+            [True] * RAD_NUM_DOORS,
+        )
+
+
+def test_report_motion_calibration_screen(qtbot: QtBot, reporter: Reporter) -> None:
+    with qtbot.waitSignal(reporter.signals["motion"].calibration_screen, timeout=TIMEOUT):
+        reporter.report_motion_calibration_screen(MTDome.MotionState.MOVING, True)
+
+
 def test_report_fault_code_azimuth_axis(qtbot: QtBot, reporter: Reporter) -> None:
     with qtbot.waitSignal(reporter.signals["fault_code"].azimuth_axis, timeout=TIMEOUT):
         reporter.report_fault_code_azimuth_axis("No error")
@@ -238,3 +280,13 @@ def test_report_fault_code_aperture_shutter(qtbot: QtBot, reporter: Reporter) ->
 def test_report_fault_code_louvers(qtbot: QtBot, reporter: Reporter) -> None:
     with qtbot.waitSignal(reporter.signals["fault_code"].louvers, timeout=TIMEOUT):
         reporter.report_fault_code_louvers("No error")
+
+
+def test_report_fault_code_rear_access_door(qtbot: QtBot, reporter: Reporter) -> None:
+    with qtbot.waitSignal(reporter.signals["fault_code"].rear_access_door, timeout=TIMEOUT):
+        reporter.report_fault_code_rear_access_door("No error")
+
+
+def test_report_fault_code_calibration_screen(qtbot: QtBot, reporter: Reporter) -> None:
+    with qtbot.waitSignal(reporter.signals["fault_code"].calibration_screen, timeout=TIMEOUT):
+        reporter.report_fault_code_calibration_screen("No error")
