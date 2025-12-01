@@ -6,6 +6,20 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.0:
+
+-------------
+0.6.0
+-------------
+
+* Add the ``tab_brake.py``.
+* Check the engaged brakes.
+* Support the control status of control system.
+* Support the state, motion state, and fault error code in the rear access door and calibration screen.
+* Add the ``documenteer.toml``.
+* Update the ``Jenkinsfile`` to remove the ``use_pyside6`` option, which is the default value.
+* Sort the Python scripts to put the lsst to an individual section.
+
 .. _lsst.ts.mtdomegui-0.5.7:
 
 -------------
