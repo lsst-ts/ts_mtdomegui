@@ -23,11 +23,13 @@ import asyncio
 import logging
 
 import pytest
+from PySide6.QtCore import Qt
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabCalibration
-from PySide6.QtCore import Qt
-from pytestqt.qtbot import QtBot
+from lsst.ts.xml.enums import MTDome
 
 
 @pytest.fixture
@@ -76,3 +78,34 @@ async def test_set_signal_telemetry(widget: TabCalibration) -> None:
 
     for figure in widget._figures.values():
         assert figure._data[0][-1] == 1.0
+
+
+@pytest.mark.asyncio
+async def test_set_signal_state(widget: TabCalibration) -> None:
+    widget.model.reporter.report_state_calibration_screen(MTDome.EnabledState.ENABLED)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["state"].text() == MTDome.EnabledState.ENABLED.name
+
+
+@pytest.mark.asyncio
+async def test_set_signal_motion(widget: TabCalibration) -> None:
+    widget.model.reporter.report_motion_calibration_screen(MTDome.MotionState.MOVING, True)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["motion"].text() == MTDome.MotionState.MOVING.name
+    assert widget._states["in_position"].text() == str(True)
+
+
+@pytest.mark.asyncio
+async def test_set_signal_fault_code(widget: TabCalibration) -> None:
+    widget.model.reporter.report_fault_code_calibration_screen("Error")
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._window_fault_code.toPlainText() == "Error"

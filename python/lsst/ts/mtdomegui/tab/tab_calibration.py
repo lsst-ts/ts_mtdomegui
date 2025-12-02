@@ -21,7 +21,6 @@
 
 __all__ = ["TabCalibration"]
 
-from lsst.ts.guitool import TabTemplate, create_group_box, create_label
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -32,9 +31,12 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
+from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.xml.enums import MTDome
+
 from ..model import Model
-from ..signals import SignalTelemetry
-from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs
+from ..signals import SignalFaultCode, SignalMotion, SignalState, SignalTelemetry
+from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs, create_window_fault_code
 from .tab_figure import TabFigure
 
 
@@ -59,14 +61,35 @@ class TabCalibration(TabTemplate):
 
         self.model = model
 
+        self._states = self._create_states()
         self._status = self._create_status()
+        self._window_fault_code = create_window_fault_code()
 
         self._figures = self._create_figures()
         self._buttons = self._create_buttons()
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
+        signals = self.model.reporter.signals
+        self._set_signal_telemetry(signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_state(signals["state"])  # type: ignore[arg-type]
+        self._set_signal_motion(signals["motion"])  # type: ignore[arg-type]
+        self._set_signal_fault_code(signals["fault_code"])  # type: ignore[arg-type]
+
+    def _create_states(self) -> dict[str, QLabel]:
+        """Create the states.
+
+        Returns
+        -------
+        `dict`
+            System states.
+        """
+
+        return {
+            "state": create_label(),
+            "motion": create_label(),
+            "in_position": create_label(),
+        }
 
     def _create_status(self) -> dict[str, QLabel]:
         """Create the status.
@@ -151,21 +174,46 @@ class TabCalibration(TabTemplate):
 
     def create_layout(self) -> QHBoxLayout:
         # First column
+        layout_state = QVBoxLayout()
+        layout_state.addWidget(self._create_group_state())
+
+        # Second column
         layout_status = QVBoxLayout()
         layout_status.addWidget(self._create_group_position())
         layout_status.addWidget(self._create_group_drive_torque())
         layout_status.addWidget(self._create_group_drive_temperature())
         layout_status.addWidget(self._create_group_power())
 
-        # Second column
+        # Third column
         layout_realtime = QVBoxLayout()
         layout_realtime.addWidget(self._create_group_realtime_chart())
 
         layout = QHBoxLayout()
+        layout.addLayout(layout_state)
         layout.addLayout(layout_status)
         layout.addLayout(layout_realtime)
 
         return layout
+
+    def _create_group_state(self) -> QGroupBox:
+        """Create the group of state.
+
+        Returns
+        -------
+        `PySide6.QtWidgets.QGroupBox`
+            Group.
+        """
+
+        layout_form = QFormLayout()
+        layout_form.addRow("State:", self._states["state"])
+        layout_form.addRow("Motion:", self._states["motion"])
+        layout_form.addRow("In position:", self._states["in_position"])
+
+        layout = QVBoxLayout()
+        layout.addLayout(layout_form)
+        layout.addWidget(self._window_fault_code)
+
+        return create_group_box("State", layout)
 
     def _create_group_position(self) -> QGroupBox:
         """Create the group of position.
@@ -293,3 +341,76 @@ class TabCalibration(TabTemplate):
         self._figures["encoder_head"].append_data([telemetry["encoderHeadCalibrated"]])
 
         self._figures["power"].append_data([power])
+
+    def _set_signal_state(self, signal: SignalState) -> None:
+        """Set the state signal.
+
+        Parameters
+        ----------
+        signal : `SignalState`
+            Signal.
+        """
+
+        signal.calibration_screen.connect(self._callback_update_state)
+
+    @asyncSlot()
+    async def _callback_update_state(self, state: int) -> None:
+        """Callback to update the state.
+
+        Parameters
+        ----------
+        state : `int`
+            State.
+        """
+
+        self._states["state"].setText(MTDome.EnabledState(state).name)
+
+    def _set_signal_motion(self, signal: SignalMotion) -> None:
+        """Set the motion signal.
+
+        Parameters
+        ----------
+        signal : `SignalMotion`
+            Signal.
+        """
+
+        signal.calibration_screen.connect(self._callback_update_motion)
+
+    @asyncSlot()
+    async def _callback_update_motion(self, motion: tuple[MTDome.MotionState, bool]) -> None:
+        """Callback to update the motion state.
+
+        Parameters
+        ----------
+        motion : `tuple`
+            A tuple of (motion_state, in_position).
+        """
+
+        self._states["motion"].setText(motion[0].name)
+        self._states["in_position"].setText(str(motion[1]))
+
+    def _set_signal_fault_code(self, signal: SignalFaultCode) -> None:
+        """Set the fault code signal.
+
+        Parameters
+        ----------
+        signal : `SignalFaultCode`
+            Signal.
+        """
+
+        signal.calibration_screen.connect(self._callback_update_fault_code)
+
+    @asyncSlot()
+    async def _callback_update_fault_code(self, fault_code: str) -> None:
+        """Callback to update the fault code.
+
+        Parameters
+        ----------
+        fault_code : `str`
+            Fault code.
+        """
+
+        self._window_fault_code.clear()
+
+        if fault_code != "":
+            self._window_fault_code.setPlainText(fault_code)
