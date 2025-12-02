@@ -23,13 +23,16 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomecom.schema import registry
-from lsst.ts.mtdomegui import Model, generate_dict_from_registry
-from lsst.ts.mtdomegui.tab import TabRearAccessDoor
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QRadioButton
 from pytestqt.qtbot import QtBot
+
+from lsst.ts.mtdomecom import RAD_NUM_DOORS
+from lsst.ts.mtdomecom.schema import registry
+from lsst.ts.mtdomegui import Model, generate_dict_from_registry
+from lsst.ts.mtdomegui.tab import TabRearAccessDoor
+from lsst.ts.xml.enums import MTDome
 
 
 @pytest.fixture
@@ -88,3 +91,36 @@ async def test_set_signal_telemetry(widget: TabRearAccessDoor) -> None:
         else:
             for indicator in indicators:
                 assert indicator.palette().color(QPalette.Base) in (Qt.green, Qt.red)
+
+
+@pytest.mark.asyncio
+async def test_set_signal_state(widget: TabRearAccessDoor) -> None:
+    widget.model.reporter.report_state_rear_access_door(MTDome.EnabledState.ENABLED)
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["state"].text() == MTDome.EnabledState.ENABLED.name
+
+
+@pytest.mark.asyncio
+async def test_set_signal_motion(widget: TabRearAccessDoor) -> None:
+    widget.model.reporter.report_motion_rear_access_door(
+        [MTDome.MotionState.MOVING] * RAD_NUM_DOORS, [True] * RAD_NUM_DOORS
+    )
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._states["motion"].text() == "MOVING, MOVING"
+    assert widget._states["in_position"].text() == "True, True"
+
+
+@pytest.mark.asyncio
+async def test_set_signal_fault_code(widget: TabRearAccessDoor) -> None:
+    widget.model.reporter.report_fault_code_rear_access_door("Error")
+
+    # Sleep so the event loop can access CPU to handle the signal
+    await asyncio.sleep(1)
+
+    assert widget._window_fault_code.toPlainText() == "Error"
