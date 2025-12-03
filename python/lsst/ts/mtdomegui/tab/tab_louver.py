@@ -21,6 +21,15 @@
 
 __all__ = ["TabLouver"]
 
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QPushButton,
+    QVBoxLayout,
+)
+from qasync import asyncSlot
+
 from lsst.ts.guitool import (
     TabTemplate,
     create_grid_layout_buttons,
@@ -30,14 +39,6 @@ from lsst.ts.guitool import (
 )
 from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtWidgets import (
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QPushButton,
-    QVBoxLayout,
-)
-from qasync import asyncSlot
 
 from ..model import Model
 from ..signals import SignalFaultCode, SignalMotion, SignalState, SignalTelemetry

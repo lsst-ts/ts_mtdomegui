@@ -21,9 +21,6 @@
 
 __all__ = ["TabLouverSingle"]
 
-from lsst.ts.guitool import TabTemplate, create_group_box, create_label
-from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
-from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -32,6 +29,10 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
+
+from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.mtdomecom import LCS_NUM_MOTORS_PER_LOUVER
+from lsst.ts.xml.enums import MTDome
 
 from ..model import Model
 from ..utils import add_empty_row_to_form_layout, create_buttons_with_tabs

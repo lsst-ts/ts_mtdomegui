@@ -23,6 +23,17 @@ __all__ = ["TabSettings"]
 
 import math
 
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLineEdit,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+)
+from qasync import QApplication, asyncSlot
+
 from lsst.ts.guitool import (
     LOG_LEVEL_MAXIMUM,
     LOG_LEVEL_MINIMUM,
@@ -47,16 +58,6 @@ from lsst.ts.mtdomecom import (
     LWSCS_VMAX,
     LlcName,
 )
-from PySide6.QtWidgets import (
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QLineEdit,
-    QPushButton,
-    QSpinBox,
-    QVBoxLayout,
-)
-from qasync import QApplication, asyncSlot
 
 from ..model import Model
 from ..signals import SignalConfig

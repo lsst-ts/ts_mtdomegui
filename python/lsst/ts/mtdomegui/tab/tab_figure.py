@@ -21,9 +21,10 @@
 
 __all__ = ["TabFigure"]
 
-from lsst.ts.guitool import FigureConstant, TabTemplate
 from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QVBoxLayout
+
+from lsst.ts.guitool import FigureConstant, TabTemplate
 
 from ..model import Model
 

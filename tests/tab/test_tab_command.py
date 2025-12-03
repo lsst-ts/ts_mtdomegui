@@ -24,6 +24,9 @@ import logging
 import math
 
 import pytest
+from PySide6.QtCore import Qt
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.mtdomecom import (
     AMCS_NUM_MOTORS,
     LCS_NUM_LOUVERS,
@@ -33,8 +36,6 @@ from lsst.ts.mtdomecom import (
 from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, Model
 from lsst.ts.mtdomegui.tab import TabCommand
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtCore import Qt
-from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture

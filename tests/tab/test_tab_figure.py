@@ -22,9 +22,10 @@
 import logging
 
 import pytest
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.mtdomegui import Model
 from lsst.ts.mtdomegui.tab import TabFigure
-from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture

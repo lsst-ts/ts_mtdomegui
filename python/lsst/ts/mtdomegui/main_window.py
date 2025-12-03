@@ -26,6 +26,11 @@ import pathlib
 import sys
 from datetime import datetime
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QMainWindow, QToolBar, QVBoxLayout, QWidget
+from qasync import QApplication, asyncSlot
+
 from lsst.ts.guitool import (
     ControlTabs,
     QMessageBoxAsync,
@@ -36,10 +41,6 @@ from lsst.ts.guitool import (
     read_yaml_file,
     run_command,
 )
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMainWindow, QToolBar, QVBoxLayout, QWidget
-from qasync import QApplication, asyncSlot
 
 from .control_panel import ControlPanel
 from .model import Model

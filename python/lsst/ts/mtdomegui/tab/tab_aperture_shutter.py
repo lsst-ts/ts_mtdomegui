@@ -21,9 +21,6 @@
 
 __all__ = ["TabApertureShutter"]
 
-from lsst.ts.guitool import TabTemplate, create_group_box, create_label
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
-from lsst.ts.xml.enums import MTDome
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -33,6 +30,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 from qasync import asyncSlot
+
+from lsst.ts.guitool import TabTemplate, create_group_box, create_label
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
+from lsst.ts.xml.enums import MTDome
 
 from ..constants import NUM_DRIVE_SHUTTER
 from ..model import Model

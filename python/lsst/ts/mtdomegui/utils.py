@@ -27,7 +27,6 @@ __all__ = [
     "generate_dict_from_registry",
 ]
 
-from lsst.ts.guitool import ButtonStatus, TabTemplate, set_button, update_button_color
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
     QFormLayout,
@@ -36,6 +35,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QRadioButton,
 )
+
+from lsst.ts.guitool import ButtonStatus, TabTemplate, set_button, update_button_color
 
 
 def combine_indicators(indicators: list[QRadioButton]) -> QHBoxLayout:

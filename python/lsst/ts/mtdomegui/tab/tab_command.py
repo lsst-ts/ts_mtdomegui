@@ -23,6 +23,16 @@ __all__ = ["TabCommand"]
 
 import math
 
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QRadioButton,
+    QVBoxLayout,
+)
+from qasync import asyncSlot
+
 from lsst.ts.guitool import (
     TabTemplate,
     create_double_spin_box,
@@ -40,15 +50,6 @@ from lsst.ts.mtdomecom import (
     LWSCS_VMAX,
 )
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtWidgets import (
-    QComboBox,
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QRadioButton,
-    QVBoxLayout,
-)
-from qasync import asyncSlot
 
 from ..constants import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, SUBSYSTEMS
 from ..model import Model

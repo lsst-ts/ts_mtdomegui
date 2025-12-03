@@ -23,10 +23,11 @@ import asyncio
 import logging
 
 import pytest
-from lsst.ts.mtdomegui import Model
-from lsst.ts.mtdomegui.tab import TabLouverSingle
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
+
+from lsst.ts.mtdomegui import Model
+from lsst.ts.mtdomegui.tab import TabLouverSingle
 
 
 @pytest.fixture
