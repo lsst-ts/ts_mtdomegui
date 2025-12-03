@@ -21,6 +21,9 @@
 
 __all__ = ["TabInterlock"]
 
+from PySide6.QtGui import QPalette
+from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
+
 from lsst.ts.guitool import (
     ButtonStatus,
     TabTemplate,
@@ -30,8 +33,6 @@ from lsst.ts.guitool import (
     update_button_color,
 )
 from lsst.ts.mtdomecom import MON_NUM_SENSORS
-from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
 
 from ..model import Model
 
@@ -91,7 +92,7 @@ class TabInterlock(TabTemplate):
 
         Parameters
         ----------
-        indicator : `QPushButton`
+        indicator : `PySide6.QtWidgets.QPushButton`
             Indicator.
         is_triggered : `bool`
             Is triggered or not.
