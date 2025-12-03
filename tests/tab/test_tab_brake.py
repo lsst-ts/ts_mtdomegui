@@ -19,18 +19,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .tab_aperture_shutter import *
-from .tab_azimuth import *
-from .tab_brake import *
-from .tab_calibration import *
-from .tab_command import *
-from .tab_elevation import *
-from .tab_figure import *
-from .tab_interlock import *
-from .tab_louver import *
-from .tab_louver_single import *
-from .tab_rear_access_door import *
-from .tab_selector import *
-from .tab_settings import *
-from .tab_thermal_system import *
-from .tab_utility import *
+import logging
+
+import pytest
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPalette
+from pytestqt.qtbot import QtBot
+
+# TODO: OSW-1538, use MTDome.Brake after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import Brake
+from lsst.ts.mtdomegui import Model
+from lsst.ts.mtdomegui.tab import TabBrake
+
+
+@pytest.fixture
+def widget(qtbot: QtBot) -> TabBrake:
+    widget = TabBrake("Brake", Model(logging.getLogger()))
+    qtbot.addWidget(widget)
+
+    return widget
+
+
+def test_init(widget: TabBrake) -> None:
+    assert len(widget._indicators_brake) == len(Brake)
+
+
+def test_update_indicator_color(widget: TabBrake) -> None:
+    indicator = widget._indicators_brake[0]
+    widget._update_indicator_color(indicator, False)
+
+    assert indicator.palette().color(QPalette.Button) == Qt.green
+
+    widget._update_indicator_color(indicator, True)
+
+    assert indicator.palette().color(QPalette.Button) == Qt.yellow
