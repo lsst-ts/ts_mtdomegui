@@ -21,6 +21,9 @@
 
 __all__ = ["TabUtility"]
 
+from PySide6.QtWidgets import QFormLayout, QGroupBox, QLabel, QRadioButton, QVBoxLayout
+from qasync import asyncSlot
+
 from lsst.ts.guitool import (
     TabTemplate,
     create_group_box,
@@ -29,8 +32,6 @@ from lsst.ts.guitool import (
 )
 from lsst.ts.mtdomecom import CBCS_NUM_CAPACITOR_BANKS
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtWidgets import QFormLayout, QGroupBox, QLabel, QRadioButton, QVBoxLayout
-from qasync import asyncSlot
 
 from ..constants import SUBSYSTEMS
 from ..model import Model

@@ -23,13 +23,14 @@ import asyncio
 import logging
 
 import pytest
+from PySide6.QtCore import Qt
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import NUM_DRIVE_SHUTTER, Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabApertureShutter
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtCore import Qt
-from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture

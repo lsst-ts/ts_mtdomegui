@@ -24,6 +24,10 @@ import logging
 import math
 
 import pytest
+from PySide6.QtCore import Qt
+from pytestqt.qtbot import QtBot
+from qasync import QApplication
+
 from lsst.ts.guitool import (
     LOG_LEVEL_MAXIMUM,
     LOG_LEVEL_MINIMUM,
@@ -44,9 +48,6 @@ from lsst.ts.mtdomecom import (
 )
 from lsst.ts.mtdomegui import Model
 from lsst.ts.mtdomegui.tab import TabSettings
-from PySide6.QtCore import Qt
-from pytestqt.qtbot import QtBot
-from qasync import QApplication
 
 
 @pytest.fixture

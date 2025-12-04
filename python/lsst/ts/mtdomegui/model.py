@@ -29,13 +29,18 @@ import types
 import typing
 
 from lsst.ts.guitool import prompt_dialog_critical
+
+# TODO: OSW-1538, remove the ControlMode and Brake after the ts_xml: 24.4.
 from lsst.ts.mtdomecom import (
-    get_louvers_enabled,
+    BRAKES_ENGAGED_STATES,
+    Brake,
+    ControlMode,
     LlcName,
     LlcNameDict,
     MTDomeCom,
     ResponseCode,
     ValidSimulationMode,
+    get_louvers_enabled,
     motion_state_translations,
 )
 from lsst.ts.xml.enums import MTDome
@@ -102,6 +107,9 @@ class Model:
 
         self.reporter = Reporter(self.log)
 
+        # Keep track of which brakes are engaged.
+        self._brakes_engaged_bitmask = 0
+
         self.mtdome_com: MTDomeCom | None = None
 
     async def connect(self) -> None:
@@ -133,6 +141,7 @@ class Model:
                 LlcName.MONCS: self.callback_status_moncs,
                 LlcName.RAD: self.callback_status_rad,
                 LlcName.THCS: self.callback_status_thcs,
+                LlcName.CONTROL: self.callback_status_control,
             }
             if self._is_simulation_mode
             else {
@@ -169,7 +178,13 @@ class Model:
         self.reporter.report_state_louvers(MTDome.EnabledState.ENABLED)
         self.reporter.report_fault_code_louvers("")
 
-        self.reporter.report_state_brake_engaged(0)
+        self.reporter.report_state_rear_access_door(MTDome.EnabledState.ENABLED)
+        self.reporter.report_fault_code_rear_access_door("")
+
+        self.reporter.report_state_calibration_screen(MTDome.EnabledState.ENABLED)
+        self.reporter.report_fault_code_calibration_screen("")
+
+        self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
         self.reporter.report_state_locking_pins_engaged(0)
 
         self.reporter.report_state_power_mode(self.mtdome_com.power_management_mode)
@@ -271,6 +286,12 @@ class Model:
                 )
                 self.reporter.report_capacitor_bank(processed_telemetry_update)
 
+            case LlcName.CONTROL:
+                # TODO: OSW-1538, use the MTDome.ControlMode after the
+                # ts_xml: 24.4.
+                control_mode = ControlMode[status["control_mode"]]
+                self.reporter.report_state_control_mode(control_mode)
+
             case _:
                 self.reporter.report_telemetry(llc_name.name.lower(), processed_telemetry)
 
@@ -313,6 +334,14 @@ class Model:
                 case LlcName.LCS:
                     self.reporter.report_state_louvers(MTDome.EnabledState.FAULT)
                     self.reporter.report_fault_code_louvers(exception_message)
+
+                case LlcName.RAD:
+                    self.reporter.report_state_rear_access_door(MTDome.EnabledState.FAULT)
+                    self.reporter.report_fault_code_rear_access_door(exception_message)
+
+                case LlcName.CSCS:
+                    self.reporter.report_state_calibration_screen(MTDome.EnabledState.FAULT)
+                    self.reporter.report_fault_code_calibration_screen(exception_message)
 
                 case _:
                     pass
@@ -407,6 +436,12 @@ class Model:
             case LlcName.LCS:
                 self._check_errors_and_report_louvers(status)
 
+            case LlcName.RAD:
+                self._check_errors_and_report_rear_access_door(status)
+
+            case LlcName.CSCS:
+                self._check_errors_and_report_calibration_screen(status)
+
             case _:
                 # The details for other subsystems are not defined yet.
                 # See the ts_mtdome.
@@ -427,16 +462,19 @@ class Model:
         self.reporter.report_state_azimuth_axis(state)
         self.reporter.report_fault_code_azimuth_axis(fault_code)
 
-        if not has_error:
-            motion_state = self._translate_motion_state_if_necessary(status["status"])
-            if motion_state is not None:
-                in_position = motion_state in [
-                    MTDome.MotionState.STOPPED,
-                    MTDome.MotionState.STOPPED_BRAKED,
-                    MTDome.MotionState.CRAWLING,
-                    MTDome.MotionState.PARKED,
-                ]
-                self.reporter.report_motion_azimuth_axis(motion_state, in_position)
+        motion_state = self._translate_motion_state_if_necessary(status["status"])
+        if motion_state is not None:
+            in_position = motion_state in [
+                MTDome.MotionState.STOPPED,
+                MTDome.MotionState.STOPPED_BRAKED,
+                MTDome.MotionState.CRAWLING,
+                MTDome.MotionState.PARKED,
+            ]
+            self.reporter.report_motion_azimuth_axis(motion_state, in_position)
+
+            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
+            self._set_brakes_engaged_bit(motion_state, Brake.AMCS.value)
+            self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     def _get_fault_code(self, status: dict[str, typing.Any]) -> tuple[bool, str]:
         """Get the fault code.
@@ -492,6 +530,22 @@ class Model:
                 self.log.error(f"Unknown motion state: {state!r}")
                 return None
 
+    def _set_brakes_engaged_bit(self, motion_state: MTDome.MotionState, index: int) -> None:
+        """Set a bit on the brakes engaged bitmask.
+
+        Parameters
+        ----------
+        motion_state : enum `MTDome.MotionState`
+            The motion state to determine the bit value with.
+        index : `int`
+            The bit index to update.
+        """
+
+        if motion_state in BRAKES_ENGAGED_STATES:
+            self._brakes_engaged_bitmask |= 1 << index
+        else:
+            self._brakes_engaged_bitmask &= ~(1 << index)
+
     def _check_errors_and_report_elevation(self, status: dict[str, typing.Any]) -> None:
         """Check the errors and report for the elevation.
 
@@ -507,15 +561,18 @@ class Model:
         self.reporter.report_state_elevation_axis(state)
         self.reporter.report_fault_code_elevation_axis(fault_code)
 
-        if not has_error:
-            motion_state = self._translate_motion_state_if_necessary(status["status"])
-            if motion_state is not None:
-                in_position = motion_state in [
-                    MTDome.MotionState.STOPPED,
-                    MTDome.MotionState.STOPPED_BRAKED,
-                    MTDome.MotionState.CRAWLING,
-                ]
-                self.reporter.report_motion_elevation_axis(motion_state, in_position)
+        motion_state = self._translate_motion_state_if_necessary(status["status"])
+        if motion_state is not None:
+            in_position = motion_state in [
+                MTDome.MotionState.STOPPED,
+                MTDome.MotionState.STOPPED_BRAKED,
+                MTDome.MotionState.CRAWLING,
+            ]
+            self.reporter.report_motion_elevation_axis(motion_state, in_position)
+
+            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
+            self._set_brakes_engaged_bit(motion_state, Brake.LWSCS.value)
+            self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     def _check_errors_and_report_aperture_shutter(self, status: dict[str, typing.Any]) -> None:
         """Check the errors and report for the aperture shutter.
@@ -532,29 +589,33 @@ class Model:
         self.reporter.report_state_aperture_shutter(state)
         self.reporter.report_fault_code_aperture_shutter(fault_code)
 
-        if not has_error:
-            # The number of statuses has been validated by the JSON schema. So
-            # here it is safe to loop over all statuses.
-            motion_states = list()
-            in_positions = list()
-            for specific_status in status["status"]:
-                motion_state = self._translate_motion_state_if_necessary(specific_status)
+        # The number of statuses has been validated by the JSON schema. So
+        # here it is safe to loop over all statuses.
+        motion_states = list()
+        in_positions = list()
+        for index, specific_status in enumerate(status["status"]):
+            motion_state = self._translate_motion_state_if_necessary(specific_status)
 
-                if motion_state is None:
-                    return
+            if motion_state is None:
+                return
 
-                motion_states.append(motion_state)
-                in_positions.append(
-                    motion_state
-                    in [
-                        MTDome.MotionState.STOPPED,
-                        MTDome.MotionState.STOPPED_BRAKED,
-                        MTDome.MotionState.CLOSED,
-                        MTDome.MotionState.OPEN,
-                    ]
-                )
+            motion_states.append(motion_state)
+            in_positions.append(
+                motion_state
+                in [
+                    MTDome.MotionState.STOPPED,
+                    MTDome.MotionState.STOPPED_BRAKED,
+                    MTDome.MotionState.CLOSED,
+                    MTDome.MotionState.OPEN,
+                ]
+            )
 
-            self.reporter.report_motion_aperture_shutter(motion_states, in_positions)
+            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
+            brake = Brake.APSCS_LEFT_DOOR if (index == 0) else Brake.APSCS_RIGHT_DOOR
+            self._set_brakes_engaged_bit(motion_state, brake.value)
+
+        self.reporter.report_motion_aperture_shutter(motion_states, in_positions)
+        self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     def _check_errors_and_report_louvers(self, status: dict[str, typing.Any]) -> None:
         """Check the errors and report for the louvers.
@@ -571,29 +632,111 @@ class Model:
         self.reporter.report_state_louvers(state)
         self.reporter.report_fault_code_louvers(fault_code)
 
-        if not has_error:
-            # The number of statuses has been validated by the JSON schema. So
-            # here it is safe to loop over all statuses.
-            motion_states = list()
-            in_positions = list()
-            for specific_status in status["status"]:
-                motion_state = self._translate_motion_state_if_necessary(specific_status)
+        # The number of statuses has been validated by the JSON schema. So
+        # here it is safe to loop over all statuses.
+        motion_states = list()
+        in_positions = list()
+        for index, specific_status in enumerate(status["status"]):
+            louver = MTDome.Louver(index + 1)
+            motion_state = (
+                self._translate_motion_state_if_necessary(specific_status)
+                if (louver in self.louvers_enabled)
+                else MTDome.MotionState.DISABLED
+            )
 
-                if motion_state is None:
-                    return
+            if motion_state is None:
+                return
 
-                motion_states.append(motion_state)
-                in_positions.append(
-                    motion_state
-                    in [
-                        MTDome.MotionState.STOPPED,
-                        MTDome.MotionState.STOPPED_BRAKED,
-                        MTDome.MotionState.CLOSED,
-                        MTDome.MotionState.OPEN,
-                    ]
-                )
+            motion_states.append(motion_state)
+            in_positions.append(
+                motion_state
+                in [
+                    MTDome.MotionState.STOPPED,
+                    MTDome.MotionState.STOPPED_BRAKED,
+                    MTDome.MotionState.CLOSED,
+                    MTDome.MotionState.OPEN,
+                    MTDome.MotionState.DISABLED,
+                ]
+            )
 
-            self.reporter.report_motion_louvers(motion_states, in_positions)
+            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
+            brake = Brake[f"LOUVER_{louver.name}"]
+            self._set_brakes_engaged_bit(motion_state, brake.value)
+
+        self.reporter.report_motion_louvers(motion_states, in_positions)
+        self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
+
+    def _check_errors_and_report_rear_access_door(self, status: dict[str, typing.Any]) -> None:
+        """Check the errors and report for the rear access door.
+
+        Parameters
+        ----------
+        status : `dict`
+            Status.
+        """
+
+        has_error, fault_code = self._get_fault_code(status)
+        state = MTDome.EnabledState.FAULT if has_error else MTDome.EnabledState.ENABLED
+
+        self.reporter.report_state_rear_access_door(state)
+        self.reporter.report_fault_code_rear_access_door(fault_code)
+
+        # The number of statuses has been validated by the JSON schema. So
+        # here it is safe to loop over all statuses.
+        motion_states = list()
+        in_positions = list()
+        for index, specific_status in enumerate(status["status"]):
+            motion_state = self._translate_motion_state_if_necessary(specific_status)
+
+            if motion_state is None:
+                return
+
+            motion_states.append(motion_state)
+            in_positions.append(
+                motion_state
+                in [
+                    MTDome.MotionState.STOPPED,
+                    MTDome.MotionState.STOPPED_BRAKED,
+                    MTDome.MotionState.CLOSED,
+                    MTDome.MotionState.OPEN,
+                ]
+            )
+
+            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
+            brake = Brake.RAD_LEFT_DOOR if (index == 0) else Brake.RAD_RIGHT_DOOR
+            self._set_brakes_engaged_bit(motion_state, brake.value)
+
+        self.reporter.report_motion_rear_access_door(motion_states, in_positions)
+        self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
+
+    def _check_errors_and_report_calibration_screen(self, status: dict[str, typing.Any]) -> None:
+        """Check the errors and report for the calibration screen.
+
+        Parameters
+        ----------
+        status : `dict`
+            Status.
+        """
+
+        has_error, fault_code = self._get_fault_code(status)
+        state = MTDome.EnabledState.FAULT if has_error else MTDome.EnabledState.ENABLED
+
+        self.reporter.report_state_calibration_screen(state)
+        self.reporter.report_fault_code_calibration_screen(fault_code)
+
+        # The number of statuses has been validated by the JSON schema. So
+        # here it is safe to loop over all statuses.
+        motion_state = self._translate_motion_state_if_necessary(status["status"])
+        if motion_state is not None:
+            in_position = motion_state in [
+                MTDome.MotionState.STOPPED,
+                MTDome.MotionState.STOPPED_BRAKED,
+            ]
+            self.reporter.report_motion_calibration_screen(motion_state, in_position)
+
+        # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
+        self._set_brakes_engaged_bit(motion_state, Brake.CSCS.value)
+        self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     async def callback_status_amcs(self, status: dict) -> None:
         """Callback to report the status of azimuth motion control system
@@ -698,6 +841,17 @@ class Model:
         """
 
         await self.report_llc_status(LlcName.THCS, status)
+
+    async def callback_status_control(self, status: dict) -> None:
+        """Callback to report the status of software control.
+
+        Parameters
+        ----------
+        status : `dict`
+            System status.
+        """
+
+        await self.report_llc_status(LlcName.CONTROL, status)
 
     async def __aenter__(self) -> object:
         """This is an overridden function to support the asynchronous context

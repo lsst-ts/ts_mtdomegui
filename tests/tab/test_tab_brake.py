@@ -19,41 +19,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
 import logging
 
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
 
+# TODO: OSW-1538, use MTDome.Brake after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import Brake
 from lsst.ts.mtdomegui import Model
-from lsst.ts.mtdomegui.tab import TabLouverSingle
+from lsst.ts.mtdomegui.tab import TabBrake
 
 
 @pytest.fixture
-def widget(qtbot: QtBot) -> TabLouverSingle:
-    widget = TabLouverSingle("LouverSingle", Model(logging.getLogger()))
+def widget(qtbot: QtBot) -> TabBrake:
+    widget = TabBrake("Brake", Model(logging.getLogger()))
     qtbot.addWidget(widget)
 
     return widget
 
 
-def test_init(widget: TabLouverSingle) -> None:
-    assert len(widget._states) == 2
-    assert len(widget._status) == 6
-    assert len(widget._figures) == len(widget._buttons)
+def test_init(widget: TabBrake) -> None:
+    assert len(widget._indicators_brake) == len(Brake)
 
 
-@pytest.mark.asyncio
-async def test_show_figure(qtbot: QtBot, widget: TabLouverSingle) -> None:
-    name = "position"
+def test_update_indicator_color(widget: TabBrake) -> None:
+    indicator = widget._indicators_brake[0]
+    widget._update_indicator_color(indicator, False)
 
-    assert widget._figures[name].windowTitle() == "LouverSingle Position"
-    assert widget._figures[name].isVisible() is False
+    assert indicator.palette().color(QPalette.Button) == Qt.green
 
-    qtbot.mouseClick(widget._buttons[name], Qt.LeftButton)
+    widget._update_indicator_color(indicator, True)
 
-    # Sleep so the event loop can access CPU to handle the signal
-    await asyncio.sleep(1)
-
-    assert widget._figures[name].isVisible() is True
+    assert indicator.palette().color(QPalette.Button) == Qt.yellow

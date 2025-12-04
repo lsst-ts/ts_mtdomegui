@@ -23,6 +23,9 @@ import asyncio
 import logging
 
 import pytest
+from PySide6.QtCore import Qt
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.mtdomecom import (
     THCS_NUM_CABINET_TEMPERATURES,
     THCS_NUM_MOTOR_COIL_TEMPERATURES,
@@ -31,8 +34,6 @@ from lsst.ts.mtdomecom import (
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabThermalSystem
-from PySide6.QtCore import Qt
-from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture

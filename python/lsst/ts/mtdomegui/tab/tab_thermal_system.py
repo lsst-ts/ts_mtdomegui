@@ -23,6 +23,16 @@ __all__ = ["TabThermalSystem"]
 
 import asyncio
 
+from PySide6.QtWidgets import (
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+)
+from qasync import asyncSlot
+
 from lsst.ts.guitool import (
     FigureConstant,
     TabTemplate,
@@ -36,15 +46,6 @@ from lsst.ts.mtdomecom import (
     THCS_NUM_MOTOR_DRIVE_TEMPERATURES,
 )
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtWidgets import (
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QVBoxLayout,
-)
-from qasync import asyncSlot
 
 from ..model import Model
 from ..signals import SignalTelemetry

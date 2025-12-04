@@ -8,11 +8,17 @@ namespace mtdomegui {
   class Model
   class Reporter
   class SignalTelemetry
+  class SignalFaultCode
+  class SignalMotion
+  class SignalState
 }
 
 Model *-- Reporter
 
 Reporter *-- SignalTelemetry : emit()
+Reporter *-- SignalFaultCode : emit()
+Reporter *-- SignalMotion : emit()
+Reporter *-- SignalState : emit()
 
 TabTemplate <|-- TabCalibration
 TabTemplate <|-- TabFigure
@@ -20,5 +26,8 @@ TabTemplate <|-- TabFigure
 TabCalibration *-- Model
 TabCalibration "1" *-- "6" TabFigure
 TabCalibration --> SignalTelemetry : connect()
+TabCalibration --> SignalFaultCode : connect()
+TabCalibration --> SignalMotion : connect()
+TabCalibration --> SignalState : connect()
 
 TabFigure *-- Model

@@ -42,7 +42,7 @@ After the execution of GUI, you will see the above control panel.
 You can use the top toolbar to change the **Settings** of GUI, **Connect**/**Disconnect** the dome controller, and **Exit** the application.
 
 The top region of control panel shows the summary of the dome system.
-You can see that whether the azimuth/elevation/shutter/louver is in fault, interlock, locking pin, break, and power mode status.
+You can see that whether the azimuth/elevation/shutter/louver/rear access door/calibration screen is in fault, interlock, locking pin, brake, power mode, and control mode status (remote, GUI, or others).
 
 The bottom region of control panel has multiple tables that you can double-click to open to have more detailed system information.
 If you move the mouse close to the buttons/indicators and texts in the panel and tables, you will see the prompted tips to explain the related details.
@@ -273,7 +273,9 @@ Rear Access Door
   Rear access door control system.
 
 You can see the status of rear access door control system in this table.
-It shows the current position, torque, motor current, drive temperature, and power here.
+It shows the current state and motion state.
+If there is the fault, you will see the error message in the table.
+It also shows the current position, torque, motor current, drive temperature, and power here.
 The related realtime charts are provided.
 It also has the safety indicators to show the status of limit switches, locking pins, brakes, photo sensors, and light curtain.
 
@@ -288,5 +290,7 @@ Calibration Screen
   Calibration screen control system.
 
 You can see the status of calibration screen control system in this table.
-It shows the current position, torque, motor current, drive temperature, and power here.
+It shows the current state and motion state.
+If there is the fault, you will see the error message in the table.
+It also shows the current position, torque, motor current, drive temperature, and power here.
 The related realtime charts are provided.

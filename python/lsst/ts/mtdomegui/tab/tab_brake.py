@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["TabInterlock"]
+__all__ = ["TabBrake"]
 
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
@@ -29,16 +29,19 @@ from lsst.ts.guitool import (
     TabTemplate,
     create_grid_layout_buttons,
     create_group_box,
+    create_label,
     set_button,
     update_button_color,
 )
-from lsst.ts.mtdomecom import MON_NUM_SENSORS
+
+# TODO: OSW-1538, use MTDome.Brake after the ts_xml: 24.4.
+from lsst.ts.mtdomecom import Brake
 
 from ..model import Model
 
 
-class TabInterlock(TabTemplate):
-    """Table of the interlock.
+class TabBrake(TabTemplate):
+    """Table of the engaged brakes.
 
     Parameters
     ----------
@@ -58,28 +61,25 @@ class TabInterlock(TabTemplate):
 
         self.model = model
 
-        self._indicators_interlock = self._create_indicators_interlock(MON_NUM_SENSORS)
+        self._indicators_brake = self._create_indicators_brake()
 
         self.set_widget_and_layout()
 
-    def _create_indicators_interlock(self, number: int) -> list[QPushButton]:
-        """Creates the interlock indicators.
-
-        Parameters
-        ----------
-        number : `int`
-            Total number of interlock.
+    def _create_indicators_brake(self) -> list[QPushButton]:
+        """Creates the brake indicators.
 
         Returns
         -------
         indicators : `list`
-            Interlock indicators.
+            Brake indicators.
         """
 
         indicators = list()
 
-        for specific_id in range(number):
-            indicator = set_button(str(specific_id), None, is_indicator=True, is_adjust_size=True)
+        for idx, specific_brake in enumerate(Brake):
+            indicator = set_button(
+                f"{specific_brake.name} ({idx})", None, is_indicator=True, is_adjust_size=True
+            )
 
             self._update_indicator_color(indicator, False)
 
@@ -87,28 +87,34 @@ class TabInterlock(TabTemplate):
 
         return indicators
 
-    def _update_indicator_color(self, indicator: QPushButton, is_triggered: bool) -> None:
+    def _update_indicator_color(self, indicator: QPushButton, is_engaged: bool) -> None:
         """Update the indicator color.
 
         Parameters
         ----------
         indicator : `PySide6.QtWidgets.QPushButton`
             Indicator.
-        is_triggered : `bool`
-            Is triggered or not.
+        is_engaged : `bool`
+            Is engaged or not.
         """
 
-        button_status = ButtonStatus.Error if is_triggered else ButtonStatus.Normal
+        button_status = ButtonStatus.Warn if is_engaged else ButtonStatus.Normal
         update_button_color(indicator, QPalette.Button, button_status)
 
     def create_layout(self) -> QVBoxLayout:
         layout = QVBoxLayout()
-        layout.addWidget(self._create_group_interlock())
+        layout.addWidget(
+            create_label(
+                "If the brake is engaged, the indicator will be shown in yellow."
+                " Otherwise, it will be shown in green."
+            )
+        )
+        layout.addWidget(self._create_group_brake())
 
         return layout
 
-    def _create_group_interlock(self) -> QGroupBox:
-        """Create the group of interlock.
+    def _create_group_brake(self) -> QGroupBox:
+        """Create the group of brake.
 
         Returns
         -------
@@ -116,20 +122,20 @@ class TabInterlock(TabTemplate):
             Group.
         """
 
-        num_column = MON_NUM_SENSORS // 4
-        layout = create_grid_layout_buttons(self._indicators_interlock, num_column)
+        num_column = len(Brake) // 10
+        layout = create_grid_layout_buttons(self._indicators_brake, num_column)
 
-        return create_group_box("Interlock Status", layout)
+        return create_group_box("Brake Status", layout)
 
-    def update_interlock_status(self, index: int, is_triggered: bool) -> None:
-        """ "Update the interlock status.
+    def update_brake_status(self, index: int, is_engaged: bool) -> None:
+        """ "Update the brake status.
 
         Parameters
         ----------
         index : `int`
-            Index of the interlock.
-        is_triggered : `bool`
-            Is triggered or not.
+            Index of the brake.
+        is_engaged : `bool`
+            Is engaged or not.
         """
 
-        self._update_indicator_color(self._indicators_interlock[index], is_triggered)
+        self._update_indicator_color(self._indicators_brake[index], is_engaged)

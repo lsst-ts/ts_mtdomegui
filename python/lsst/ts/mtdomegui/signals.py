@@ -55,7 +55,8 @@ class SignalState(QtCore.QObject):
 
     # Bitmask of the brakes that are engaged. This is not fully defined yet.
     # See the "MTDome_logevent_brakesEngaged" in ts_xml.
-    brake_engaged = QtCore.Signal(int)
+    # Use the object instead of int to workaround the PySide6 to use the int64.
+    brake_engaged = QtCore.Signal(object)
 
     # State of the azimuth axis as the enum of
     # `lsst.ts.xml.enums.MTDome.EnabledState`.
@@ -73,8 +74,19 @@ class SignalState(QtCore.QObject):
     # `lsst.ts.xml.enums.MTDome.EnabledState`.
     louvers = QtCore.Signal(int)
 
+    # State of the rear access door as the enum of
+    # `lsst.ts.xml.enums.MTDome.EnabledState`.
+    rear_access_door = QtCore.Signal(int)
+
+    # State of the calibration screen as the enum of
+    # `lsst.ts.xml.enums.MTDome.EnabledState`.
+    calibration_screen = QtCore.Signal(int)
+
     # Power mode as the enum of `lsst.ts.xml.enums.MTDome.PowerManagementMode`.
     power_mode = QtCore.Signal(int)
+
+    # Control mode as the enum of `lsst.ts.xml.enums.MTDome.ControlMode`.
+    control_mode = QtCore.Signal(int)
 
 
 class SignalOperationalMode(QtCore.QObject):
@@ -144,6 +156,8 @@ class SignalMotion(QtCore.QObject):
     elevation_axis = QtCore.Signal(object)
     aperture_shutter = QtCore.Signal(object)
     louvers = QtCore.Signal(object)
+    rear_access_door = QtCore.Signal(object)
+    calibration_screen = QtCore.Signal(object)
 
 
 class SignalFaultCode(QtCore.QObject):
@@ -153,6 +167,8 @@ class SignalFaultCode(QtCore.QObject):
     elevation_axis = QtCore.Signal(str)
     aperture_shutter = QtCore.Signal(str)
     louvers = QtCore.Signal(str)
+    rear_access_door = QtCore.Signal(str)
+    calibration_screen = QtCore.Signal(str)
 
 
 class SignalConfig(QtCore.QObject):

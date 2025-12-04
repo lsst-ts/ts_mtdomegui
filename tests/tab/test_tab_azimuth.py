@@ -23,13 +23,14 @@ import asyncio
 import logging
 
 import pytest
+from PySide6.QtCore import Qt
+from pytestqt.qtbot import QtBot
+
 from lsst.ts.mtdomecom import AMCS_NUM_MOTORS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabAzimuth
 from lsst.ts.xml.enums import MTDome
-from PySide6.QtCore import Qt
-from pytestqt.qtbot import QtBot
 
 
 @pytest.fixture

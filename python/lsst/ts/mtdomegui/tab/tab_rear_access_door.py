@@ -21,17 +21,6 @@
 
 __all__ = ["TabRearAccessDoor"]
 
-from lsst.ts.guitool import (
-    TabTemplate,
-    create_group_box,
-    create_label,
-    create_radio_indicators,
-)
-from lsst.ts.mtdomecom import (
-    RAD_NUM_DOORS,
-    RAD_NUM_LIMIT_SWITCHES,
-    RAD_NUM_LOCKING_PINS,
-)
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -43,12 +32,26 @@ from PySide6.QtWidgets import (
 )
 from qasync import asyncSlot
 
+from lsst.ts.guitool import (
+    TabTemplate,
+    create_group_box,
+    create_label,
+    create_radio_indicators,
+)
+from lsst.ts.mtdomecom import (
+    RAD_NUM_DOORS,
+    RAD_NUM_LIMIT_SWITCHES,
+    RAD_NUM_LOCKING_PINS,
+)
+from lsst.ts.xml.enums import MTDome
+
 from ..model import Model
-from ..signals import SignalTelemetry
+from ..signals import SignalFaultCode, SignalMotion, SignalState, SignalTelemetry
 from ..utils import (
     add_empty_row_to_form_layout,
     combine_indicators,
     create_buttons_with_tabs,
+    create_window_fault_code,
     update_boolean_indicator_status,
 )
 from .tab_figure import TabFigure
@@ -75,7 +78,9 @@ class TabRearAccessDoor(TabTemplate):
 
         self.model = model
 
+        self._states = self._create_states()
         self._status = self._create_status()
+        self._window_fault_code = create_window_fault_code()
         self._indicators = self._create_indicators()
 
         self._figures = self._create_figures()
@@ -83,7 +88,26 @@ class TabRearAccessDoor(TabTemplate):
 
         self.set_widget_and_layout()
 
-        self._set_signal_telemetry(self.model.reporter.signals["telemetry"])  # type: ignore[arg-type]
+        signals = self.model.reporter.signals
+        self._set_signal_telemetry(signals["telemetry"])  # type: ignore[arg-type]
+        self._set_signal_state(signals["state"])  # type: ignore[arg-type]
+        self._set_signal_motion(signals["motion"])  # type: ignore[arg-type]
+        self._set_signal_fault_code(signals["fault_code"])  # type: ignore[arg-type]
+
+    def _create_states(self) -> dict[str, QLabel]:
+        """Create the states.
+
+        Returns
+        -------
+        `dict`
+            System states.
+        """
+
+        return {
+            "state": create_label(),
+            "motion": create_label(),
+            "in_position": create_label(),
+        }
 
     def _create_status(self) -> dict[str, QLabel | list[QLabel]]:
         """Create the status.
@@ -205,22 +229,47 @@ class TabRearAccessDoor(TabTemplate):
 
     def create_layout(self) -> QHBoxLayout:
         # First column
+        layout_state = QVBoxLayout()
+        layout_state.addWidget(self._create_group_state())
+        layout_state.addWidget(self._create_group_position())
+
+        # Second column
         layout_status = QVBoxLayout()
-        layout_status.addWidget(self._create_group_position())
         layout_status.addWidget(self._create_group_drive_torque())
         layout_status.addWidget(self._create_group_drive_temperature())
         layout_status.addWidget(self._create_group_power())
 
-        # Second column
+        # Third column
         layout_realtime = QVBoxLayout()
         layout_realtime.addWidget(self._create_group_safety())
         layout_realtime.addWidget(self._create_group_realtime_chart())
 
         layout = QHBoxLayout()
+        layout.addLayout(layout_state)
         layout.addLayout(layout_status)
         layout.addLayout(layout_realtime)
 
         return layout
+
+    def _create_group_state(self) -> QGroupBox:
+        """Create the group of state.
+
+        Returns
+        -------
+        `PySide6.QtWidgets.QGroupBox`
+            Group.
+        """
+
+        layout_form = QFormLayout()
+        layout_form.addRow("State:", self._states["state"])
+        layout_form.addRow("Motion:", self._states["motion"])
+        layout_form.addRow("In position:", self._states["in_position"])
+
+        layout = QVBoxLayout()
+        layout.addLayout(layout_form)
+        layout.addWidget(self._window_fault_code)
+
+        return create_group_box("State", layout)
 
     def _create_group_position(self) -> QGroupBox:
         """Create the group of position.
@@ -432,3 +481,76 @@ class TabRearAccessDoor(TabTemplate):
                     update_boolean_indicator_status(indicator, bool(value))
                 else:
                     update_boolean_indicator_status(indicator, value)
+
+    def _set_signal_state(self, signal: SignalState) -> None:
+        """Set the state signal.
+
+        Parameters
+        ----------
+        signal : `SignalState`
+            Signal.
+        """
+
+        signal.rear_access_door.connect(self._callback_update_state)
+
+    @asyncSlot()
+    async def _callback_update_state(self, state: int) -> None:
+        """Callback to update the state.
+
+        Parameters
+        ----------
+        state : `int`
+            State.
+        """
+
+        self._states["state"].setText(MTDome.EnabledState(state).name)
+
+    def _set_signal_motion(self, signal: SignalMotion) -> None:
+        """Set the motion signal.
+
+        Parameters
+        ----------
+        signal : `SignalMotion`
+            Signal.
+        """
+
+        signal.rear_access_door.connect(self._callback_update_motion)
+
+    @asyncSlot()
+    async def _callback_update_motion(self, motion: tuple[list[MTDome.MotionState], list[bool]]) -> None:
+        """Callback to update the motion state.
+
+        Parameters
+        ----------
+        motion : `tuple`
+            A tuple of (motion_states, in_positions).
+        """
+
+        self._states["motion"].setText(", ".join([value.name for value in motion[0]]))
+        self._states["in_position"].setText(", ".join([str(value) for value in motion[1]]))
+
+    def _set_signal_fault_code(self, signal: SignalFaultCode) -> None:
+        """Set the fault code signal.
+
+        Parameters
+        ----------
+        signal : `SignalFaultCode`
+            Signal.
+        """
+
+        signal.rear_access_door.connect(self._callback_update_fault_code)
+
+    @asyncSlot()
+    async def _callback_update_fault_code(self, fault_code: str) -> None:
+        """Callback to update the fault code.
+
+        Parameters
+        ----------
+        fault_code : `str`
+            Fault code.
+        """
+
+        self._window_fault_code.clear()
+
+        if fault_code != "":
+            self._window_fault_code.setPlainText(fault_code)

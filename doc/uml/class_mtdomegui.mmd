@@ -12,10 +12,12 @@ namespace guitool {
 namespace tab {
   class TabSettings
   class TabInterlock
+  class TabBrake
 }
 
 TabTemplate <|-- TabSettings
 TabTemplate <|-- TabInterlock
+TabTemplate <|-- TabBrake
 
 MainWindow *-- Model
 MainWindow *-- ControlTabs
@@ -37,6 +39,7 @@ Reporter *-- SignalConfig : emit()
 
 ControlPanel *-- Model
 ControlPanel *-- TabInterlock
+ControlPanel *-- TabBrake
 ControlPanel --> SignalInterlock : connect()
 ControlPanel --> SignalState : connect()
 
@@ -44,5 +47,6 @@ TabSettings *-- Model
 TabSettings --> SignalConfig : connect()
 
 TabInterlock *-- Model
+TabBrake *-- Model
 
 ControlTabs "1" *-- "9" TabTemplate

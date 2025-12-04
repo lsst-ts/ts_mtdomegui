@@ -89,6 +89,7 @@ mtdomegui.tab
 * **TabSettings** shows the settings of GUI.
 * **TabThermalSystem** shows the thermal system status.
 * **TabUtility** shows the utility status.
+* **TabBrake** shows the brake status.
 
 The class diagrams for each table class are listed below to give you the idea of class relationship.
 
@@ -205,6 +206,14 @@ mtdomegui.tab.TabUtility
 
 .. mermaid:: ../uml/tab/class_tab_utility.mmd
     :caption: Class diagram of TabUtility class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_brake:
+
+mtdomegui.tab.TabBrake
+--------------------------
+
+.. mermaid:: ../uml/tab/class_tab_brake.mmd
+    :caption: Class diagram of TabBrake class
 
 .. _API:
 

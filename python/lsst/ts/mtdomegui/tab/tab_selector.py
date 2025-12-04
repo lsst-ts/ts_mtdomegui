@@ -21,14 +21,15 @@
 
 __all__ = ["TabSelector"]
 
+from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
+from qasync import asyncSlot
+
 from lsst.ts.guitool import (
     TabTemplate,
     create_grid_layout_buttons,
     create_group_box,
     set_button,
 )
-from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
-from qasync import asyncSlot
 
 from ..model import Model
 

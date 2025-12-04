@@ -24,11 +24,12 @@ import logging
 from copy import deepcopy
 
 import pytest
-from lsst.ts.mtdomegui import Model, TabUtility
-from lsst.ts.xml.enums import MTDome
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
+
+from lsst.ts.mtdomegui import Model, TabUtility
+from lsst.ts.xml.enums import MTDome
 
 
 @pytest.fixture

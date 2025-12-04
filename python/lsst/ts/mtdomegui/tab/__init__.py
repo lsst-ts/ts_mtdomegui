@@ -21,6 +21,7 @@
 
 from .tab_aperture_shutter import *
 from .tab_azimuth import *
+from .tab_brake import *
 from .tab_calibration import *
 from .tab_command import *
 from .tab_elevation import *
