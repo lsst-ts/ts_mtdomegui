@@ -90,7 +90,7 @@ class Reporter:
         self.report_state_calibration_screen(MTDome.EnabledState.DISABLED)
 
         self.report_state_power_mode(MTDome.PowerManagementMode.NO_POWER_MANAGEMENT)
-        self.report_state_control_mode(ControlMode.Remote)
+        self.report_state_control_mode(ControlMode.remote)
 
         for subsystem in MTDome.SubSystemId:
             self.report_operational_mode(subsystem, MTDome.OperationalMode.NORMAL)

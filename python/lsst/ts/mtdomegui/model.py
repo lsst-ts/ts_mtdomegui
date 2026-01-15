@@ -141,7 +141,7 @@ class Model:
                 LlcName.MONCS: self.callback_status_moncs,
                 LlcName.RAD: self.callback_status_rad,
                 LlcName.THCS: self.callback_status_thcs,
-                LlcName.CONTROL: self.callback_status_control,
+                LlcName.LLC: self.callback_status_llc,
             }
             if self._is_simulation_mode
             else {
@@ -286,7 +286,7 @@ class Model:
                 )
                 self.reporter.report_capacitor_bank(processed_telemetry_update)
 
-            case LlcName.CONTROL:
+            case LlcName.LLC:
                 # TODO: OSW-1538, use the MTDome.ControlMode after the
                 # ts_xml: 24.4.
                 control_mode = ControlMode[status["control_mode"]]
@@ -842,8 +842,8 @@ class Model:
 
         await self.report_llc_status(LlcName.THCS, status)
 
-    async def callback_status_control(self, status: dict) -> None:
-        """Callback to report the status of software control.
+    async def callback_status_llc(self, status: dict) -> None:
+        """Callback to report the status of low level control.
 
         Parameters
         ----------
@@ -851,7 +851,7 @@ class Model:
             System status.
         """
 
-        await self.report_llc_status(LlcName.CONTROL, status)
+        await self.report_llc_status(LlcName.LLC, status)
 
     async def __aenter__(self) -> object:
         """This is an overridden function to support the asynchronous context
