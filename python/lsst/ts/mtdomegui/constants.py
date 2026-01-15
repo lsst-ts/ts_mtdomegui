@@ -50,5 +50,5 @@ SUBSYSTEMS = [
     "Calibration Screen Control System",
     "Overhead Bridge Crane",
     "Capacitor Banks Control System",
-    "Software Control System",
+    "Low Level Control",
 ]

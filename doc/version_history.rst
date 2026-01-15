@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.1:
+
+-------------
+0.6.1
+-------------
+
+* Adapt the **ts_mtdomecom** to use the **LlcName.LLC**.
+
 .. _lsst.ts.mtdomegui-0.6.0:
 
 -------------

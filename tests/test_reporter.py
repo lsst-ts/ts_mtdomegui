@@ -154,9 +154,9 @@ def test_report_state_power_mode(qtbot: QtBot, reporter: Reporter) -> None:
 def test_report_state_control_mode(qtbot: QtBot, reporter: Reporter) -> None:
     # TODO: OSW-1538, Use the MTDome.ControlMode after the ts_xml: 24.4.
     with qtbot.waitSignal(reporter.signals["state"].control_mode, timeout=TIMEOUT):
-        reporter.report_state_control_mode(ControlMode.LocalKeba)
+        reporter.report_state_control_mode(ControlMode.local_keba)
 
-    assert reporter.status.state["controlMode"] == ControlMode.LocalKeba.value
+    assert reporter.status.state["controlMode"] == ControlMode.local_keba.value
 
 
 def test_report_operational_mode(qtbot: QtBot, reporter: Reporter) -> None:
