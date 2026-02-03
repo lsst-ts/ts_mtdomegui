@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.2:
+
+-------------
+0.6.2
+-------------
+
+* Enabled the statusLLC command.
+
 .. _lsst.ts.mtdomegui-0.6.1:
 
 -------------

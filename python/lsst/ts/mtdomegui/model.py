@@ -150,6 +150,7 @@ class Model:
                 LlcName.CBCS: self.callback_status_cbcs,
                 LlcName.THCS: self.callback_status_thcs,
                 LlcName.LCS: self.callback_status_lcs,
+                LlcName.LLC: self.callback_status_llc,
             }
         )
 
@@ -259,10 +260,11 @@ class Model:
             await asyncio.sleep(1.0)
             return
 
-        self._report_operational_mode(llc_name, status["status"])
-        self._report_configuration(llc_name, status)
+        if "status" in status:
+            self._report_operational_mode(llc_name, status["status"])
+            self._check_errors_and_report(llc_name, status["status"])
 
-        self._check_errors_and_report(llc_name, status["status"])
+        self._report_configuration(llc_name, status)
 
         # Remove some keys because they are not reported in the telemetry
         processed_telemetry = self.mtdome_com.remove_keys_from_dict(status, {"timestamp"})
