@@ -13,6 +13,7 @@ Version History
 -------------
 
 * Enabled the statusLLC command.
+* Use the enums of **ControlMode** and **Brake** in **ts_xml**.
 
 .. _lsst.ts.mtdomegui-0.6.1:
 

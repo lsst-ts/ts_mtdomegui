@@ -26,10 +26,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
 
-# TODO: OSW-1538, use MTDome.Brake after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import Brake
 from lsst.ts.mtdomegui import Model
 from lsst.ts.mtdomegui.tab import TabBrake
+from lsst.ts.xml.enums import MTDome
 
 
 @pytest.fixture
@@ -41,7 +40,7 @@ def widget(qtbot: QtBot) -> TabBrake:
 
 
 def test_init(widget: TabBrake) -> None:
-    assert len(widget._indicators_brake) == len(Brake)
+    assert len(widget._indicators_brake) == len(MTDome.Brake)
 
 
 def test_update_indicator_color(widget: TabBrake) -> None:

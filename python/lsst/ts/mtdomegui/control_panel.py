@@ -34,9 +34,6 @@ from lsst.ts.guitool import (
     set_button,
     update_button_color,
 )
-
-# TODO: OSW-1538, remove the Brake and ControlMode after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import Brake, ControlMode
 from lsst.ts.xml.enums import MTDome
 
 from .model import Model
@@ -187,7 +184,7 @@ class ControlPanel(QWidget):
         self,
         field: str,
         value: int,
-        enum: MTDome.EnabledState | MTDome.PowerManagementMode | ControlMode | None = None,
+        enum: MTDome.EnabledState | MTDome.PowerManagementMode | MTDome.ControlMode | None = None,
     ) -> None:
         """Callback to update the label.
 
@@ -198,12 +195,9 @@ class ControlPanel(QWidget):
         value : `int`
             Value.
         enum: `MTDome.EnabledState` or `MTDome.PowerManagementMode` or
-        `lsst.ts.mtdome.ControlMode` or None
+        `MTDome.ControlMode` or None
             Enum to convert the value. If None, the hex value will be shown.
         """
-
-        # TODO: OSW-1538, update the annotation of enum and related doc string
-        # to use the MTDome.ControlMode after ts_xml 24.4.
 
         if enum is None:
             self._labels[field].setText(hex(value))
@@ -263,12 +257,11 @@ class ControlPanel(QWidget):
             )
         )
 
-        # TODO: OSW-1538, use the MTDome.ControlMode after the ts_xml: 24.4.
         signal.control_mode.connect(
             partial(
                 self._callback_update_label,
                 "control_mode",
-                enum=ControlMode,
+                enum=MTDome.ControlMode,
             )
         )
 
@@ -284,6 +277,6 @@ class ControlPanel(QWidget):
 
         self._button_brake_engaged.setText(hex(brake_engaged))
 
-        for idx, specific_brake in enumerate(Brake):
+        for idx, specific_brake in enumerate(MTDome.Brake):
             is_engaged = bool(brake_engaged & (1 << specific_brake.value))
             self._tab_brake.update_brake_status(idx, is_engaged)

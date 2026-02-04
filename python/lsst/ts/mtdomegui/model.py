@@ -29,12 +29,8 @@ import types
 import typing
 
 from lsst.ts.guitool import prompt_dialog_critical
-
-# TODO: OSW-1538, remove the ControlMode and Brake after the ts_xml: 24.4.
 from lsst.ts.mtdomecom import (
     BRAKES_ENGAGED_STATES,
-    Brake,
-    ControlMode,
     LlcName,
     LlcNameDict,
     MTDomeCom,
@@ -289,9 +285,7 @@ class Model:
                 self.reporter.report_capacitor_bank(processed_telemetry_update)
 
             case LlcName.LLC:
-                # TODO: OSW-1538, use the MTDome.ControlMode after the
-                # ts_xml: 24.4.
-                control_mode = ControlMode[status["control_mode"]]
+                control_mode = MTDome.ControlMode[status["control_mode"]]
                 self.reporter.report_state_control_mode(control_mode)
 
             case _:
@@ -474,8 +468,7 @@ class Model:
             ]
             self.reporter.report_motion_azimuth_axis(motion_state, in_position)
 
-            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
-            self._set_brakes_engaged_bit(motion_state, Brake.AMCS.value)
+            self._set_brakes_engaged_bit(motion_state, MTDome.Brake.AMCS.value)
             self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     def _get_fault_code(self, status: dict[str, typing.Any]) -> tuple[bool, str]:
@@ -572,8 +565,7 @@ class Model:
             ]
             self.reporter.report_motion_elevation_axis(motion_state, in_position)
 
-            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
-            self._set_brakes_engaged_bit(motion_state, Brake.LWSCS.value)
+            self._set_brakes_engaged_bit(motion_state, MTDome.Brake.LWSCS.value)
             self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     def _check_errors_and_report_aperture_shutter(self, status: dict[str, typing.Any]) -> None:
@@ -612,8 +604,7 @@ class Model:
                 ]
             )
 
-            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
-            brake = Brake.APSCS_LEFT_DOOR if (index == 0) else Brake.APSCS_RIGHT_DOOR
+            brake = MTDome.Brake.APSCS_LEFT_DOOR if (index == 0) else MTDome.Brake.APSCS_RIGHT_DOOR
             self._set_brakes_engaged_bit(motion_state, brake.value)
 
         self.reporter.report_motion_aperture_shutter(motion_states, in_positions)
@@ -661,8 +652,7 @@ class Model:
                 ]
             )
 
-            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
-            brake = Brake[f"LOUVER_{louver.name}"]
+            brake = MTDome.Brake[f"LOUVER_{louver.name}"]
             self._set_brakes_engaged_bit(motion_state, brake.value)
 
         self.reporter.report_motion_louvers(motion_states, in_positions)
@@ -704,8 +694,7 @@ class Model:
                 ]
             )
 
-            # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
-            brake = Brake.RAD_LEFT_DOOR if (index == 0) else Brake.RAD_RIGHT_DOOR
+            brake = MTDome.Brake.RAD_LEFT_DOOR if (index == 0) else MTDome.Brake.RAD_RIGHT_DOOR
             self._set_brakes_engaged_bit(motion_state, brake.value)
 
         self.reporter.report_motion_rear_access_door(motion_states, in_positions)
@@ -736,8 +725,7 @@ class Model:
             ]
             self.reporter.report_motion_calibration_screen(motion_state, in_position)
 
-        # TODO: OSW-1538, use the MTDome.Brake after the ts_xml: 24.4.
-        self._set_brakes_engaged_bit(motion_state, Brake.CSCS.value)
+        self._set_brakes_engaged_bit(motion_state, MTDome.Brake.CSCS.value)
         self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
     async def callback_status_amcs(self, status: dict) -> None:
