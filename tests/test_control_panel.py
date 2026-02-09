@@ -28,8 +28,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
 
-# TODO: OSW-1538, remove the ControlMode after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import ControlMode
 from lsst.ts.mtdomegui import ControlPanel, Model
 from lsst.ts.xml.enums import MTDome
 
@@ -102,7 +100,7 @@ async def test_set_signal_state(widget: ControlPanel) -> None:
     widget.model.reporter.report_state_rear_access_door(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_calibration_screen(MTDome.EnabledState.ENABLED)
     widget.model.reporter.report_state_power_mode(MTDome.PowerManagementMode.EMERGENCY)
-    widget.model.reporter.report_state_control_mode(ControlMode.local_keba)
+    widget.model.reporter.report_state_control_mode(MTDome.ControlMode.local_keba)
 
     # 30 = 2 + 4 + 8 + 16 (first four brakes are engaged)
     widget.model.reporter.report_state_brake_engaged(30)
@@ -117,7 +115,7 @@ async def test_set_signal_state(widget: ControlPanel) -> None:
     assert widget._labels["rear_access_door"].text() == MTDome.EnabledState.ENABLED.name
     assert widget._labels["calibration_screen"].text() == MTDome.EnabledState.ENABLED.name
     assert widget._labels["power_mode"].text() == MTDome.PowerManagementMode.EMERGENCY.name
-    assert widget._labels["control_mode"].text() == ControlMode.local_keba.name
+    assert widget._labels["control_mode"].text() == MTDome.ControlMode.local_keba.name
 
     assert widget._button_brake_engaged.text() == "0x1e"
 

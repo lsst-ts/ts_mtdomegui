@@ -23,8 +23,7 @@ __all__ = ["Reporter"]
 
 import logging
 
-# TODO: OSW-1538, remove the ControlMode after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS, ControlMode
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS
 from lsst.ts.mtdomecom.schema import registry
 from lsst.ts.xml.enums import MTDome
 
@@ -90,7 +89,7 @@ class Reporter:
         self.report_state_calibration_screen(MTDome.EnabledState.DISABLED)
 
         self.report_state_power_mode(MTDome.PowerManagementMode.NO_POWER_MANAGEMENT)
-        self.report_state_control_mode(ControlMode.remote)
+        self.report_state_control_mode(MTDome.ControlMode.remote)
 
         for subsystem in MTDome.SubSystemId:
             self.report_operational_mode(subsystem, MTDome.OperationalMode.NORMAL)
@@ -255,17 +254,14 @@ class Reporter:
 
         self._check_system_state_and_report("powerMode", "state", "power_mode", mode.value)
 
-    def report_state_control_mode(self, mode: ControlMode) -> None:
+    def report_state_control_mode(self, mode: MTDome.ControlMode) -> None:
         """Report the state of the control mode.
 
         Parameters
         ----------
-        mode : enum `lsst.ts.mtdome.ControlMode`
+        mode : enum `MTDome.ControlMode`
             Control mode.
         """
-
-        # TODO: OSW-1538, update the annotation of enum and related doc string
-        # to use the MTDome.ControlMode after ts_xml 24.4.
 
         self._check_system_state_and_report("controlMode", "state", "control_mode", mode.value)
 

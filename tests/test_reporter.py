@@ -25,8 +25,7 @@ from copy import deepcopy
 import pytest
 from pytestqt.qtbot import QtBot
 
-# TODO: OSW-1538, remove the ControlMode after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS, ControlMode
+from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS
 from lsst.ts.mtdomegui import Reporter
 from lsst.ts.xml.enums import MTDome
 
@@ -152,11 +151,10 @@ def test_report_state_power_mode(qtbot: QtBot, reporter: Reporter) -> None:
 
 
 def test_report_state_control_mode(qtbot: QtBot, reporter: Reporter) -> None:
-    # TODO: OSW-1538, Use the MTDome.ControlMode after the ts_xml: 24.4.
     with qtbot.waitSignal(reporter.signals["state"].control_mode, timeout=TIMEOUT):
-        reporter.report_state_control_mode(ControlMode.local_keba)
+        reporter.report_state_control_mode(MTDome.ControlMode.local_keba)
 
-    assert reporter.status.state["controlMode"] == ControlMode.local_keba.value
+    assert reporter.status.state["controlMode"] == MTDome.ControlMode.local_keba.value
 
 
 def test_report_operational_mode(qtbot: QtBot, reporter: Reporter) -> None:

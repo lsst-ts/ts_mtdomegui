@@ -28,9 +28,7 @@ import pytest_asyncio
 from pytestqt.qtbot import QtBot
 
 from lsst.ts.guitool import get_config_dir
-
-# TODO: OSW-1538, remove the Brake after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, RAD_NUM_DOORS, Brake, LlcName, ResponseCode
+from lsst.ts.mtdomecom import LCS_NUM_LOUVERS, RAD_NUM_DOORS, LlcName, ResponseCode
 from lsst.ts.mtdomegui import Model
 from lsst.ts.xml.enums import MTDome
 
@@ -252,18 +250,18 @@ def test_translate_motion_state_if_necessary(model: Model) -> None:
 
 
 def test_set_brakes_engaged_bit(model: Model) -> None:
-    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, Brake.AMCS.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, MTDome.Brake.AMCS.value)
     assert model._brakes_engaged_bitmask == 2
 
-    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, Brake.APSCS_LEFT_DOOR.value)
-    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, Brake.APSCS_RIGHT_DOOR.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, MTDome.Brake.APSCS_LEFT_DOOR.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.BRAKES_ENGAGED, MTDome.Brake.APSCS_RIGHT_DOOR.value)
     assert model._brakes_engaged_bitmask == 14
 
-    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, Brake.AMCS.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, MTDome.Brake.AMCS.value)
     assert model._brakes_engaged_bitmask == 12
 
-    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, Brake.APSCS_LEFT_DOOR.value)
-    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, Brake.APSCS_RIGHT_DOOR.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, MTDome.Brake.APSCS_LEFT_DOOR.value)
+    model._set_brakes_engaged_bit(MTDome.MotionState.MOVING, MTDome.Brake.APSCS_RIGHT_DOOR.value)
     assert model._brakes_engaged_bitmask == 0
 
 

@@ -33,9 +33,7 @@ from lsst.ts.guitool import (
     set_button,
     update_button_color,
 )
-
-# TODO: OSW-1538, use MTDome.Brake after the ts_xml: 24.4.
-from lsst.ts.mtdomecom import Brake
+from lsst.ts.xml.enums import MTDome
 
 from ..model import Model
 
@@ -76,7 +74,7 @@ class TabBrake(TabTemplate):
 
         indicators = list()
 
-        for idx, specific_brake in enumerate(Brake):
+        for idx, specific_brake in enumerate(MTDome.Brake):
             indicator = set_button(
                 f"{specific_brake.name} ({idx})", None, is_indicator=True, is_adjust_size=True
             )
@@ -122,7 +120,7 @@ class TabBrake(TabTemplate):
             Group.
         """
 
-        num_column = len(Brake) // 10
+        num_column = len(MTDome.Brake) // 10
         layout = create_grid_layout_buttons(self._indicators_brake, num_column)
 
         return create_group_box("Brake Status", layout)
