@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.3:
+
+-------------
+0.6.3
+-------------
+
+* Support the reset_drives_el and calibrate_el commands.
+
 .. _lsst.ts.mtdomegui-0.6.2:
 
 -------------
