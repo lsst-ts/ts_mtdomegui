@@ -31,6 +31,7 @@ from lsst.ts.mtdomecom import (
     AMCS_NUM_MOTORS,
     LCS_NUM_LOUVERS,
     LCS_NUM_MOTORS_PER_LOUVER,
+    LWSCS_NUM_MOTORS,
     LWSCS_VMAX,
 )
 from lsst.ts.mtdomegui import MAX_POSITION, MAX_TEMPERATURE, NUM_DRIVE_SHUTTER, Model
@@ -50,8 +51,8 @@ def widget(qtbot: QtBot) -> TabCommand:
 
 
 def test_init(widget: TabCommand) -> None:
-    assert len(widget._command_parameters) == 14
-    assert len(widget._commands) == 21
+    assert len(widget._command_parameters) == 15
+    assert len(widget._commands) == 23
 
     assert widget._command_parameters["position"].maximum() == MAX_POSITION
     assert widget._command_parameters["position"].minimum() == -MAX_POSITION
@@ -90,8 +91,8 @@ async def test_callback_command(qtbot: QtBot, widget: TabCommand) -> None:
 
 @pytest.mark.asyncio
 async def test_show_selector(qtbot: QtBot, widget: TabCommand) -> None:
-    tab_names = ["louver", "drive_az", "drive_shuttor"]
-    parameter_names = ["louver", "reset_drives_az", "reset_drives_shutter"]
+    tab_names = ["louver", "drive_az", "drive_shuttor", "drive_el"]
+    parameter_names = ["louver", "reset_drives_az", "reset_drives_shutter", "reset_drives_el"]
 
     for tab_name, parameter_name in zip(tab_names, parameter_names):
         assert widget._tabs[tab_name].isVisible() is False
@@ -183,6 +184,17 @@ def test_get_reset_drives_aperture_shutter(widget: TabCommand) -> None:
     widget._tabs["drive_shuttor"].select(selections)
 
     assert widget._get_reset_drives_aperture_shutter() == [0, 1, 1, 0]
+
+
+def test_get_reset_drives_elevation(widget: TabCommand) -> None:
+    # No selected drives
+    assert widget._get_reset_drives_elevation() == [0] * LWSCS_NUM_MOTORS
+
+    # Has selected drives
+    selections = [1]
+    widget._tabs["drive_el"].select(selections)
+
+    assert widget._get_reset_drives_elevation() == [0, 1]
 
 
 def test_get_reset_drives_louver(widget: TabCommand) -> None:

@@ -47,6 +47,7 @@ from lsst.ts.mtdomecom import (
     DOME_AZIMUTH_OFFSET,
     LCS_NUM_LOUVERS,
     LCS_NUM_MOTORS_PER_LOUVER,
+    LWSCS_NUM_MOTORS,
     LWSCS_VMAX,
 )
 from lsst.ts.xml.enums import MTDome
@@ -104,6 +105,7 @@ class TabCommand(TabTemplate):
         names_louver = [f"{louver.name} ({idx})" for (idx, louver) in enumerate(MTDome.Louver)]
         names_drive_azimuth = [str(idx) for idx in range(AMCS_NUM_MOTORS)]
         names_drive_shuttor = [str(idx) for idx in range(NUM_DRIVE_SHUTTER)]
+        names_drive_el = [str(idx) for idx in range(LWSCS_NUM_MOTORS)]
 
         tab_louver = TabSelector("Louver", model, names_louver)
         for idx, louver in enumerate(MTDome.Louver):
@@ -113,6 +115,7 @@ class TabCommand(TabTemplate):
             "louver": tab_louver,
             "drive_az": TabSelector("Azimuth Drive", model, names_drive_azimuth),
             "drive_shuttor": TabSelector("Shutter Drive", model, names_drive_shuttor),
+            "drive_el": TabSelector("Elevation Drive", model, names_drive_el),
         }
 
     def _create_command_parameters(self, decimal: int = 3) -> dict:
@@ -212,6 +215,12 @@ class TabCommand(TabTemplate):
             tool_tip="Click to select the shutter drive.",
         )
 
+        button_reset_el = set_button(
+            "select elevation drive",
+            self._tabs["drive_el"].show,
+            tool_tip="Click to select the elevation (light/windscreen) drive.",
+        )
+
         return {
             "position": position,
             "velocity": velocity,
@@ -227,6 +236,7 @@ class TabCommand(TabTemplate):
             "louver": button_louver,
             "reset_drives_az": button_reset_az,
             "reset_drives_shutter": button_reset_shutter,
+            "reset_drives_el": button_reset_el,
         }
 
     def _create_commands(self) -> dict[str, QRadioButton]:
@@ -267,6 +277,9 @@ class TabCommand(TabTemplate):
 
         command_reset_drives_shutter = QRadioButton("Reset shutter drives", parent=self)
         command_reset_drives_louvers = QRadioButton("Reset louver drives", parent=self)
+
+        command_reset_drives_el = QRadioButton("Reset elevation drives", parent=self)
+        command_calibrate_el = QRadioButton("Calibrate elevation drives", parent=self)
 
         command_fans = QRadioButton("Fans", parent=self)
         command_inflate = QRadioButton("Inflate", parent=self)
@@ -340,6 +353,18 @@ class TabCommand(TabTemplate):
             "don't reset themselves."
         )
 
+        command_reset_drives_el.setToolTip(
+            "Reset one or more EL drives. This is necessary when exiting\n"
+            "from FAULT state without going to Degraded Mode since the\n"
+            "drives don't reset themselves."
+        )
+
+        command_calibrate_el.setToolTip(
+            "Move both EL drives towards zero until the limit switches\n"
+            "engage. This may be necessary to avoid skew in the\n"
+            "light/windscreen panels."
+        )
+
         command_fans.setToolTip("Set the fans speed to the indicated value.")
         command_inflate.setToolTip("Inflate (True) or deflate (False) the inflatable seal.")
 
@@ -372,6 +397,10 @@ class TabCommand(TabTemplate):
         command_set_zero_az.toggled.connect(self._callback_command)
 
         command_reset_drives_shutter.toggled.connect(self._callback_command)
+        command_reset_drives_louvers.toggled.connect(self._callback_command)
+
+        command_reset_drives_el.toggled.connect(self._callback_command)
+        command_calibrate_el.toggled.connect(self._callback_command)
 
         command_fans.toggled.connect(self._callback_command)
         command_inflate.toggled.connect(self._callback_command)
@@ -397,6 +426,8 @@ class TabCommand(TabTemplate):
             "set_zero_az": command_set_zero_az,
             "reset_drives_shutter": command_reset_drives_shutter,
             "reset_drives_louvers": command_reset_drives_louvers,
+            "reset_drives_el": command_reset_drives_el,
+            "calibrate_el": command_calibrate_el,
             "fans": command_fans,
             "inflate": command_inflate,
             "set_power_management_mode": command_set_power_management_mode,
@@ -459,6 +490,12 @@ class TabCommand(TabTemplate):
 
         elif self._commands["reset_drives_louvers"].isChecked():
             self._enable_command_parameters(["louver"])
+
+        elif self._commands["reset_drives_el"].isChecked():
+            self._enable_command_parameters(["reset_drives_el"])
+
+        elif self._commands["calibrate_el"].isChecked():
+            self._enable_command_parameters([])
 
         elif self._commands["fans"].isChecked():
             self._enable_command_parameters(["speed"])
@@ -630,6 +667,17 @@ class TabCommand(TabTemplate):
                     self._get_reset_drives_louver(),
                 )
 
+            case "reset_drives_el":
+                await run_command(
+                    self.model.mtdome_com.reset_drives_el,  # type: ignore[union-attr]
+                    self._get_reset_drives_elevation(),
+                )
+
+            case "calibrate_el":
+                await run_command(
+                    self.model.mtdome_com.calibrate_el,  # type: ignore[union-attr]
+                )
+
             case "fans":
                 await run_command(
                     self.model.mtdome_com.fans,  # type: ignore[union-attr]
@@ -794,6 +842,21 @@ class TabCommand(TabTemplate):
 
         return reset_drives
 
+    def _get_reset_drives_elevation(self) -> list[int]:
+        """Get the reset elevation drives.
+
+        Returns
+        -------
+        reset_drives : `list` [`int`]
+            Reset elevation drives. 0 means no reset, 1 means reset.
+        """
+
+        reset_drives = [0] * LWSCS_NUM_MOTORS
+        for idx in self._tabs["drive_el"].get_selection():
+            reset_drives[idx] = 1
+
+        return reset_drives
+
     def _get_reset_drives_louver(self) -> list[int]:
         """Get the reset louver drives.
 
@@ -879,6 +942,7 @@ class TabCommand(TabTemplate):
         layout.addRow("Percentage:", self._command_parameters["percentage"])
         layout.addRow("Azimuth drives:", self._command_parameters["reset_drives_az"])
         layout.addRow("Shutter drives:", self._command_parameters["reset_drives_shutter"])
+        layout.addRow("Elevation drives:", self._command_parameters["reset_drives_el"])
 
         return create_group_box("Command Parameters", layout)
 
