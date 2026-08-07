@@ -52,7 +52,7 @@ def widget(qtbot: QtBot) -> TabCommand:
 
 def test_init(widget: TabCommand) -> None:
     assert len(widget._command_parameters) == 15
-    assert len(widget._commands) == 23
+    assert len(widget._commands) == 24
 
     assert widget._command_parameters["position"].maximum() == MAX_POSITION
     assert widget._command_parameters["position"].minimum() == -MAX_POSITION

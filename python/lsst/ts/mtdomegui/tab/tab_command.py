@@ -267,6 +267,8 @@ class TabCommand(TabTemplate):
         command_close_shutter = QRadioButton("Close shutter", parent=self)
         command_open_shutter = QRadioButton("Open shutter", parent=self)
 
+        command_set_photocell_shutter = QRadioButton("Set photocell shutter", parent=self)
+
         command_stop = QRadioButton("Stop", parent=self)
 
         command_set_temperature = QRadioButton("Set temperature", parent=self)
@@ -316,6 +318,8 @@ class TabCommand(TabTemplate):
 
         command_close_shutter.setToolTip("Close the shutter.")
         command_open_shutter.setToolTip("Open the shutter.")
+
+        command_set_photocell_shutter.setToolTip("Switch on (True) or off (False) the shutter photocell.")
 
         command_stop.setToolTip(
             "For all indicated subsystems that are moving: stop the motion\n"
@@ -388,6 +392,8 @@ class TabCommand(TabTemplate):
         command_close_shutter.toggled.connect(self._callback_command)
         command_open_shutter.toggled.connect(self._callback_command)
 
+        command_set_photocell_shutter.toggled.connect(self._callback_command)
+
         command_stop.toggled.connect(self._callback_command)
 
         command_set_temperature.toggled.connect(self._callback_command)
@@ -419,6 +425,7 @@ class TabCommand(TabTemplate):
             "close_louvers": command_close_louvers,
             "close_shutter": command_close_shutter,
             "open_shutter": command_open_shutter,
+            "set_photocell_shutter": command_set_photocell_shutter,
             "stop": command_stop,
             "set_temperature": command_set_temperature,
             "set_operational_mode": command_set_operational_mode,
@@ -469,6 +476,9 @@ class TabCommand(TabTemplate):
 
         elif self._commands["open_shutter"].isChecked():
             self._enable_command_parameters([])
+
+        elif self._commands["set_photocell_shutter"].isChecked():
+            self._enable_command_parameters(["action"])
 
         elif self._commands["stop"].isChecked():
             self._enable_command_parameters(["engage_brakes", "subsystem"])
@@ -612,6 +622,22 @@ class TabCommand(TabTemplate):
                 await run_command(
                     self.model.mtdome_com.open_shutter,  # type: ignore[union-attr]
                 )
+
+            case "set_photocell_shutter":
+                action = self._get_on_off(self._command_parameters["action"])
+                if action is None:
+                    await prompt_dialog_warning(
+                        "_callback_send_command()",
+                        ("The action can not be empty."),
+                    )
+                    self._button_send_command.setEnabled(True)
+                    return
+
+                else:
+                    await run_command(
+                        self.model.mtdome_com.set_photocell_shutter,  # type: ignore[union-attr]
+                        action,
+                    )
 
             case "stop":
                 subsystem_bitmask = self._get_subsystem_bitmask()
