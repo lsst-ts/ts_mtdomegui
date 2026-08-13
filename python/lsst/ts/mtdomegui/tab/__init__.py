@@ -31,6 +31,8 @@ from .tab_louver import *
 from .tab_louver_single import *
 from .tab_rear_access_door import *
 from .tab_selector import *
+from .tab_sensor_fixed import *
+from .tab_sensor_rotating import *
 from .tab_settings import *
 from .tab_thermal_system import *
 from .tab_utility import *
