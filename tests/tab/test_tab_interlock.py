@@ -26,7 +26,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
 
-from lsst.ts.mtdomecom import MON_NUM_SENSORS
 from lsst.ts.mtdomegui import Model
 from lsst.ts.mtdomegui.tab import TabInterlock
 
@@ -40,15 +39,23 @@ def widget(qtbot: QtBot) -> TabInterlock:
 
 
 def test_init(widget: TabInterlock) -> None:
-    assert len(widget._indicators_interlock) == MON_NUM_SENSORS
+    interlocks_and_sensors = widget.model.reporter.status.interlocks_and_sensors
+    indicators = widget._indicators
+
+    assert len(indicators) == 8
+    for key in interlocks_and_sensors.keys():
+        if key.startswith("interlocks"):
+            assert len(indicators[key]) == len(interlocks_and_sensors[key])
 
 
-def test_update_indicator_color(widget: TabInterlock) -> None:
-    indicator = widget._indicators_interlock[0]
-    widget._update_indicator_color(indicator, False)
+def test_update_interlock_status(widget: TabInterlock) -> None:
+    indicator = widget._indicators["interlocksAMCS"]["gisA3Active"]
+    assert indicator.palette().color(QPalette.Base) != Qt.green
 
-    assert indicator.palette().color(QPalette.Button) == Qt.green
+    widget.update_interlock_status("interlocksAMCS", {"gisA3Active": False})
 
-    widget._update_indicator_color(indicator, True)
+    assert indicator.palette().color(QPalette.Base) == Qt.green
 
-    assert indicator.palette().color(QPalette.Button) == Qt.red
+    widget.update_interlock_status("interlocksAMCS", {"gisA3Active": True})
+
+    assert indicator.palette().color(QPalette.Base) == Qt.red

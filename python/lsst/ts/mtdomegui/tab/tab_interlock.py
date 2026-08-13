@@ -21,20 +21,18 @@
 
 __all__ = ["TabInterlock"]
 
-from PySide6.QtGui import QPalette
-from PySide6.QtWidgets import QGroupBox, QPushButton, QVBoxLayout
+from PySide6.QtWidgets import QFormLayout, QGroupBox, QHBoxLayout, QRadioButton, QVBoxLayout
+from qasync import asyncSlot
 
 from lsst.ts.guitool import (
-    ButtonStatus,
     TabTemplate,
-    create_grid_layout_buttons,
     create_group_box,
-    set_button,
-    update_button_color,
+    create_radio_indicators,
 )
-from lsst.ts.mtdomecom import MON_NUM_SENSORS
 
 from ..model import Model
+from ..signals import SignalInterlock
+from ..utils import update_boolean_indicator_status
 
 
 class TabInterlock(TabTemplate):
@@ -58,78 +56,205 @@ class TabInterlock(TabTemplate):
 
         self.model = model
 
-        self._indicators_interlock = self._create_indicators_interlock(MON_NUM_SENSORS)
+        self._indicators = self._create_indicators()
 
         self.set_widget_and_layout()
 
-    def _create_indicators_interlock(self, number: int) -> list[QPushButton]:
-        """Creates the interlock indicators.
+        signals = self.model.reporter.signals
+        self._set_signal_interlock(signals["interlock"])  # type: ignore[arg-type]
 
-        Parameters
-        ----------
-        number : `int`
-            Total number of interlock.
+    def _create_indicators(self) -> dict[str, dict[str, QRadioButton]]:
+        """Creates the interlock indicators.
 
         Returns
         -------
-        indicators : `list`
+        indicators : `dict` [`str`, `dict`]
             Interlock indicators.
         """
 
-        indicators = list()
+        interlocks_and_sensors = self.model.reporter.status.interlocks_and_sensors
 
-        for specific_id in range(number):
-            indicator = set_button(str(specific_id), None, is_indicator=True, is_adjust_size=True)
+        indicators: dict[str, dict[str, QRadioButton]] = dict()
+        for key in interlocks_and_sensors.keys():
+            if key.startswith("interlocks"):
+                indicators[key] = dict()
 
-            self._update_indicator_color(indicator, False)
-
-            indicators.append(indicator)
+                num = len(interlocks_and_sensors[key].keys())
+                radio_indicators = create_radio_indicators(num)
+                for idx, interlock in enumerate(interlocks_and_sensors[key].keys()):
+                    indicators[key][interlock] = radio_indicators[idx]
 
         return indicators
 
-    def _update_indicator_color(self, indicator: QPushButton, is_triggered: bool) -> None:
-        """Update the indicator color.
-
-        Parameters
-        ----------
-        indicator : `PySide6.QtWidgets.QPushButton`
-            Indicator.
-        is_triggered : `bool`
-            Is triggered or not.
-        """
-
-        button_status = ButtonStatus.Error if is_triggered else ButtonStatus.Normal
-        update_button_color(indicator, QPalette.Button, button_status)
-
     def create_layout(self) -> QVBoxLayout:
-        layout = QVBoxLayout()
-        layout.addWidget(self._create_group_interlock())
+        layout = QHBoxLayout()
+
+        counter_max = 15
+        counter_current = 0
+        layout_internal = QVBoxLayout()
+        for group_key in self._indicators.keys():
+            group, num = self._create_group_interlock(group_key)
+            layout_internal.addWidget(group)
+            counter_current += num
+
+            if counter_current >= counter_max:
+                layout.addLayout(layout_internal)
+                layout_internal = QVBoxLayout()
+                counter_current = 0
+
+        if counter_current > 0:
+            layout.addLayout(layout_internal)
 
         return layout
 
-    def _create_group_interlock(self) -> QGroupBox:
+    def _create_group_interlock(self, group_key: str) -> tuple[QGroupBox, int]:
         """Create the group of interlock.
+
+        Parameters
+        ----------
+        group_key : `str`
+            Group key of the interlocks.
 
         Returns
         -------
-        group : `PySide6.QtWidgets.QGroupBox`
+        `PySide6.QtWidgets.QGroupBox`
             Group.
+        `int`
+            Number of the indicators.
         """
 
-        num_column = MON_NUM_SENSORS // 4
-        layout = create_grid_layout_buttons(self._indicators_interlock, num_column)
+        layout = QFormLayout()
 
-        return create_group_box("Interlock Status", layout)
+        indicators = self._indicators[group_key]
+        for key in indicators.keys():
+            layout.addRow(f"{key}:", indicators[key])
 
-    def update_interlock_status(self, index: int, is_triggered: bool) -> None:
+        return create_group_box(group_key, layout), len(indicators)
+
+    def _set_signal_interlock(self, signal: SignalInterlock) -> None:
+        """Set the interlock signal.
+
+        Parameters
+        ----------
+        signal : `SignalInterlock`
+            Interlock signal.
+        """
+
+        signal.amcs.connect(self._callback_interlock_amcs)
+        signal.lwscs.connect(self._callback_interlock_lwscs)
+        signal.apscs.connect(self._callback_interlock_apscs)
+        signal.lcs.connect(self._callback_interlock_lcs)
+        signal.obc.connect(self._callback_interlock_obc)
+        signal.rad.connect(self._callback_interlock_rad)
+        signal.cscs.connect(self._callback_interlock_cscs)
+        signal.locking_pins.connect(self._callback_interlock_locking_pins)
+
+    @asyncSlot()
+    async def _callback_interlock_amcs(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of AMCS.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksAMCS", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_lwscs(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of LWSCS.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksLWSCS", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_apscs(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of ApSCS.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksApSCS", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_lcs(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of LCS.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksLCS", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_obc(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of OBC.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksOBC", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_rad(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of RAD.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksRAD", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_cscs(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of CSCS.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksCSCS", interlocks)
+
+    @asyncSlot()
+    async def _callback_interlock_locking_pins(self, interlocks: dict[str, bool]) -> None:
+        """Callback to update the interlock of locking pins.
+
+        Parameters
+        ----------
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
+        """
+
+        self.update_interlock_status("interlocksLockingPins", interlocks)
+
+    def update_interlock_status(self, group_name: str, interlocks: dict[str, bool]) -> None:
         """ "Update the interlock status.
 
         Parameters
         ----------
-        index : `int`
-            Index of the interlock.
-        is_triggered : `bool`
-            Is triggered or not.
+        group_name : `str`
+            Group name.
+        interlocks : `dict` [`str`, `bool`]
+            Status of the interlocks. True is latched. Otherwise, False.
         """
 
-        self._update_indicator_color(self._indicators_interlock[index], is_triggered)
+        for interlock, is_fault in interlocks.items():
+            update_boolean_indicator_status(self._indicators[group_name][interlock], is_fault)
