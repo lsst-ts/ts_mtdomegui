@@ -1,0 +1,20 @@
+classDiagram
+
+namespace guitool {
+  class TabTemplate
+}
+
+namespace mtdomegui {
+  class Model
+  class Reporter
+  class SignalSensor
+}
+
+Model *-- Reporter
+
+Reporter *-- SignalSensor : emit()
+
+TabTemplate <|-- TabSensorRotating
+
+TabSensorRotating *-- Model
+TabSensorRotating --> SignalSensor : connect()
