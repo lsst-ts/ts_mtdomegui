@@ -21,6 +21,7 @@
 
 __all__ = [
     "SignalInterlock",
+    "SignalSensor",
     "SignalState",
     "SignalOperationalMode",
     "SignalTelemetry",
@@ -36,18 +37,47 @@ from PySide6 import QtCore
 class SignalInterlock(QtCore.QObject):
     """Interlock signal to send the current interlock status."""
 
-    # List of the safety interlock status. This should be the same as the
-    # "MTDome_interlocks" in ts_xml. But I found another
-    # "MTDome_logevent_interlocks" topic. Need to check the difference
-    # TODO: DM-48348.
-    #
-    # In addition, this should be related to the dictionary object defined in
-    # the "moncs_status.py" in ts_mtdomecom.
-    interlock = QtCore.Signal(object)
+    # List of the safety interlock status. This should be related to the
+    # JSON schema defined in the "moncs_status.json" in ts_mtdomecom.
+    amcs = QtCore.Signal(object)
+    lwscs = QtCore.Signal(object)
+    apscs = QtCore.Signal(object)
+    lcs = QtCore.Signal(object)
+    obc = QtCore.Signal(object)
+    rad = QtCore.Signal(object)
+    cscs = QtCore.Signal(object)
+    locking_pins = QtCore.Signal(object)
 
-    # Bitmask of the locking pins that have been engaged. This is not fully
-    # defined yet. See the "MTDome_logevent_lockingPinsEngaged" in ts_xml.
-    locking_pins_engaged = QtCore.Signal(int)
+
+class SignalSensor(QtCore.QObject):
+    """Interlock signal to send the current sensor status."""
+
+    # List of the sensor status. This should be related to the JSON schema
+    # defined in the "moncs_status.json" in ts_mtdomecom.
+    fixed_part_alarms = QtCore.Signal(object)
+    fixed_part_inflatable_seal = QtCore.Signal(object)
+    fixed_part_lines_24v = QtCore.Signal(object)
+    fixed_part_selectors = QtCore.Signal(object)
+    fixed_part_valves = QtCore.Signal(object)
+    fixed_part = QtCore.Signal(object)
+
+    rotating_part_lines_24v = QtCore.Signal(object)
+    rotating_part_locking_pins = QtCore.Signal(object)
+    rotating_part_alarms = QtCore.Signal(object)
+    rotating_part_doors_closed = QtCore.Signal(object)
+    rotating_part_cabinet_fan = QtCore.Signal(object)
+    rotating_part_limit_switches = QtCore.Signal(object)
+    rotating_part_selectors = QtCore.Signal(object)
+    rotating_part_emergency_pushbuttons = QtCore.Signal(object)
+    rotating_part_power_available = QtCore.Signal(object)
+    rotating_part_hatches = QtCore.Signal(object)
+    rotating_part_photocells = QtCore.Signal(object)
+    rotating_part_light_curtain = QtCore.Signal(object)
+    rotating_part_obc = QtCore.Signal(object)
+    rotating_part_axial_fans = QtCore.Signal(object)
+    rotating_part_lights = QtCore.Signal(object)
+    rotating_part_heating_cables = QtCore.Signal(object)
+    rotating_part_brakes = QtCore.Signal(object)
 
 
 class SignalState(QtCore.QObject):
