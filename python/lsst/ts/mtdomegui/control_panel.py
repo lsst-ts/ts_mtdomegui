@@ -23,22 +23,19 @@ __all__ = ["ControlPanel"]
 
 from functools import partial
 
-from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import QFormLayout, QGroupBox, QVBoxLayout, QWidget
 from qasync import asyncSlot
 
 from lsst.ts.guitool import (
-    ButtonStatus,
     create_group_box,
     create_label,
     set_button,
-    update_button_color,
 )
 from lsst.ts.xml.enums import MTDome
 
 from .model import Model
-from .signals import SignalInterlock, SignalState
-from .tab import TabBrake, TabInterlock
+from .signals import SignalState
+from .tab import TabBrake
 from .utils import add_empty_row_to_form_layout
 
 
@@ -61,14 +58,8 @@ class ControlPanel(QWidget):
 
         self.model = model
 
-        self._tab_interlock = TabInterlock("Interlock", self.model)
         self._tab_brake = TabBrake("Brake", self.model)
 
-        self._button_interlock = set_button(
-            "",
-            self._tab_interlock.show,
-            tool_tip="Click to show the interlocks.",
-        )
         self._button_brake_engaged = set_button(
             "",
             self._tab_brake.show,
@@ -76,7 +67,6 @@ class ControlPanel(QWidget):
         )
 
         self._labels = {
-            "locking_pin": create_label(),
             "azimuth_axis": create_label(),
             "elevation_axis": create_label(),
             "aperture_shutter": create_label(),
@@ -90,7 +80,6 @@ class ControlPanel(QWidget):
         self.setLayout(self._create_layout())
 
         signals = self.model.reporter.signals
-        self._set_signal_interlock(signals["interlock"])  # type: ignore[arg-type]
         self._set_signal_state(signals["state"])  # type: ignore[arg-type]
 
     def _create_layout(self) -> QVBoxLayout:
@@ -118,11 +107,6 @@ class ControlPanel(QWidget):
 
         layout = QFormLayout()
 
-        layout.addRow("Interlock:", self._button_interlock)
-        layout.addRow("Locking pin:", self._labels["locking_pin"])
-
-        add_empty_row_to_form_layout(layout)
-
         layout.addRow("Brake engaged:", self._button_brake_engaged)
         layout.addRow("Azimuth axis:", self._labels["azimuth_axis"])
         layout.addRow("Elevation axis:", self._labels["elevation_axis"])
@@ -137,47 +121,6 @@ class ControlPanel(QWidget):
         layout.addRow("Control mode:", self._labels["control_mode"])
 
         return create_group_box("Summary", layout)
-
-    def _set_signal_interlock(self, signal: SignalInterlock) -> None:
-        """Set the interlock signal.
-
-        Parameters
-        ----------
-        signal : `SignalInterlock`
-        """
-
-        signal.interlock.connect(self._callback_interlock)
-        signal.locking_pins_engaged.connect(partial(self._callback_update_label, "locking_pin"))
-
-    @asyncSlot()
-    async def _callback_interlock(self, interlocks: list[bool]) -> None:
-        """Callback to update the interlock.
-
-        Parameters
-        ----------
-        interlocks : `list` [`bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
-        """
-
-        for index, is_triggered in enumerate(interlocks):
-            self._tab_interlock.update_interlock_status(index, is_triggered)
-
-        self._update_button_interlock(any(interlocks))
-
-    def _update_button_interlock(self, is_triggered: bool) -> None:
-        """Update the button of interlock.
-
-        Parameters
-        ----------
-        is_triggered : `bool`
-            Is triggered or not.
-        """
-
-        name = MTDome.OnOff.ON.name if is_triggered else MTDome.OnOff.OFF.name
-        self._button_interlock.setText(name)
-
-        button_status = ButtonStatus.Error if is_triggered else ButtonStatus.Normal
-        update_button_color(self._button_interlock, QPalette.Button, button_status)
 
     @asyncSlot()
     async def _callback_update_label(

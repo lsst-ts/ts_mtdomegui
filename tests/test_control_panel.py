@@ -21,7 +21,6 @@
 
 import asyncio
 import logging
-from copy import deepcopy
 
 import pytest
 from PySide6.QtCore import Qt
@@ -41,54 +40,7 @@ def widget(qtbot: QtBot) -> ControlPanel:
 
 
 def test_init(widget: ControlPanel) -> None:
-    assert len(widget._labels) == 9
-
-
-@pytest.mark.asyncio
-async def test_show_interlock(qtbot: QtBot, widget: ControlPanel) -> None:
-    assert widget._tab_interlock.isVisible() is False
-
-    qtbot.mouseClick(widget._button_interlock, Qt.LeftButton)
-
-    # Sleep so the event loop can access CPU to handle the signal
-    await asyncio.sleep(1)
-
-    assert widget._tab_interlock.isVisible() is True
-
-
-def test_update_button_interlock(widget: ControlPanel) -> None:
-    widget._update_button_interlock(False)
-
-    assert widget._button_interlock.text() == MTDome.OnOff.OFF.name
-    assert widget._button_interlock.palette().color(QPalette.Button) == Qt.green
-
-    widget._update_button_interlock(True)
-
-    assert widget._button_interlock.text() == MTDome.OnOff.ON.name
-    assert widget._button_interlock.palette().color(QPalette.Button) == Qt.red
-
-
-@pytest.mark.asyncio
-async def test_set_signal_interlock(widget: ControlPanel) -> None:
-    # Interlocks
-    interlocks = deepcopy(widget.model.reporter.status.interlocks)
-    interlocks[0] = True
-
-    widget.model.reporter.report_interlocks(interlocks)
-
-    # Sleep so the event loop can access CPU to handle the signal
-    await asyncio.sleep(1)
-
-    widget._tab_interlock._indicators_interlock[0].palette().color(QPalette.Button) == Qt.red
-    widget._button_interlock.palette().color(QPalette.Button) == Qt.red
-
-    # Locking pins
-    widget.model.reporter.report_state_locking_pins_engaged(1)
-
-    # Sleep so the event loop can access CPU to handle the signal
-    await asyncio.sleep(1)
-
-    assert widget._labels["locking_pin"].text() == hex(1)
+    assert len(widget._labels) == 8
 
 
 @pytest.mark.asyncio
