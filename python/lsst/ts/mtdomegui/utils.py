@@ -66,7 +66,7 @@ def update_boolean_indicator_status(indicator: QRadioButton, is_fault: bool) -> 
 
     Parameters
     ----------
-    indicator : `QRadioButton`
+    indicator : `PySide6.QtWidgets.QRadioButton`
         Indicator.
     is_fault : `bool`
         Is fault or not.
