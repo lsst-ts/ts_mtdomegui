@@ -42,7 +42,7 @@ After the execution of GUI, you will see the above control panel.
 You can use the top toolbar to change the **Settings** of GUI, **Connect**/**Disconnect** the dome controller, and **Exit** the application.
 
 The top region of control panel shows the summary of the dome system.
-You can see that whether the azimuth/elevation/shutter/louver/rear access door/calibration screen is in fault, interlock, locking pin, brake, power mode, and control mode status (remote, GUI, or others).
+You can see that whether the azimuth/elevation/shutter/louver/rear access door/calibration screen is in fault, brake, power mode, and control mode status (remote, GUI, or others).
 
 The bottom region of control panel has multiple tables that you can double-click to open to have more detailed system information.
 If you move the mouse close to the buttons/indicators and texts in the panel and tables, you will see the prompted tips to explain the related details.
@@ -166,6 +166,52 @@ If the capacitor banks are connected and there is no issue, once the control sys
 Otherwise, you should see the voltage keeps low after issuing the ``moveAz()`` command.
 Then, you know maybe they are not connected or something went wrong (such as the blowing fuses or others).
 If the capacitor banks are not connected, the azimuth control system can only run the degraded mode.
+
+.. _lsst.ts.mtdomegui-user_interlock:
+
+Interlock
+---------
+
+.. figure:: ../screenshot/interlock.png
+  :width: 550
+
+  Interlock status.
+
+You can see the interlock status for each subsystem.
+If the interlock is satisfied, the indicator will be green.
+Otherwise, it will be red.
+
+.. _lsst.ts.mtdomegui-user_sensor_fixed:
+
+Sensor (Fixed Part)
+-------------------
+
+.. figure:: ../screenshot/sensor_fixed.png
+  :width: 550
+
+  Sensor status of the fixed part.
+
+You can see the sensor status of fixed part.
+For each sensor, if the received value is False, it will be gray color.
+Otherwise, it will be yellow color.
+This does not mean the sensor is in warning, but it means the reported sensor's value from controller is True.
+For the valve's value, it is in percentage (0-100).
+
+.. _lsst.ts.mtdomegui-user_sensor_rotating:
+
+Sensor (Rotating Part)
+----------------------
+
+.. figure:: ../screenshot/sensor_rotating.png
+  :width: 550
+
+  Sensor status of the rotating part.
+
+You can see the sensor status of rotating part.
+For each sensor, if the received value is False, it will be gray color.
+Otherwise, it will be yellow color.
+This does not mean the sensor is in warning, but it means the reported sensor's value from controller is True.
+Note this is a scrollable widget, so you can scroll to see all the sensors.
 
 .. _lsst.ts.mtdomegui-user_azimuth:
 
