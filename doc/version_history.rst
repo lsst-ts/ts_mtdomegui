@@ -6,6 +6,17 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.4:
+
+-------------
+0.6.4
+-------------
+
+* Support the setPhotocellShutter command.
+* Support the interlock status and sensor status from the monitoring control system.
+* Update the UML.
+* Update the developer guide and user guide.
+
 .. _lsst.ts.mtdomegui-0.6.3:
 
 -------------

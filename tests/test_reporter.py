@@ -38,13 +38,42 @@ def reporter() -> Reporter:
 
 
 def test_init(reporter: Reporter) -> None:
-    assert len(reporter.signals) == 8
+    assert len(reporter.signals) == 9
 
 
 def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
     signals = [
-        reporter.signals["interlock"].interlock,
-        reporter.signals["interlock"].locking_pins_engaged,
+        reporter.signals["interlock"].amcs,
+        reporter.signals["interlock"].lwscs,
+        reporter.signals["interlock"].apscs,
+        reporter.signals["interlock"].lcs,
+        reporter.signals["interlock"].obc,
+        reporter.signals["interlock"].rad,
+        reporter.signals["interlock"].cscs,
+        reporter.signals["interlock"].locking_pins,
+        reporter.signals["sensor"].fixed_part_alarms,
+        reporter.signals["sensor"].fixed_part_inflatable_seal,
+        reporter.signals["sensor"].fixed_part_lines_24v,
+        reporter.signals["sensor"].fixed_part_selectors,
+        reporter.signals["sensor"].fixed_part_valves,
+        reporter.signals["sensor"].fixed_part,
+        reporter.signals["sensor"].rotating_part_lines_24v,
+        reporter.signals["sensor"].rotating_part_locking_pins,
+        reporter.signals["sensor"].rotating_part_alarms,
+        reporter.signals["sensor"].rotating_part_doors_closed,
+        reporter.signals["sensor"].rotating_part_cabinet_fan,
+        reporter.signals["sensor"].rotating_part_limit_switches,
+        reporter.signals["sensor"].rotating_part_selectors,
+        reporter.signals["sensor"].rotating_part_emergency_pushbuttons,
+        reporter.signals["sensor"].rotating_part_power_available,
+        reporter.signals["sensor"].rotating_part_hatches,
+        reporter.signals["sensor"].rotating_part_photocells,
+        reporter.signals["sensor"].rotating_part_light_curtain,
+        reporter.signals["sensor"].rotating_part_obc,
+        reporter.signals["sensor"].rotating_part_axial_fans,
+        reporter.signals["sensor"].rotating_part_lights,
+        reporter.signals["sensor"].rotating_part_heating_cables,
+        reporter.signals["sensor"].rotating_part_brakes,
         reporter.signals["state"].brake_engaged,
         reporter.signals["state"].azimuth_axis,
         reporter.signals["state"].elevation_axis,
@@ -77,21 +106,39 @@ def test_report_default(qtbot: QtBot, reporter: Reporter) -> None:
         reporter.report_default()
 
 
-def test_report_interlocks(qtbot: QtBot, reporter: Reporter) -> None:
-    interlocks = deepcopy(reporter.status.interlocks)
-    interlocks[0] = True
+def test_report_default_interlocks_and_sensors(reporter: Reporter) -> None:
+    reporter._report_default_interlocks_and_sensors()
 
-    with qtbot.waitSignal(reporter.signals["interlock"].interlock, timeout=TIMEOUT):
-        reporter.report_interlocks(interlocks)
-
-    assert reporter.status.interlocks == interlocks
+    interlocks_and_sensors = reporter.status.interlocks_and_sensors
+    for key in interlocks_and_sensors.keys():
+        assert interlocks_and_sensors[key] != dict()
 
 
-def test_report_state_locking_pins_engaged(qtbot: QtBot, reporter: Reporter) -> None:
-    with qtbot.waitSignal(reporter.signals["interlock"].locking_pins_engaged, timeout=TIMEOUT):
-        reporter.report_state_locking_pins_engaged(1)
+def test_report_interlocks_and_sensors(qtbot: QtBot, reporter: Reporter) -> None:
+    interlocks_and_sensors = reporter.status.interlocks_and_sensors
 
-    assert reporter.status.state["lockingPinsEngaged"] == 1
+    interlocks_and_sensors_modified = deepcopy(interlocks_and_sensors)
+    interlocks_and_sensors_modified["interlocksAMCS"]["gisA3Active"] = True
+    interlocks_and_sensors_modified["sensorsFixedPartAlarms"]["accessPointDoorOpen"] = True
+    interlocks_and_sensors_modified["sensorsRotatingPartLines24V"]["pilzHmi"] = True
+
+    signals = [
+        reporter.signals["interlock"].amcs,
+        reporter.signals["sensor"].fixed_part_alarms,
+        reporter.signals["sensor"].rotating_part_lines_24v,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
+        reporter.report_interlocks_and_sensors(interlocks_and_sensors_modified)
+
+    assert interlocks_and_sensors["interlocksAMCS"] == interlocks_and_sensors_modified["interlocksAMCS"]
+    assert (
+        interlocks_and_sensors["sensorsFixedPartAlarms"]
+        == interlocks_and_sensors_modified["sensorsFixedPartAlarms"]
+    )
+    assert (
+        interlocks_and_sensors["sensorsRotatingPartLines24V"]
+        == interlocks_and_sensors_modified["sensorsRotatingPartLines24V"]
+    )
 
 
 def test_report_state_brake_engaged(qtbot: QtBot, reporter: Reporter) -> None:

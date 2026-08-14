@@ -182,7 +182,6 @@ class Model:
         self.reporter.report_fault_code_calibration_screen("")
 
         self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
-        self.reporter.report_state_locking_pins_engaged(0)
 
         self.reporter.report_state_power_mode(self.mtdome_com.power_management_mode)
 
@@ -268,10 +267,7 @@ class Model:
         # Report the telemetry
         match llc_name:
             case LlcName.MONCS:
-                # There is the question for the details of interlock at the
-                # moment. This part might be updated in the future.
-                interlocks = [bool(value) for value in processed_telemetry["data"]]
-                self.reporter.report_interlocks(interlocks)
+                self.reporter.report_interlocks_and_sensors(processed_telemetry)
 
             case LlcName.OBC:
                 # The related event/telemetry is not defined yet.
@@ -471,13 +467,17 @@ class Model:
             self._set_brakes_engaged_bit(motion_state, MTDome.Brake.AMCS.value)
             self.reporter.report_state_brake_engaged(self._brakes_engaged_bitmask)
 
-    def _get_fault_code(self, status: dict[str, typing.Any]) -> tuple[bool, str]:
+    def _get_fault_code(
+        self, status: dict[str, typing.Any], bypass_code: ResponseCode | None = None
+    ) -> tuple[bool, str]:
         """Get the fault code.
 
         Parameters
         ----------
         status : `dict`
             Status.
+        bypass_code : enum `lsst.ts.mtdomecom.ResponseCode` or None, optional
+            Code to bypass. (the default is None)
 
         Returns
         -------
@@ -488,9 +488,11 @@ class Model:
         """
 
         messages = status["messages"]
+        has_error = len(messages) != 1
 
         codes = [message["code"] for message in messages]
-        has_error = (len(messages) != 1) or (codes[0] != 0)
+        if (not has_error) and (codes[0] not in [ResponseCode.OK, bypass_code]):
+            has_error = True
 
         fault_code = (
             ", ".join([f"{message['code']}={message['description']}" for message in messages])
@@ -577,7 +579,7 @@ class Model:
             Status.
         """
 
-        has_error, fault_code = self._get_fault_code(status)
+        has_error, fault_code = self._get_fault_code(status, bypass_code=ResponseCode.PHOTOCELLS_CODE)
         state = MTDome.EnabledState.FAULT if has_error else MTDome.EnabledState.ENABLED
 
         self.reporter.report_state_aperture_shutter(state)

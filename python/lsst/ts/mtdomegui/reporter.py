@@ -22,6 +22,7 @@
 __all__ = ["Reporter"]
 
 import logging
+from copy import deepcopy
 
 from lsst.ts.mtdomecom import APSCS_NUM_SHUTTERS, LCS_NUM_LOUVERS, RAD_NUM_DOORS
 from lsst.ts.mtdomecom.schema import registry
@@ -33,6 +34,7 @@ from .signals import (
     SignalInterlock,
     SignalMotion,
     SignalOperationalMode,
+    SignalSensor,
     SignalState,
     SignalTarget,
     SignalTelemetry,
@@ -59,12 +61,53 @@ class Reporter:
         Signals.
     """
 
+    INTERLOCK_PAIRS = [
+        ("interlocksAMCS", "amcs"),
+        ("interlocksLWSCS", "lwscs"),
+        ("interlocksApSCS", "apscs"),
+        ("interlocksLCS", "lcs"),
+        ("interlocksOBC", "obc"),
+        ("interlocksRAD", "rad"),
+        ("interlocksCSCS", "cscs"),
+        ("interlocksLockingPins", "locking_pins"),
+    ]
+
+    FIXED_PART_SENSOR_PAIRS = [
+        ("sensorsFixedPartAlarms", "fixed_part_alarms"),
+        ("sensorsFixedPartInflatableSeal", "fixed_part_inflatable_seal"),
+        ("sensorsFixedPartLines24V", "fixed_part_lines_24v"),
+        ("sensorsFixedPartSelectors", "fixed_part_selectors"),
+        ("sensorsFixedPartValves", "fixed_part_valves"),
+        ("sensorsFixedPart", "fixed_part"),
+    ]
+
+    ROTATING_PART_SENSOR_PAIRS = [
+        ("sensorsRotatingPartLines24V", "rotating_part_lines_24v"),
+        ("sensorsRotatingPartLockingPins", "rotating_part_locking_pins"),
+        ("sensorsRotatingPartAlarms", "rotating_part_alarms"),
+        ("sensorsRotatingPartDoorsClosed", "rotating_part_doors_closed"),
+        ("sensorsRotatingPartCabinetFan", "rotating_part_cabinet_fan"),
+        ("sensorsRotatingPartLimitSwitches", "rotating_part_limit_switches"),
+        ("sensorsRotatingPartSelectors", "rotating_part_selectors"),
+        ("sensorsRotatingPartEmergencyPushbuttons", "rotating_part_emergency_pushbuttons"),
+        ("sensorsRotatingPartPowerAvailable", "rotating_part_power_available"),
+        ("sensorsRotatingPartHatches", "rotating_part_hatches"),
+        ("sensorsRotatingPartPhotocells", "rotating_part_photocells"),
+        ("sensorsRotatingPartLightCurtain", "rotating_part_light_curtain"),
+        ("sensorsRotatingPartOBC", "rotating_part_obc"),
+        ("sensorsRotatingPartAxialFans", "rotating_part_axial_fans"),
+        ("sensorsRotatingPartLights", "rotating_part_lights"),
+        ("sensorsRotatingPartHeatingCables", "rotating_part_heating_cables"),
+        ("sensorsRotatingPartBrakes", "rotating_part_brakes"),
+    ]
+
     def __init__(self, log: logging.Logger) -> None:
         self.log = log
 
         self.status = Status()
         self.signals = {
             "interlock": SignalInterlock(),
+            "sensor": SignalSensor(),
             "state": SignalState(),
             "operational_mode": SignalOperationalMode(),
             "telemetry": SignalTelemetry(),
@@ -77,8 +120,7 @@ class Reporter:
     def report_default(self) -> None:
         """Report the default status."""
 
-        self.signals["interlock"].interlock.emit(self.status.interlocks)  # type: ignore[attr-defined]
-        self.report_state_locking_pins_engaged(0)
+        self._report_default_interlocks_and_sensors()
 
         self.report_state_brake_engaged(0)
         self.report_state_azimuth_axis(MTDome.EnabledState.DISABLED)
@@ -119,31 +161,67 @@ class Reporter:
         )
         self.report_motion_calibration_screen(MTDome.MotionState.STOPPED, False)
 
-    def report_interlocks(self, interlocks: list[bool]) -> None:
-        """Report the interlocks.
+    def _report_default_interlocks_and_sensors(self) -> None:
+        """Report the default status of interlocks and sensors."""
+
+        # Cache the current default value
+        interlocks_and_sensors = deepcopy(self.status.interlocks_and_sensors)
+
+        # Put the status value to be dict() first to be able to report the
+        # default value
+        for key in self.status.interlocks_and_sensors.keys():
+            self.status.interlocks_and_sensors[key] = dict()
+
+        self.report_interlocks_and_sensors(interlocks_and_sensors)
+
+    def report_interlocks_and_sensors(self, interlocks_and_sensors: dict[str, dict]) -> None:
+        """Report the status of interlocks and sensors.
 
         Parameters
         ----------
-        interlocks : `list` [`bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+        interlocks_and_sensors : `dict` [`str`, `dict`]
+            Status of the interlocks and sensors.
         """
 
-        if self.status.interlocks != interlocks:
-            self.status.interlocks = interlocks
-            self.signals["interlock"].interlock.emit(interlocks)  # type: ignore[attr-defined]
+        # Interlocks
+        for pair in self.INTERLOCK_PAIRS:
+            self._check_system_interlocks_and_sensors_and_report(
+                pair[0], "interlock", pair[1], interlocks_and_sensors[pair[0]]
+            )
 
-    def report_state_locking_pins_engaged(self, engaged_pins: int) -> None:
-        """Report the state of the engaged locking pins.
+        # Sensors (fixed part)
+        for pair in self.FIXED_PART_SENSOR_PAIRS:
+            self._check_system_interlocks_and_sensors_and_report(
+                pair[0], "sensor", pair[1], interlocks_and_sensors[pair[0]]
+            )
+
+        # Sensors (rotating part)
+        for pair in self.ROTATING_PART_SENSOR_PAIRS:
+            self._check_system_interlocks_and_sensors_and_report(
+                pair[0], "sensor", pair[1], interlocks_and_sensors[pair[0]]
+            )
+
+    def _check_system_interlocks_and_sensors_and_report(
+        self, interlocks_and_sensors_field: str, signal_name: str, signal_field: str, value: dict
+    ) -> None:
+        """Check the system's status of interlocks and sensors and report it if
+        the value is changed.
 
         Parameters
         ----------
-        engaged_pins : `int`
-            Bitmask of the locking pins that have been engaged.
+        interlocks_and_sensors_field : `str`
+            Status field of the interlocks and sensors.
+        signal_name : `str`
+            Signal's name defined in "self.signals".
+        signal_field : `str`
+            Signal's field.
+        value : `dict`
+            New value.
         """
 
-        self._check_system_state_and_report(
-            "lockingPinsEngaged", "interlock", "locking_pins_engaged", engaged_pins
-        )
+        if self.status.interlocks_and_sensors[interlocks_and_sensors_field] != value:
+            self.status.interlocks_and_sensors[interlocks_and_sensors_field] = value
+            getattr(self.signals[signal_name], signal_field).emit(value)
 
     def _check_system_state_and_report(
         self, state_field: str, signal_name: str, signal_field: str, value: int

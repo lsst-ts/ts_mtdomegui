@@ -22,6 +22,7 @@
 import asyncio
 import logging
 import math
+from copy import deepcopy
 
 import pytest
 import pytest_asyncio
@@ -81,8 +82,57 @@ async def test_disconnect(model_async: Model) -> None:
 
 @pytest.mark.asyncio
 async def test_low_level_component_status(qtbot: QtBot, model_async: Model) -> None:
-    with qtbot.waitSignal(model_async.reporter.signals["telemetry"].amcs, timeout=TIMEOUT):
+    # Cache the interlocks_and_sensors in status
+    reporter = model_async.reporter
+    interlocks_and_sensors_cached = deepcopy(reporter.status.interlocks_and_sensors)
+
+    # Reset the interlocks_and_sensors in status to empty dicts
+    for key in reporter.status.interlocks_and_sensors.keys():
+        reporter.status.interlocks_and_sensors[key] = dict()
+
+    # Wait for the signals
+    signals = [
+        reporter.signals["telemetry"].amcs,
+        reporter.signals["interlock"].amcs,
+        reporter.signals["interlock"].lwscs,
+        reporter.signals["interlock"].apscs,
+        reporter.signals["interlock"].lcs,
+        reporter.signals["interlock"].obc,
+        reporter.signals["interlock"].rad,
+        reporter.signals["interlock"].cscs,
+        reporter.signals["interlock"].locking_pins,
+        reporter.signals["sensor"].fixed_part_alarms,
+        reporter.signals["sensor"].fixed_part_inflatable_seal,
+        reporter.signals["sensor"].fixed_part_lines_24v,
+        reporter.signals["sensor"].fixed_part_selectors,
+        reporter.signals["sensor"].fixed_part_valves,
+        reporter.signals["sensor"].fixed_part,
+        reporter.signals["sensor"].rotating_part_lines_24v,
+        reporter.signals["sensor"].rotating_part_locking_pins,
+        reporter.signals["sensor"].rotating_part_alarms,
+        reporter.signals["sensor"].rotating_part_doors_closed,
+        reporter.signals["sensor"].rotating_part_cabinet_fan,
+        reporter.signals["sensor"].rotating_part_limit_switches,
+        reporter.signals["sensor"].rotating_part_selectors,
+        reporter.signals["sensor"].rotating_part_emergency_pushbuttons,
+        reporter.signals["sensor"].rotating_part_power_available,
+        reporter.signals["sensor"].rotating_part_hatches,
+        reporter.signals["sensor"].rotating_part_photocells,
+        reporter.signals["sensor"].rotating_part_light_curtain,
+        reporter.signals["sensor"].rotating_part_obc,
+        reporter.signals["sensor"].rotating_part_axial_fans,
+        reporter.signals["sensor"].rotating_part_lights,
+        reporter.signals["sensor"].rotating_part_heating_cables,
+        reporter.signals["sensor"].rotating_part_brakes,
+    ]
+    with qtbot.waitSignals(signals, timeout=TIMEOUT):
         await asyncio.sleep(1.0)
+
+    # Check the interlocks_and_sensors in status is updated and is the same
+    # as the cached interlocks_and_sensors. By doing so, we can confirm the
+    # default value of the interlocks_and_sensors in status is the same as the
+    # simulation value in the low-level components.
+    assert reporter.status.interlocks_and_sensors == interlocks_and_sensors_cached
 
 
 @pytest.mark.asyncio
@@ -231,14 +281,34 @@ def test_get_fault_code(model: Model) -> None:
     status_error = {
         "messages": [
             {"code": 1, "description": "Errors 1"},
-            {"code": 2, "description": "Errors 2"},
+            {"code": ResponseCode.PHOTOCELLS_CODE.value, "description": "Errors 2"},
         ]
     }
 
     has_error, fault_code = model._get_fault_code(status_error)
 
     assert has_error is True
-    assert fault_code == "1=Errors 1, 2=Errors 2"
+    assert fault_code == "1=Errors 1, 3037=Errors 2"
+
+    # Since we have multiple messages, no bypass of codes.
+    has_error, fault_code = model._get_fault_code(status_error, bypass_code=ResponseCode.PHOTOCELLS_CODE)
+
+    assert has_error is True
+    assert fault_code == "1=Errors 1, 3037=Errors 2"
+
+    # Error data to be bypassed
+    status_error_bypass = {
+        "messages": [
+            {"code": ResponseCode.PHOTOCELLS_CODE.value, "description": "Error photocells"},
+        ]
+    }
+
+    has_error, fault_code = model._get_fault_code(
+        status_error_bypass, bypass_code=ResponseCode.PHOTOCELLS_CODE
+    )
+
+    assert has_error is False
+    assert fault_code == ""
 
 
 def test_translate_motion_state_if_necessary(model: Model) -> None:

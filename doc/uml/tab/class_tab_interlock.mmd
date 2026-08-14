@@ -6,8 +6,15 @@ namespace guitool {
 
 namespace mtdomegui {
   class Model
+  class Reporter
+  class SignalInterlock
 }
+
+Model *-- Reporter
+
+Reporter *-- SignalInterlock : emit()
 
 TabTemplate <|-- TabInterlock
 
 TabInterlock *-- Model
+TabInterlock --> SignalInterlock : connect()

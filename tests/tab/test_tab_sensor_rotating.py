@@ -27,35 +27,46 @@ from PySide6.QtGui import QPalette
 from pytestqt.qtbot import QtBot
 
 from lsst.ts.mtdomegui import Model
-from lsst.ts.mtdomegui.tab import TabInterlock
+from lsst.ts.mtdomegui.tab import TabSensorRotating
 
 
 @pytest.fixture
-def widget(qtbot: QtBot) -> TabInterlock:
-    widget = TabInterlock("Interlock", Model(logging.getLogger()))
+def widget(qtbot: QtBot) -> TabSensorRotating:
+    widget = TabSensorRotating("Sensor (Rotating Part)", Model(logging.getLogger()))
     qtbot.addWidget(widget)
 
     return widget
 
 
-def test_init(widget: TabInterlock) -> None:
+def test_init(widget: TabSensorRotating) -> None:
     interlocks_and_sensors = widget.model.reporter.status.interlocks_and_sensors
     indicators = widget._indicators
 
-    assert len(indicators) == 8
+    assert len(indicators) == 17
     for key in interlocks_and_sensors.keys():
-        if key.startswith("interlocks"):
+        if key.startswith("sensorsRotatingPart"):
             assert len(indicators[key]) == len(interlocks_and_sensors[key])
 
 
-def test_update_interlock_status(widget: TabInterlock) -> None:
-    indicator = widget._indicators["interlocksAMCS"]["gisA3Active"]
-    assert indicator.palette().color(QPalette.Base) != Qt.green
+def test_update_sensor_status(widget: TabSensorRotating) -> None:
+    interlocks_and_sensors = widget.model.reporter.status.interlocks_and_sensors
 
-    widget.update_interlock_status("interlocksAMCS", {"gisA3Active": False})
+    group_name = "sensorsRotatingPartSelectors"
+    interlocks_and_sensors[group_name]["llbvRadLouverSelected"] = 0
+    interlocks_and_sensors[group_name]["llbvLocalBox1LouverSelected"] = 1
 
-    assert indicator.palette().color(QPalette.Base) == Qt.green
+    widget.update_sensor_status(group_name, interlocks_and_sensors[group_name])
 
-    widget.update_interlock_status("interlocksAMCS", {"gisA3Active": True})
+    assert widget._indicators[group_name]["llbvRadLouverSelected"].text() == "None"
+    assert widget._indicators[group_name]["llbvLocalBox1LouverSelected"].text() == "A1"
 
-    assert indicator.palette().color(QPalette.Base) == Qt.red
+
+def test_update_boolean_indicator_status(widget: TabSensorRotating) -> None:
+    indicator = widget._indicators["sensorsRotatingPartLines24V"]["pilzHmi"]
+    widget._update_boolean_indicator_status(indicator, False)
+
+    assert indicator.palette().color(QPalette.Base) == Qt.gray
+
+    widget._update_boolean_indicator_status(indicator, True)
+
+    assert indicator.palette().color(QPalette.Base) == Qt.yellow

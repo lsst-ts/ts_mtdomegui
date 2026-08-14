@@ -11,12 +11,10 @@ namespace guitool {
 
 namespace tab {
   class TabSettings
-  class TabInterlock
   class TabBrake
 }
 
 TabTemplate <|-- TabSettings
-TabTemplate <|-- TabInterlock
 TabTemplate <|-- TabBrake
 
 MainWindow *-- Model
@@ -29,6 +27,7 @@ Model *-- MTDomeCom
 
 Reporter *-- Status
 Reporter *-- SignalInterlock : emit()
+Reporter *-- SignalSensor : emit()
 Reporter *-- SignalState : emit()
 Reporter *-- SignalOperationalMode : emit()
 Reporter *-- SignalTelemetry : emit()
@@ -38,15 +37,12 @@ Reporter *-- SignalFaultCode : emit()
 Reporter *-- SignalConfig : emit()
 
 ControlPanel *-- Model
-ControlPanel *-- TabInterlock
 ControlPanel *-- TabBrake
-ControlPanel --> SignalInterlock : connect()
 ControlPanel --> SignalState : connect()
 
 TabSettings *-- Model
 TabSettings --> SignalConfig : connect()
 
-TabInterlock *-- Model
 TabBrake *-- Model
 
-ControlTabs "1" *-- "9" TabTemplate
+ControlTabs "1" *-- "12" TabTemplate

@@ -59,7 +59,8 @@ mtdomegui.signals
 The available Qt signals are listed below:
 
 * **SignalInterlock** sends the current interlock status.
-* **SignalState** sends the current state..
+* **SignalSensor** sends the current sensor status.
+* **SignalState** sends the current state.
 * **SignalOperationalMode** sends the current operational mode.
 * **SignalTelemetry** sends the telemetry.
 * **SignalTarget** sends the target.
@@ -82,6 +83,8 @@ mtdomegui.tab
 * **TabElevation** shows the elevation (light/wind screen) status.
 * **TabFigure** shows the real-time figure.
 * **TabInterlock** shows the interlock status.
+* **TabSensorFixed** shows the sensor status of fixed part.
+* **TabSensorRotating** shows the sensor status of rotating part.
 * **TabLouver** shows the louver status.
 * **TabLouverSingle** shows the single louver status that is selected in **TabLouver**.
 * **TabRearAccessDoor** shows the rear access door status.
@@ -149,6 +152,22 @@ mtdomegui.tab.TabInterlock
 
 .. mermaid:: ../uml/tab/class_tab_interlock.mmd
     :caption: Class diagram of TabInterlock class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_sensor_fixed:
+
+mtdomegui.tab.TabSensorFixed
+----------------------------
+
+.. mermaid:: ../uml/tab/class_tab_sensor_fixed.mmd
+    :caption: Class diagram of TabSensorFixed class
+
+.. _lsst.ts.mtdomegui-modules_mtdomegui_tab_sensor_rotating:
+
+mtdomegui.tab.TabSensorRotating
+-------------------------------
+
+.. mermaid:: ../uml/tab/class_tab_sensor_rotating.mmd
+    :caption: Class diagram of TabSensorRotating class
 
 .. _lsst.ts.mtdomegui-modules_mtdomegui_tab_louver:
 
