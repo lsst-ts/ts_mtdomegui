@@ -178,8 +178,8 @@ Interlock
   Interlock status.
 
 You can see the interlock status for each subsystem.
-If the interlock is satisfied, the indicator will be green.
-Otherwise, it will be red.
+If the interlock is engaged, the indicator will be red.
+Otherwise, it will be green.
 
 .. _lsst.ts.mtdomegui-user_sensor_fixed:
 

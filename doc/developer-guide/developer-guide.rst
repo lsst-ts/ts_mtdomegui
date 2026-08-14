@@ -60,7 +60,7 @@ The available Qt signals are listed below:
 
 * **SignalInterlock** sends the current interlock status.
 * **SignalSensor** sends the current sensor status.
-* **SignalState** sends the current state..
+* **SignalState** sends the current state.
 * **SignalOperationalMode** sends the current operational mode.
 * **SignalTelemetry** sends the telemetry.
 * **SignalTarget** sends the target.

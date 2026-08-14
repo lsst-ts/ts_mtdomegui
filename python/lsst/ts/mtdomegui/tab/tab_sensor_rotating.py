@@ -539,7 +539,7 @@ class TabSensorRotating(TabTemplate):
         self.update_sensor_status("sensorsRotatingPartBrakes", sensors)  # type: ignore[arg-type]
 
     def update_sensor_status(self, group_name: str, sensors: dict[str, bool | float]) -> None:
-        """ "Update the sensor status.
+        """Update the sensor status.
 
         Parameters
         ----------

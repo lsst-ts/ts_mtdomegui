@@ -156,7 +156,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksAMCS", interlocks)
@@ -168,7 +168,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksLWSCS", interlocks)
@@ -180,7 +180,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksApSCS", interlocks)
@@ -192,7 +192,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksLCS", interlocks)
@@ -204,7 +204,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksOBC", interlocks)
@@ -216,7 +216,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksRAD", interlocks)
@@ -228,7 +228,7 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksCSCS", interlocks)
@@ -240,20 +240,20 @@ class TabInterlock(TabTemplate):
         Parameters
         ----------
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         self.update_interlock_status("interlocksLockingPins", interlocks)
 
     def update_interlock_status(self, group_name: str, interlocks: dict[str, bool]) -> None:
-        """ "Update the interlock status.
+        """Update the interlock status.
 
         Parameters
         ----------
         group_name : `str`
             Group name.
         interlocks : `dict` [`str`, `bool`]
-            Status of the interlocks. True is latched. Otherwise, False.
+            Status of the interlocks. True is engaged. Otherwise, False.
         """
 
         for interlock, is_fault in interlocks.items():
