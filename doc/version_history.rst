@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.5:
+
+-------------
+0.6.5
+-------------
+
+* Add and update the header license.
+
 .. _lsst.ts.mtdomegui-0.6.4:
 
 -------------
