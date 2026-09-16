@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.6:
+
+-------------
+0.6.6
+-------------
+
+* Workaround the issue of the Qt and asyncio event loops in Python 3.14.
+
 .. _lsst.ts.mtdomegui-0.6.5:
 
 -------------

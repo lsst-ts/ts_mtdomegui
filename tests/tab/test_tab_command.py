@@ -24,6 +24,7 @@ import logging
 import math
 
 import pytest
+import pytest_asyncio
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -39,7 +40,7 @@ from lsst.ts.mtdomegui.tab import TabCommand
 from lsst.ts.xml.enums import MTDome
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def widget(qtbot: QtBot) -> TabCommand:
     model = Model(logging.getLogger())
     model.louvers_enabled = [MTDome.Louver.E1]
@@ -92,10 +93,16 @@ async def test_callback_command(qtbot: QtBot, widget: TabCommand) -> None:
 @pytest.mark.asyncio
 async def test_show_selector(qtbot: QtBot, widget: TabCommand) -> None:
     tab_names = ["louver", "drive_az", "drive_shuttor", "drive_el"]
+    command_names = ["set_louvers", "reset_drives_az", "reset_drives_shutter", "reset_drives_el"]
     parameter_names = ["louver", "reset_drives_az", "reset_drives_shutter", "reset_drives_el"]
 
-    for tab_name, parameter_name in zip(tab_names, parameter_names):
+    for tab_name, command_name, parameter_name in zip(tab_names, command_names, parameter_names):
         assert widget._tabs[tab_name].isVisible() is False
+
+        qtbot.mouseClick(widget._commands[command_name], Qt.LeftButton)
+
+        # Sleep so the event loop can access CPU to handle the signal
+        await asyncio.sleep(1)
 
         qtbot.mouseClick(widget._command_parameters[parameter_name], Qt.LeftButton)
 
