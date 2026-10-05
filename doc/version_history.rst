@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.7:
+
+-------------
+0.6.7
+-------------
+
+* Add the ``local_scheme="no-local-version"`` to the **setup.py**.
+
 .. _lsst.ts.mtdomegui-0.6.6:
 
 -------------
