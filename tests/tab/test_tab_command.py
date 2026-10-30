@@ -40,8 +40,10 @@ from lsst.ts.mtdomegui.tab import TabCommand
 from lsst.ts.xml.enums import MTDome
 
 
+# The constructor has the callback with asyncSlot() signal. Therefore, we use
+# the async here.
 @pytest_asyncio.fixture
-def widget(qtbot: QtBot) -> TabCommand:
+async def widget(qtbot: QtBot) -> TabCommand:
     model = Model(logging.getLogger())
     model.louvers_enabled = [MTDome.Louver.E1]
 
@@ -112,7 +114,10 @@ async def test_show_selector(qtbot: QtBot, widget: TabCommand) -> None:
         assert widget._tabs[tab_name].isVisible() is True
 
 
-def test_get_selected_command(widget: TabCommand) -> None:
+# setChecked() triggers the asyncSlot() callback. Therefore, we need to use
+# @pytest.mark.asyncio.
+@pytest.mark.asyncio
+async def test_get_selected_command(widget: TabCommand) -> None:
     for name, command in widget._commands.items():
         command.setChecked(True)
 
