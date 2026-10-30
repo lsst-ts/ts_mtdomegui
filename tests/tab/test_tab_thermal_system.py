@@ -23,6 +23,7 @@ import asyncio
 import logging
 
 import pytest
+import pytest_asyncio
 from PySide6.QtCore import Qt
 from pytestqt.qtbot import QtBot
 
@@ -36,9 +37,14 @@ from lsst.ts.mtdomegui import Model, generate_dict_from_registry
 from lsst.ts.mtdomegui.tab import TabThermalSystem
 
 
-@pytest.fixture
-def widget(qtbot: QtBot) -> TabThermalSystem:
+@pytest_asyncio.fixture
+async def widget(qtbot: QtBot) -> TabThermalSystem:
     widget = TabThermalSystem("Thermal System", Model(logging.getLogger()))
+
+    # pytest-qt processes the pending Qt events outside the asyncio loop after
+    # each test. Stop the timer to avoid its asyncSlot callback running there.
+    widget._timer.stop()
+
     qtbot.addWidget(widget)
 
     return widget
@@ -95,7 +101,9 @@ async def test_callback_update(qtbot: QtBot, widget: TabThermalSystem) -> None:
     # Sleep so the event loop can access CPU to handle the signal
     await asyncio.sleep(1)
 
-    await widget._callback_time_out()
+    # The asyncSlot wrapper schedules a task and returns None
+    widget._callback_time_out()
+    await asyncio.sleep(1)
 
     assert widget._selections == selections
     assert len(widget._figures["motor"].chart().series()) == len(selections)

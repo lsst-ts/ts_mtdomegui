@@ -31,10 +31,17 @@ from lsst.ts.guitool import get_config_dir, read_yaml_file
 from lsst.ts.mtdomegui import MainWindow
 
 
+# The constructor has the callback with asyncSlot() signal. Therefore, we use
+# the async here.
 @pytest_asyncio.fixture
-def widget(qtbot: QtBot) -> MainWindow:
+async def widget(qtbot: QtBot) -> MainWindow:
     widget = MainWindow(False, False, False, log_level=13)
     qtbot.addWidget(widget)
+
+    # pytest-qt processes the pending Qt events outside the asyncio loop after
+    # each test. Stop the timer to avoid its asyncSlot callback running there.
+    tab = widget._control_tabs.get_tab("Thermal System")[1]
+    tab._timer.stop()
 
     return widget
 

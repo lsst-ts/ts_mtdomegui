@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import logging
 
 import pytest
@@ -42,7 +43,9 @@ def test_init(widget: TabSelector) -> None:
 
 @pytest.mark.asyncio
 async def test_callback_select_all(widget: TabSelector) -> None:
-    await widget._callback_select_all()
+    # The asyncSlot wrapper schedules a task and returns None
+    widget._callback_select_all()
+    await asyncio.sleep(1)
 
     for button in widget._buttons["selection"]:
         assert button.isChecked() is True
@@ -50,9 +53,13 @@ async def test_callback_select_all(widget: TabSelector) -> None:
 
 @pytest.mark.asyncio
 async def test_callback_reset_all(widget: TabSelector) -> None:
-    await widget._callback_select_all()
+    # The asyncSlot wrapper schedules a task and returns None
+    widget._callback_select_all()
+    await asyncio.sleep(1)
 
-    await widget._callback_reset_all()
+    # The asyncSlot wrapper schedules a task and returns None
+    widget._callback_reset_all()
+    await asyncio.sleep(1)
 
     for button in widget._buttons["selection"]:
         assert button.isChecked() is False
