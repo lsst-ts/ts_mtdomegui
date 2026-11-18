@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.8:
+
+-------------
+0.6.8
+-------------
+
+* Allow the **MONCS** telemetry in ``Model.connect()``.
+
 .. _lsst.ts.mtdomegui-0.6.7:
 
 -------------

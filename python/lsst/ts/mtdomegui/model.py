@@ -146,6 +146,7 @@ class Model:
                 LlcName.CBCS: self.callback_status_cbcs,
                 LlcName.THCS: self.callback_status_thcs,
                 LlcName.LCS: self.callback_status_lcs,
+                LlcName.MONCS: self.callback_status_moncs,
                 LlcName.LLC: self.callback_status_llc,
             }
         )
