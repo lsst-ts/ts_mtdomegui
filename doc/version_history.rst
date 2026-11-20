@@ -6,6 +6,14 @@
 Version History
 ##################
 
+.. _lsst.ts.mtdomegui-0.6.9:
+
+-------------
+0.6.9
+-------------
+
+* Fix the unit tests from the ``qasync`` 0.29.0a1 version and remove the workaround.
+
 .. _lsst.ts.mtdomegui-0.6.8:
 
 -------------
